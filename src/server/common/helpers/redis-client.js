@@ -22,7 +22,7 @@ function buildRedisClient() {
       port,
       host: config.get('redisHost'),
       db,
-      keyPrefix: config.get('redisKeyPrefix'),
+      keyPrefix: config.get('redisKeyPrefix')
     })
   } else {
     redisClient = new IoRedis.Cluster(

@@ -25,9 +25,7 @@ function catchAll(request, h) {
   const statusCode = response.output.statusCode
   const errorMessage = statusCodeMessage(statusCode)
 
-  return h
-    .response(errorMessage)
-    .code(statusCode)
+  return h.response(errorMessage).code(statusCode)
 }
 
 export { catchAll }

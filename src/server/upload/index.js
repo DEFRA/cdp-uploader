@@ -1,4 +1,4 @@
-import { initiateController } from '~/src/server/initiate/controller'
+import { uploadController } from '~/src/server/upload/controller'
 
 const upload = {
   plugin: {
@@ -8,7 +8,7 @@ const upload = {
         {
           method: 'POST',
           path: '/cdp/upload/{id}',
-          ...initiateController
+          ...uploadController
         }
       ])
     }
