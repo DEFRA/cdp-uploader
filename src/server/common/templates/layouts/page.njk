@@ -1,0 +1,70 @@
+{% extends "govuk/template.njk" %}
+
+{% from "page-body/macro.njk" import appPageBody %}
+{% from "breadcrumbs/macro.njk" import appBreadcrumbs %}
+{% from "heading/macro.njk" import appHeading %}
+
+{% set mainClasses = "app-main-wrapper" %}
+
+{% block headIcons %}
+  <link rel="icon" sizes="48x48" href="{{ getAssetPath("images/favicon.ico") }}">
+  <link rel="icon" sizes="any" href="{{ getAssetPath("images/favicon.svg") }}" type="image/svg+xml">
+  <link rel="mask-icon" href="{{ getAssetPath("images/govuk-icon-mask.svg") }}"
+        color="{{ themeColor | default("#0b0c0c") }}"> {#- Hardcoded value of $govuk-black #}
+  <link rel="apple-touch-icon" href="{{ getAssetPath("images/govuk-icon-180.png") }}">
+{% endblock %}
+
+{% block head %}
+  <link href="{{ getAssetPath('application.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block header %}
+  {{ govukHeader({
+    homepageUrl: "https://www.gov.uk/",
+    classes: "app-header",
+    containerClasses: "govuk-width-container",
+    serviceName: serviceName,
+    serviceUrl: serviceUrl,
+    useTudorCrown: true
+  }) }}
+  {% include "partials/navigation.njk" %}
+{% endblock %}
+
+{% block pageTitle %}
+  {{ pageTitle }} | {{ serviceName }}
+{% endblock %}
+
+{% block beforeContent %}
+  {% if breadcrumbs.length > 1 %}
+    {{ appBreadcrumbs({
+      items: breadcrumbs
+    }) }}
+  {% endif %}
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block footer %}
+  {{ govukFooter({
+    meta: {
+      items: [
+        {
+          href: "https://www.gov.uk/help/privacy-notice",
+          text: "Privacy"
+        },
+        {
+          href: "https://www.gov.uk/help/cookies",
+          text: "Cookies"
+        },
+        {
+          href: "https://www.gov.uk/help/accessibility-statement",
+          text: "Accessibility statement"
+        }
+      ]
+    }
+  }) }}
+{% endblock %}
+
+{% block bodyEnd %}
+  <script src="{{ getAssetPath('application.js') }}"></script>
+{% endblock %}
