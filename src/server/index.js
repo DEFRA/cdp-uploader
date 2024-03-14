@@ -2,13 +2,15 @@ import path from 'path'
 import hapi from '@hapi/hapi'
 
 import { config } from '~/src/config'
-import { nunjucksConfig } from '~/src/config/nunjucks'
 import { router } from './router'
 import { requestLogger } from '~/src/server/common/helpers/logging/request-logger'
 import { catchAll } from '~/src/server/common/helpers/errors'
 import { secureContext } from '~/src/server/common/helpers/secure-context'
+import {buildRedisClient} from "~/src/server/common/helpers/redis-client";
 
 const isProduction = config.get('isProduction')
+
+
 
 async function createServer() {
   const server = hapi.server({
@@ -45,8 +47,9 @@ async function createServer() {
   }
 
   await server.register(router)
-  await server.register(nunjucksConfig)
 
+  const redisClient = buildRedisClient()
+  server.decorate('request', 'redis', redisClient)
   server.ext('onPreResponse', catchAll)
 
   return server
