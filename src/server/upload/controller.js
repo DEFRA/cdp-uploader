@@ -1,7 +1,15 @@
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
+import {
+  uploadPathValidation,
+  uploadValidation
+} from '~/src/server/upload/helpers/upload-validation'
 
 const uploadController = {
   options: {
+    validate: {
+      params: uploadPathValidation,
+      payload: uploadValidation
+    },
     payload: {
       allow: 'multipart/form-data',
       multipart: true,
