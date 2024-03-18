@@ -35,6 +35,8 @@
   "author": "Defra DDTS",
   "license": "OGL-UK-3.0",
   "dependencies": {
+    "@aws-sdk/credential-providers": "3.535.0",
+    "@aws-sdk/lib-storage": "3.534.0",
     "@babel/runtime": "7.23.9",
     "@elastic/ecs-pino-format": "1.5.0",
     "@hapi/hapi": "21.3.3",
@@ -46,13 +48,13 @@
     "govuk-frontend": "5.1.0",
     "hapi-pino": "12.1.0",
     "https-proxy-agent": "7.0.2",
+    "ioredis": "5.3.2",
+    "joi": "17.12.1",
     "lodash": "4.17.21",
     "node-fetch": "2.7.0",
     "nunjucks": "3.2.4",
     "pino": "8.18.0",
-    "undici": "6.6.2",
-    "ioredis": "5.3.2",
-    "joi": "17.12.1"
+    "undici": "6.6.2"
   },
   "devDependencies": {
     "@babel/cli": "7.23.9",

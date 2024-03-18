@@ -110,6 +110,12 @@ const config = convict({
     format: Boolean,
     default: process.env.NODE_ENV !== 'production',
     env: 'USE_SINGLE_INSTANCE_CACHE'
+  },
+  quarantineBucket: {
+    doc: 'S3 bucket for storing unscanned files',
+    format: String,
+    default: 'cdp-upload-quarantine',
+    env: 'S3_CDP_QUARANTINE_BUCKET'
   }
 })
 

@@ -1,5 +1,18 @@
+import { config } from '~/src/config'
+import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
+import {
+  uploadPathValidation,
+  uploadValidation
+} from '~/src/server/upload/helpers/upload-validation'
+
+const quarantineBucket = config.get('quarantineBucket')
+
 const uploadController = {
   options: {
+    validate: {
+      params: uploadPathValidation,
+      payload: uploadValidation
+    },
     payload: {
       allow: 'multipart/form-data',
       multipart: true,
@@ -11,7 +24,7 @@ const uploadController = {
   handler: async (request, h) => {
     const id = request.params.id
     if (!id) {
-      return h.response('Failed to upload').code(404)
+      return h.response('Failed to upload. No id').code(404)
     }
 
     const init = JSON.parse(await request.redis.get(id))
@@ -19,27 +32,24 @@ const uploadController = {
       // TODO: work out how we gracefully handle this from the user's point of view
       return h.response('Failed to upload, no init data').code(404)
     }
-
+    // check redis token matches form token
+    // this is assuming only a file is uploaded in form data
     const files = request.payload
     const result = {}
     for (const f in files) {
       if (files[f]) {
         const file = files[f]
-        let fileSize = 0
-        file.on('data', (chunk) => {
-          fileSize += chunk.length
-          // TODO: actually upload it to s3
-        })
-
-        await new Promise((resolve) => {
-          file.on('end', () => {
-            result[f] = fileSize
-            resolve()
-          })
-        })
+        //   console.log(`Uploading ${JSON.stringify(file.hapi.filename)}`)
+        const res = await uploadStream(
+          quarantineBucket,
+          `${id}/${file.hapi.filename}`,
+          file
+        )
+        result[f] = res
       }
     }
 
+    //  console.log(`Uploaded to ${JSON.stringify(result.data.Location)}`)
     // TODO: check all the files sizes match the size set in init
     return h.redirect(init.uploadRedirect)
   }
