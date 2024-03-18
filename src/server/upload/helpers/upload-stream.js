@@ -9,7 +9,7 @@ async function uploadStream(Bucket, Key, fileStream) {
   let res
   try {
     const upload = new Upload({
-      s3client,
+      client: s3client,
       params: {
         Bucket,
         Key,

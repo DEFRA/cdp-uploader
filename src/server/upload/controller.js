@@ -1,8 +1,11 @@
+import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
 import {
   uploadPathValidation,
   uploadValidation
 } from '~/src/server/upload/helpers/upload-validation'
+
+const quarantineBucket = config.get('quarantineBucket')
 
 const uploadController = {
   options: {
@@ -19,16 +22,9 @@ const uploadController = {
     }
   },
   handler: async (request, h) => {
-    //  console.log('===== uploadController  =====')
-    //  console.log(`Id is ${request.params.id}`)
-    //  console.log(`Token is ${request.params.token}`)
     const id = request.params.id
     if (!id) {
       return h.response('Failed to upload. No id').code(404)
-    }
-    const token = request.params.token
-    if (!token) {
-      return h.response('Failed to upload. No token').code(404)
     }
 
     const init = JSON.parse(await request.redis.get(id))
@@ -43,23 +39,17 @@ const uploadController = {
     for (const f in files) {
       if (files[f]) {
         const file = files[f]
-        const res = await uploadStream(init.bucket, init.key, file)
+        //   console.log(`Uploading ${JSON.stringify(file.hapi.filename)}`)
+        const res = await uploadStream(
+          quarantineBucket,
+          `${id}/${file.hapi.filename}`,
+          file
+        )
         result[f] = res
-        //      let fileSize = 0
-        //      file.on('data', (chunk) => {
-        //        fileSize += chunk.length
-        //        // TODO: actually upload it to s3
-        //      })
-
-        //      await new Promise((resolve) => {
-        //        file.on('end', () => {
-        //          result[f] = fileSize
-        //          resolve()
-        //        })
-        //      })
       }
     }
 
+    //  console.log(`Uploaded to ${JSON.stringify(result.data.Location)}`)
     // TODO: check all the files sizes match the size set in init
     return h.redirect(init.uploadRedirect)
   }

@@ -5,7 +5,7 @@ const uploadPathValidation = Joi.object({
 })
 
 const uploadPayloadValidation = Joi.object({
-  token: Joi.string().base64().required(),
+  //   token: Joi.string().base64().required(),
   data: Joi.binary().required()
 })
 
