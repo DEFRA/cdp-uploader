@@ -18,7 +18,7 @@ const initiateController = {
     request.redis.set(uuid, JSON.stringify(initiateRequest))
     request.logger.info(`request ${uuid} ${initiateRequest}`)
     const payload = {
-      url: `/file-upload/${uuid}`
+      url: `http://localhost:7337/upload/${uuid}`
     }
     return h.response(payload).code(200)
   }

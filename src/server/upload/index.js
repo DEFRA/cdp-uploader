@@ -7,7 +7,7 @@ const upload = {
       server.route([
         {
           method: 'POST',
-          path: '/cdp/upload/{id}',
+          path: '/upload/{id}',
           ...uploadController
         }
       ])

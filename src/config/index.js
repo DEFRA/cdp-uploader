@@ -114,7 +114,7 @@ const config = convict({
   quarantineBucket: {
     doc: 'S3 bucket for storing unscanned files',
     format: String,
-    default: 'cdp-upload-quarantine',
+    default: 'cdp-uploader-quarantine',
     env: 'S3_CDP_QUARANTINE_BUCKET'
   }
 })

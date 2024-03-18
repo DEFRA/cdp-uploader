@@ -22,6 +22,7 @@ const uploadController = {
     }
   },
   handler: async (request, h) => {
+
     const id = request.params.id
     if (!id) {
       return h.response('Failed to upload. No id').code(404)
@@ -32,26 +33,34 @@ const uploadController = {
       // TODO: work out how we gracefully handle this from the user's point of view
       return h.response('Failed to upload, no init data').code(404)
     }
-    // check redis token matches form token
-    // this is assuming only a file is uploaded in form data
-    const files = request.payload
-    const result = {}
-    for (const f in files) {
-      if (files[f]) {
-        const file = files[f]
-        //   console.log(`Uploading ${JSON.stringify(file.hapi.filename)}`)
-        const res = await uploadStream(
-          quarantineBucket,
-          `${id}/${file.hapi.filename}`,
-          file
-        )
-        result[f] = res
-      }
-    }
 
-    //  console.log(`Uploaded to ${JSON.stringify(result.data.Location)}`)
-    // TODO: check all the files sizes match the size set in init
-    return h.redirect(init.uploadRedirect)
+    try {
+      // check redis token matches form token
+      // this is assuming only a file is uploaded in form data
+      const files = request.payload
+      const result = {}
+      for (const f in files) {
+        if (files[f]) {
+          const file = files[f]
+          if (file.hapi?.filename) {
+            throw new Error("invalid file!!")
+            console.log(`Uploading ${JSON.stringify(file.hapi.filename)}`)
+            const res = await uploadStream(
+              quarantineBucket,
+              `${id}/${file.hapi.filename}`,
+              file
+            )
+            result[f] = res
+          }
+        }
+      }
+
+      console.log(`Uploaded to ${JSON.stringify(result.data?.Location)}`)
+      // TODO: check all the files sizes match the size set in init
+      return h.redirect(init.successRedirect)
+    } catch (e) {
+      return h.redirect(init.failureRedirect)
+    }
   }
 }
 
