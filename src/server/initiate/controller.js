@@ -12,11 +12,14 @@ const initiateController = {
       allow: 'application/json'
     }
   },
-  handler: (request, h) => {
+  handler: async (request, h) => {
     const uuid = crypto.randomUUID()
     const initiateRequest = request.payload
-    request.redis.set(uuid, JSON.stringify(initiateRequest))
+    initiateRequest.done = false
+    await request.redis.set(uuid, JSON.stringify(initiateRequest))
+
     request.logger.info(`request ${uuid} ${initiateRequest}`)
+
     const payload = {
       url: `http://localhost:7337/upload/${uuid}`
     }
