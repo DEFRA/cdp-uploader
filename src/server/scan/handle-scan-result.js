@@ -20,13 +20,13 @@ async function handleScanResult(server, payload, receiptHandle) {
     return
   }
 
-  const source = `s3://${quarantineBucket}/${payload.key}`
   const destinationKey = `${init.destinationPath}/${path.basename(payload.key)}` // do we want to strip id from the filename?
   const destination = `${init.destinationBucket}/${destinationKey}`
 
   if (payload.safe && !init.delivered) {
     const result = await moveS3File(
-      source,
+      quarantineBucket,
+      payload.key,
       init.destinationBucket,
       destinationKey
     ) // assume this will throw exception if it fails
@@ -35,7 +35,7 @@ async function handleScanResult(server, payload, receiptHandle) {
 
     if (!init.delivered) {
       logger.error(
-        `File from ${source} could not be delivered to ${destination}`
+        `File from ${quarantineBucket}/${payload.key} could not be delivered to ${destination}`
       )
       await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)
       return
