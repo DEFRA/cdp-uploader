@@ -17,13 +17,14 @@ const uploadController = {
       allow: 'multipart/form-data',
       multipart: true,
       output: 'stream',
-      maxBytes: 209715200,
+      maxBytes: 200 * 1024 * 1024, // 200MB
       uploads: 'uploads'
     }
   },
   handler: async (request, h) => {
     const id = request.params.id
     if (!id) {
+      request.logger.info('Failed to upload, no id')
       return h.response('Failed to upload. No id').code(404)
     }
 
@@ -40,7 +41,7 @@ const uploadController = {
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`
       )
-      await request.redis.set(id, JSON.stringify(init))
+      await request.redis.set(id, JSON.stringify(init)) // refresh the TTL ?
       return h.redirect(init.failureRedirect)
     }
 
