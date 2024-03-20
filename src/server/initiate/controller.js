@@ -18,7 +18,7 @@ const initiateController = {
     initiateRequest.done = false
     await request.redis.set(uuid, JSON.stringify(initiateRequest))
 
-    request.logger.info(`request ${uuid} ${initiateRequest}`)
+    request.logger.info({ initiateRequest }, `request ${uuid}`)
 
     const payload = {
       url: `http://localhost:7337/upload/${uuid}`
