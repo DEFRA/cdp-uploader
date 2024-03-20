@@ -54,7 +54,9 @@
     "node-fetch": "2.7.0",
     "nunjucks": "3.2.4",
     "pino": "8.18.0",
-    "undici": "6.6.2"
+    "undici": "6.6.2",
+    "@aws-sdk/client-sqs": "3.509.0",
+    "sqs-consumer": "8.2.0"
   },
   "devDependencies": {
     "@babel/cli": "7.23.9",

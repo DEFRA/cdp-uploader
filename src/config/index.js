@@ -116,6 +116,12 @@ const config = convict({
     format: String,
     default: 'cdp-uploader-quarantine',
     env: 'S3_CDP_QUARANTINE_BUCKET'
+  },
+  sqsScanResults: {
+    doc: 'Queue for virus scan results',
+    format: String,
+    default: 'cdp-uploader-scan-results',
+    env: 'SQS_SCAN_RESULTS'
   }
 })
 

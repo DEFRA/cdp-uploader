@@ -16,6 +16,7 @@ const initiateController = {
     const uuid = crypto.randomUUID()
     const initiateRequest = request.payload
     initiateRequest.done = false
+    initiateRequest.created = new Date()
     await request.redis.set(uuid, JSON.stringify(initiateRequest))
 
     request.logger.info({ initiateRequest }, `request ${uuid}`)

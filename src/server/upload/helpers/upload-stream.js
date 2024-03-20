@@ -4,34 +4,32 @@ import stream from 'stream'
 
 import { s3client } from '~/src/server/upload/helpers/s3-client'
 
-async function uploadStream(Bucket, Key, fileStream) {
+async function uploadStream(Bucket, Key, fileStream, metadata) {
   const passThrough = new stream.PassThrough()
-  let res
-  try {
-    const upload = new Upload({
-      client: s3client,
-      params: {
-        Bucket,
-        Key,
-        Body: passThrough
+  const upload = new Upload({
+    client: s3client,
+    params: {
+      Bucket,
+      Key,
+      Metadata: {
+        callback: metadata.callback,
+        destination: metadata.destination
       },
-      // tags:[],
-      queueSize: 4,
-      partSize: 1024 * 1024 * 5,
-      leavePartsOnError: false
-    })
+      Body: passThrough
+    },
+    // tags:[],
 
-    //  upload.on('httpUploadProgress', (progress) => {
-    //    console.log(progress)
-    //  })
+    queueSize: 4,
+    partSize: 1024 * 1024 * 5,
+    leavePartsOnError: false
+  })
 
-    fileStream.pipe(passThrough)
-    res = await upload.done()
-  } catch (e) {
-    //  console.log(e)
-  }
+  //  upload.on('httpUploadProgress', (progress) => {
+  //    console.log(progress)
+  //  })
 
-  return res
+  fileStream.pipe(passThrough)
+  return await upload.done()
 }
 
 export { uploadStream }

@@ -44,6 +44,8 @@ const uploadController = {
       return h.redirect(init.failureRedirect)
     }
 
+    init.fields = {}
+
     try {
       const files = request.payload
       const result = {}
@@ -57,16 +59,17 @@ const uploadController = {
             const fileKey = `${id}/${file.hapi.filename}`
 
             // TODO: check result of upload and redirect on error
-            await uploadStream(
-              quarantineBucket,
-              `${id}/${file.hapi.filename}`,
-              fileKey,
-              file
-            )
-            result[f] = {
-              quarantineLocation: fileKey,
-              formValue: file.hapi
+            await uploadStream(quarantineBucket, fileKey, file, {
+              callback: init.scanResultCallback,
+              destination: init.fileDestination
+            })
+            init.fields[f] = {
+              fileName: file.hapi?.filename,
+              contentType: file.hapi?.headers['content-type'] ?? ''
             }
+          } else {
+            // save non-file fields
+            init.fields[f] = files[f]
           }
         }
       }
@@ -76,7 +79,7 @@ const uploadController = {
 
       // update the record in redis
       init.done = true
-      init.results = result
+      init.quarentined = new Date()
       await request.redis.set(id, JSON.stringify(init))
 
       // TODO: check all the files sizes match the size set in init
