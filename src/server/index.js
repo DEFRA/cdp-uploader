@@ -8,6 +8,7 @@ import { catchAll } from '~/src/server/common/helpers/errors'
 import { secureContext } from '~/src/server/common/helpers/secure-context'
 import { buildRedisClient } from '~/src/server/common/helpers/redis-client'
 import { SQSClient } from '@aws-sdk/client-sqs'
+import { failAction } from '~/src/server/common/helpers/fail-action'
 
 const isProduction = config.get('isProduction')
 
@@ -18,7 +19,8 @@ async function createServer() {
       validate: {
         options: {
           abortEarly: false
-        }
+        },
+        failAction
       },
       files: {
         relativeTo: path.resolve(config.get('root'), '.public')
