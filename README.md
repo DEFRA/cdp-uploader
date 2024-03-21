@@ -78,6 +78,20 @@ awslocal s3 mb s3://my-bucket --endpoint-url http://localhost:4566
 awslocal s3 list-buckets
 ```
 
+#### View bucket contents
+
+```bash
+awslocal s3 ls s3://cdp-uploader-quarantine
+awslocal s3 ls s3://my-bucket
+```
+
+Of view in your browser:
+
+```
+http://localhost:4566/cdp-uploader-quarantine/
+http://localhost:4566/my-bucket/
+```
+
 ### Local JSON API
 
 Whilst the APIs are being developed this app uses a local JSON mock API. To start this locally run:
