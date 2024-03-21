@@ -2,9 +2,7 @@ import { Consumer } from 'sqs-consumer'
 import { config } from '~/src/config'
 import { handleScanResult } from '~/src/server/scan/handle-scan-result'
 
-function listener(server) {
-  const queueUrl = config.get('sqsScanResults')
-
+function buildSqsListener(server, queueUrl, handleMessageFn) {
   server.logger.info(`Listening for scan result events on ${queueUrl}`)
 
   const listener = Consumer.create({
@@ -15,11 +13,7 @@ function listener(server) {
     visibilityTimeout: 400,
     pollingWaitTimeMs: 1000,
     shouldDeleteMessages: false,
-    handleMessage: async (message) => {
-      const payload = JSON.parse(message.Body)
-      await handleScanResult(server, payload, message.ReceiptHandle)
-      return message
-    },
+    handleMessage: handleMessageFn,
     sqs: server.sqs
   })
 
@@ -40,4 +34,15 @@ function listener(server) {
   return listener
 }
 
-export { listener }
+function buildScanResultListener(server) {
+  const queueUrl = config.get('sqsScanResults')
+  const handleMessage = async (message) => {
+    const payload = JSON.parse(message.Body)
+    await handleScanResult(server, payload, message.ReceiptHandle)
+    return message
+  }
+
+  return buildSqsListener(server, queueUrl, handleMessage)
+}
+
+export { buildScanResultListener }

@@ -7,8 +7,10 @@ import { requestLogger } from '~/src/server/common/helpers/logging/request-logge
 import { catchAll } from '~/src/server/common/helpers/errors'
 import { secureContext } from '~/src/server/common/helpers/secure-context'
 import { buildRedisClient } from '~/src/server/common/helpers/redis-client'
-import { SQSClient } from '@aws-sdk/client-sqs'
 import { failAction } from '~/src/server/common/helpers/fail-action'
+import { buildSqsClient } from '~/src/server/common/helpers/sqs-client'
+import { buildS3client } from '~/src/server/common/helpers/s3-client'
+import { buildScanResultListener } from '~/src/server/scan/build-sqs-listener'
 
 const isProduction = config.get('isProduction')
 
@@ -54,12 +56,11 @@ async function createServer() {
   server.decorate('server', 'redis', redisClient)
   server.ext('onPreResponse', catchAll)
 
-  const sqsClient = new SQSClient({
-    region: config.get('awsRegion'),
-    endpoint: config.get('sqsEndpoint')
-  })
+  server.decorate('server', 'sqs', buildSqsClient())
+  server.decorate('server', 's3', buildS3client())
 
-  server.decorate('server', 'sqs', sqsClient)
+  const scanResultListener = buildScanResultListener(server)
+  server.decorate('server', 'sqsListener', scanResultListener)
 
   return server
 }
