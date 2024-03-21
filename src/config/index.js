@@ -39,6 +39,12 @@ const config = convict({
     default: '/public',
     env: 'ASSET_PATH'
   },
+  sqsEndpoint: {
+    doc: 'AWS SQS endpoint',
+    format: String,
+    default: 'http://127.0.0.1:4566',
+    env: 'SQS_ENDPOINT'
+  },
   isProduction: {
     doc: 'If this application running in the production environment',
     format: Boolean,
@@ -59,6 +65,12 @@ const config = convict({
     format: ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'],
     default: 'info',
     env: 'LOG_LEVEL'
+  },
+  awsRegion: {
+    doc: 'AWS region',
+    format: String,
+    default: 'eu-west-2',
+    env: 'AWS_REGION'
   },
   httpProxy: {
     doc: 'HTTP Proxy',
