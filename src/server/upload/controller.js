@@ -62,7 +62,7 @@ const uploadController = {
             // TODO: check result of upload and redirect on error
             await uploadStream(quarantineBucket, fileKey, file, {
               callback: init.scanResultCallback,
-              destination: init.fileDestination
+              destination: init.destinationBucket
             })
             init.fields[f] = {
               fileName: file.hapi?.filename,
