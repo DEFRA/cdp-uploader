@@ -10,6 +10,7 @@ Core delivery platform Node.js Frontend Template.
   - [Aws localstack](#aws-localstack)
     - [Install and run LocalStack AWS](#install-and-run-localstack-aws)
     - [Setup local buckets](#setup-local-buckets)
+    - [List local buckets](#list-local-buckets)
   - [Local JSON API](#local-json-api)
   - [Production](#production)
   - [Npm scripts](#npm-scripts)
@@ -55,7 +56,7 @@ npm run dev
 
 #### Install and run LocalStack AWS
 
-- Install [LocalStack AWS CLI](https://github.com/localstack/awscli-local)
+- Install [LocalStack AWS CLI](https://docs.localstack.cloud/getting-started/installation/#localstack-cli)
 - Run AWS LocalStack Docker container:
 
 ```bash
@@ -69,6 +70,12 @@ You need local buckets setup in localstack
 ```bash
 awslocal s3 mb s3://cdp-uploader-quarantine --endpoint-url http://localhost:4566
 awslocal s3 mb s3://my-bucket --endpoint-url http://localhost:4566
+```
+
+#### List local buckets
+
+```bash
+awslocal s3 list-buckets
 ```
 
 ### Local JSON API
