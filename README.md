@@ -7,6 +7,9 @@ Core delivery platform Node.js Frontend Template.
 - [Local development](#local-development)
   - [Setup](#setup)
   - [Development](#development)
+  - [Aws localstack](#aws-localstack)
+    - [Install and run LocalStack AWS](#install-and-run-localstack-aws)
+    - [Setup local buckets](#setup-local-buckets)
   - [Local JSON API](#local-json-api)
   - [Production](#production)
   - [Npm scripts](#npm-scripts)
@@ -46,6 +49,26 @@ To run the application in `development` mode run:
 
 ```bash
 npm run dev
+```
+
+### Aws localstack
+
+#### Install and run LocalStack AWS
+
+- Install [LocalStack AWS CLI](https://github.com/localstack/awscli-local)
+- Run AWS LocalStack Docker container:
+
+```bash
+docker run --pull=always -d -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack:latest
+```
+
+#### Setup local buckets
+
+You need local buckets setup in localstack
+
+```bash
+awslocal s3 mb s3://cdp-uploader-quarantine --endpoint-url http://localhost:4566
+awslocal s3 mb s3://my-bucket --endpoint-url http://localhost:4566
 ```
 
 ### Local JSON API
