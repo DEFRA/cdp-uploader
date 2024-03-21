@@ -1,7 +1,5 @@
 function failAction(request, h, error) {
-  request.logger.error(error, error.message)
-
-  throw error
+  return error
 }
 
 export { failAction }
