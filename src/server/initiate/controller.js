@@ -1,4 +1,5 @@
-import * as crypto from 'crypto'
+import * as crypto from 'node:crypto'
+
 import { initiateValidation } from '~/src/server/initiate/helpers/initiate-validation'
 
 const initiateController = {
@@ -21,10 +22,12 @@ const initiateController = {
 
     request.logger.info({ initiateRequest }, `request ${uuid}`)
 
-    const payload = {
-      url: `http://localhost:7337/upload/${uuid}`
-    }
-    return h.response(payload).code(200)
+    return h
+      .response({
+        url: `http://localhost:7337/upload/${uuid}`,
+        id: uuid
+      })
+      .code(200)
   }
 }
 
