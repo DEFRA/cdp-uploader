@@ -23,9 +23,10 @@ function catchAll(request, h) {
   request.logger.error(response?.stack)
 
   const statusCode = response.output.statusCode
-  const errorMessage = statusCodeMessage(statusCode)
+  const message =
+    response?.stack?.replace(/"/g, "'") ?? statusCodeMessage(statusCode)
 
-  return h.response(errorMessage).code(statusCode)
+  return h.response({ message }).code(statusCode)
 }
 
 export { catchAll }
