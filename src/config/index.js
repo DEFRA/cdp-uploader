@@ -45,6 +45,12 @@ const config = convict({
     default: 'http://127.0.0.1:4566',
     env: 'SQS_ENDPOINT'
   },
+  s3Endpoint: {
+    doc: 'AWS S3 endpoint',
+    format: String,
+    default: 'http://127.0.0.1:4566',
+    env: 'S3_ENDPOINT'
+  },
   isProduction: {
     doc: 'If this application running in the production environment',
     format: Boolean,
