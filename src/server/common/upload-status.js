@@ -1,9 +1,9 @@
 const UploadStatus = {
-  Initiated: Symbol('Initiated'),
-  Quarantined: Symbol('Quarantined'),
-  Scanned: Symbol('Scanned'),
-  Moved: Symbol('Moved'),
-  Calledback: Symbol('Calledback')
+  Initiated: 'initiated',
+  Quarantined: 'quarantined',
+  Scanned: 'scanned',
+  Delivered: 'delivered',
+  Acknowledged: 'acknowledged'
 }
 
 function canBeUploaded(status) {
@@ -13,6 +13,7 @@ function canBeUploaded(status) {
 function canBeMoved(safe, status) {
   return (
     safe &&
+    status &&
     (status === UploadStatus.Quarantined || status === UploadStatus.Scanned)
   )
 }
