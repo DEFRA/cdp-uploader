@@ -52,18 +52,62 @@ To run the application in `development` mode run:
 npm run dev
 ```
 
-### Aws localstack
+### AWS CLI
 
-#### Install and run LocalStack AWS
+- Install the AWS CLI https://aws.amazon.com/cli/
 
-- Install [LocalStack AWS CLI](https://docs.localstack.cloud/getting-started/installation/#localstack-cli)
+### AWS Local
+
+- _awslocal_ is a wrapper around the _AWS CLI_ that talks to your local _localstack_
+- You can install a PIP https://github.com/localstack/awscli-local
+  But note it only works with the older v1 of _AWS CLI_
+
+#### AWS local alias
+
+- Alternatively just alias it locally:
+  - E.g in _fish_
+
+```fish
+function awslocal
+  aws --profile localstack $argv --endpoint-url http://localhost:4566
+end
+
+```
+
+- And add to your `.aws/credentials`
+
+```
+[localstack]
+aws_access_key_id = test
+aws_secret_access_key = test
+```
+
+### LocalStack
+
+Either run _localstack_ directly via _docker_ and _AWS CLI_, or via the _localstack CLI_.
+
+#### Docker
+
 - Run AWS LocalStack Docker container:
 
 ```bash
 docker run --pull=always -d -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack:latest
 ```
 
-#### Setup local buckets
+Note the exposed endpoint is `http://localhost:4566`
+
+### Localstack CLI
+
+- Install [LocalStack CLI](https://docs.localstack.cloud/getting-started/installation/#localstack-cli)
+- Run the CLI
+
+```
+localstack start
+```
+
+Note the exposed endpoint is `https://localhost:4566`
+
+#### Setup local S3 buckets
 
 You need local buckets setup in localstack
 
@@ -71,6 +115,9 @@ You need local buckets setup in localstack
 awslocal s3 mb s3://cdp-uploader-quarantine --endpoint-url http://localhost:4566
 awslocal s3 mb s3://my-bucket --endpoint-url http://localhost:4566
 ```
+
+The `--endpoint-url http://localhost:4566` may not be needed depending on how your `awslocal` is set up.
+Also note depending on how your _localstack_ is running the endpoint may be `http` or `https`.
 
 #### List local buckets
 
@@ -90,6 +137,12 @@ Of view in your browser:
 ```
 http://localhost:4566/cdp-uploader-quarantine/
 http://localhost:4566/my-bucket/
+```
+
+### Setup local queues
+
+```bash
+awslocal sqs create-queue --queue-name cdp-uploader-scan-results
 ```
 
 ### Local JSON API

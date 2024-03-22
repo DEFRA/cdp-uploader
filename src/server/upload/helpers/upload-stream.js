@@ -3,6 +3,9 @@ import { Upload } from '@aws-sdk/lib-storage'
 import stream from 'stream'
 
 import { s3client } from '~/src/server/common/helpers/s3-client'
+import { createLogger } from '~/src/server/common/helpers/logging/logger'
+
+const logger = createLogger()
 
 async function uploadStream(Bucket, Key, fileStream, metadata) {
   const passThrough = new stream.PassThrough()
@@ -24,9 +27,9 @@ async function uploadStream(Bucket, Key, fileStream, metadata) {
     leavePartsOnError: false
   })
 
-  //  upload.on('httpUploadProgress', (progress) => {
-  //    console.log(progress)
-  //  })
+  upload.on('httpUploadProgress', (progress) => {
+    logger.debug(progress)
+  })
 
   fileStream.pipe(passThrough)
   return await upload.done()

@@ -4,6 +4,7 @@ import {
   uploadPathValidation,
   uploadValidation
 } from '~/src/server/upload/helpers/upload-validation'
+import { UploadStatus } from '~/src/server/common/upload-status'
 
 const quarantineBucket = config.get('quarantineBucket')
 
@@ -36,7 +37,7 @@ const uploadController = {
     }
 
     // Upload link has already been used
-    if (init.done === true) {
+    if (init.uploadStatus || init.uploadStatus === UploadStatus.Initialised) {
       // TODO: how do we communicate this failure reason?
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`
