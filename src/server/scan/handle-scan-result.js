@@ -1,22 +1,24 @@
 import path from 'path'
-import { v4 as uuid } from 'uuid'
 
 import { moveS3Object } from '~/src/server/scan/move-s3-object'
 import { DeleteSqsMessage } from '~/src/server/scan/delete-sqs-message'
 import { config } from '~/src/config'
 import { createLogger } from '~/src/server/common/helpers/logging/logger'
 import { triggerCallback } from '~/src/server/scan/trigger-callback'
-import { buildS3client } from '~/src/server/common/helpers/s3-client'
 import { UploadStatus, canBeMoved } from '~/src/server/common/upload-status'
+import {
+  storeUploadDetails,
+  findUploadDetails
+} from '~/src/server/common/helpers/upload-details'
 
 const logger = createLogger()
 const quarantineBucket = config.get('quarantineBucket')
 const scanResultQueue = config.get('sqsScanResults')
 
 async function handleScanResult(server, payload, receiptHandle) {
-  const uploadId = findUploadUuid(payload.key)
+  const uploadId = findUploadId(payload.key)
 
-  const init = JSON.parse(await server.redis.get(uploadId))
+  const init = await findUploadDetails(server.redis, uploadId)
   if (init == null) {
     logger.info(
       `No record of ID in ${payload.key} found in Redis, ignoring scan result. May be expired.`
@@ -27,41 +29,56 @@ async function handleScanResult(server, payload, receiptHandle) {
   const destinationKey = `${init.destinationPath}/${payload.key}`
   const destination = `${init.destinationBucket}/${destinationKey}`
 
+  if (!init.uploadStatus && init.uploadStatus === UploadStatus.Quarantined) {
+    const scanResult = {
+      safe: payload.safe,
+      error: payload.error
+    }
+    if (payload.safe) {
+      scanResult.fileUrl = destination
+    }
+    init.scanResult = scanResult
+    init.uploadStatus = UploadStatus.Scanned
+    init.scanned = new Date()
+    await storeUploadDetails(server.redis, uploadId, init)
+  }
+
   if (canBeMoved(payload.safe, init.uploadStatus)) {
     // assume this will throw exception if it fails
     const delivered = await moveS3Object(
-      buildS3client(),
+      server.s3,
       quarantineBucket,
       payload.key,
       init.destinationBucket,
       destinationKey
     )
     if (delivered) {
-      init.uploadStatus = UploadStatus.Moved
-      await server.redis.set(payload.key, JSON.stringify(init))
+      init.uploadStatus = UploadStatus.Delivered
+      init.delivered = new Date()
+      await storeUploadDetails(server.redis, uploadId, init)
+      logger.info(
+        `File from ${quarantineBucket}/${payload.key} was delivered to ${destination}`
+      )
     } else {
       logger.error(
         `File from ${quarantineBucket}/${payload.key} could not be delivered to ${destination}`
       )
-      // if we fail to deliver, do we really want to delete the message?
-      // maybe a callback and message on the DLQ
       return
     }
+  } else {
+    logger.info(
+      `File from ${quarantineBucket}/${payload.key} should not be delivered to ${destination}`
+    )
   }
+  const callbackResponse = await triggerCallback(
+    init.scanResultCallback,
+    init.scanResult
+  )
 
-  const scanResult = {
-    safe: payload.safe,
-    error: payload.error
-  }
-  if (payload.safe) {
-    scanResult.fileUrl = destination
-  }
-
-  const callbackOk = await triggerCallback(init.scanResultCallback, scanResult)
-
-  if (callbackOk) {
-    init.uploadStatus = UploadStatus.Calledback
-    await server.redis.set(payload.key, JSON.stringify(init))
+  if (callbackResponse) {
+    init.uploadStatus = UploadStatus.Acknowledged
+    init.acknowledged = new Date()
+    await storeUploadDetails(server.redis, uploadId, init)
     await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)
   } else {
     logger.warn(`Callback to ${init.scanResultCallback} failed, will retry...`)
@@ -72,13 +89,6 @@ function findUploadId(key) {
   const id = path.dirname(key)
   if (!id) {
     return key
-  }
-}
-
-function findUploadUuid(key) {
-  const id = findUploadId(key)
-  if (!uuid.validate(id)) {
-    logger.warn(`Id is not uuid ${key}.`)
   }
   return id
 }

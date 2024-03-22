@@ -4,7 +4,11 @@ import {
   uploadPathValidation,
   uploadValidation
 } from '~/src/server/upload/helpers/upload-validation'
-import { UploadStatus } from '~/src/server/common/upload-status'
+import { UploadStatus, canBeUploaded } from '~/src/server/common/upload-status'
+import {
+  storeUploadDetails,
+  findUploadDetails
+} from '~/src/server/common/helpers/upload-details'
 
 const quarantineBucket = config.get('quarantineBucket')
 
@@ -29,7 +33,7 @@ const uploadController = {
       return h.response('Failed to upload. No id').code(404)
     }
 
-    const init = JSON.parse(await request.redis.get(id))
+    const init = await findUploadDetails(request.redis, id)
     if (init === null) {
       request.logger.info('Failed to upload, no init data')
       // TODO: Show user-friendly error page
@@ -37,12 +41,11 @@ const uploadController = {
     }
 
     // Upload link has already been used
-    if (init.uploadStatus || init.uploadStatus === UploadStatus.Initialised) {
+    if (!canBeUploaded(init?.uploadStatus)) {
       // TODO: how do we communicate this failure reason?
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`
       )
-      await request.redis.set(id, JSON.stringify(init)) // refresh the TTL ?
       return h.redirect(init.failureRedirect)
     }
 
@@ -61,7 +64,7 @@ const uploadController = {
             const fileKey = `${id}/${file.hapi.filename}`
 
             // TODO: check result of upload and redirect on error
-            await uploadStream(quarantineBucket, fileKey, file, {
+            await uploadStream(request.s3, quarantineBucket, fileKey, file, {
               callback: init.scanResultCallback,
               destination: init.destinationBucket
             })
@@ -80,9 +83,9 @@ const uploadController = {
       )
 
       // update the record in redis
-      init.done = true
+      init.uploadStatus = UploadStatus.Quarantined
       init.quarentined = new Date()
-      await request.redis.set(id, JSON.stringify(init))
+      await storeUploadDetails(request.redis, id, init)
 
       // TODO: check all the files sizes match the size set in init
       return h.redirect(init.successRedirect)

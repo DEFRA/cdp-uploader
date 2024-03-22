@@ -57,7 +57,10 @@ async function createServer() {
   server.ext('onPreResponse', catchAll)
 
   server.decorate('server', 'sqs', buildSqsClient())
-  server.decorate('server', 's3', buildS3client())
+
+  const s3Client = buildS3client()
+  server.decorate('request', 's3', s3Client)
+  server.decorate('server', 's3', s3Client)
 
   const scanResultListener = buildScanResultListener(server)
   server.decorate('server', 'sqsListener', scanResultListener)

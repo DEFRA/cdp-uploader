@@ -2,15 +2,14 @@ import { Upload } from '@aws-sdk/lib-storage'
 
 import stream from 'stream'
 
-import { s3client } from '~/src/server/common/helpers/s3-client'
 import { createLogger } from '~/src/server/common/helpers/logging/logger'
 
 const logger = createLogger()
 
-async function uploadStream(Bucket, Key, fileStream, metadata) {
+async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
   const passThrough = new stream.PassThrough()
   const upload = new Upload({
-    client: s3client,
+    client: s3Client,
     params: {
       Bucket,
       Key,
