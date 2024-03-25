@@ -29,7 +29,7 @@ async function handleScanResult(server, payload, receiptHandle) {
   const destinationKey = `${init.destinationPath}/${payload.key}`
   const destination = `${init.destinationBucket}/${destinationKey}`
 
-  if (!init.uploadStatus && init.uploadStatus === uploadStatus.quarantined) {
+  if (!init.uploadStatus || init.uploadStatus === uploadStatus.quarantined) {
     const scanResult = {
       safe: payload.safe,
       error: payload.error
