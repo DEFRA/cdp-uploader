@@ -12,6 +12,9 @@ async function findUploadDetails(redis, id) {
 
 async function updateUploadStatus(redis, id, status) {
   const details = findUploadDetails(id)
+  if (!details) {
+    throw new Error(`No details found for upload ID ${id}`)
+  }
   details.uploadStatus = status
   storeUploadDetails(details)
 }
