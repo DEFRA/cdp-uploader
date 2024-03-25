@@ -4,7 +4,10 @@ import {
   uploadPathValidation,
   uploadValidation
 } from '~/src/server/upload/helpers/upload-validation'
-import { uploadStatus, canBeUploaded } from '~/src/server/common/upload-status'
+import {
+  uploadStatus,
+  canBeQuarantined
+} from '~/src/server/common/upload-status'
 import {
   storeUploadDetails,
   findUploadDetails
@@ -41,7 +44,7 @@ const uploadController = {
     }
 
     // Upload link has already been used
-    if (!canBeUploaded(init?.uploadStatus)) {
+    if (!canBeQuarantined(init?.uploadStatus)) {
       // TODO: how do we communicate this failure reason?
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`

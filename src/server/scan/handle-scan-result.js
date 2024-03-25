@@ -5,7 +5,12 @@ import { DeleteSqsMessage } from '~/src/server/scan/delete-sqs-message'
 import { config } from '~/src/config'
 import { createLogger } from '~/src/server/common/helpers/logging/logger'
 import { triggerCallback } from '~/src/server/scan/trigger-callback'
-import { uploadStatus, canBeMoved } from '~/src/server/common/upload-status'
+import {
+  uploadStatus,
+  canBeScanned,
+  canBeDelivered,
+  canBeAcknowledged
+} from '~/src/server/common/upload-status'
 import {
   storeUploadDetails,
   findUploadDetails
@@ -29,7 +34,7 @@ async function handleScanResult(server, payload, receiptHandle) {
   const destinationKey = `${init.destinationPath}/${payload.key}`
   const destination = `${init.destinationBucket}/${destinationKey}`
 
-  if (!init.uploadStatus || init.uploadStatus === uploadStatus.quarantined) {
+  if (canBeScanned(init.uploadStatus)) {
     const scanResult = {
       safe: payload.safe,
       error: payload.error
@@ -43,7 +48,7 @@ async function handleScanResult(server, payload, receiptHandle) {
     await storeUploadDetails(server.redis, uploadId, init)
   }
 
-  if (canBeMoved(payload.safe, init.uploadStatus)) {
+  if (canBeDelivered(payload.safe, init.uploadStatus)) {
     // assume this will throw exception if it fails
     const delivered = await moveS3Object(
       server.s3,
@@ -69,6 +74,10 @@ async function handleScanResult(server, payload, receiptHandle) {
     logger.info(
       `File from ${quarantineBucket}/${payload.key} should not be delivered to ${destination}`
     )
+  }
+
+  if (!canBeAcknowledged(payload.safe, init.uploadStatus)) {
+    return
   }
   const callbackResponse = await triggerCallback(
     init.scanResultCallback,

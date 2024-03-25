@@ -6,11 +6,15 @@ const uploadStatus = Object.freeze({
   acknowledged: Symbol('acknowledged')
 })
 
-function canBeUploaded(status) {
+function canBeQuarantined(status) {
   return Boolean(!status || status === uploadStatus.initiated)
 }
 
-function canBeMoved(safe, status) {
+function canBeScanned(status) {
+  return Boolean(!status || status === uploadStatus.quarantined)
+}
+
+function canBeDelivered(safe, status) {
   return Boolean(
     safe &&
       status &&
@@ -18,4 +22,17 @@ function canBeMoved(safe, status) {
   )
 }
 
-export { uploadStatus, canBeUploaded, canBeMoved }
+function canBeAcknowledged(safe, status) {
+  return Boolean(
+    (!safe && status && status === uploadStatus.scanned) ||
+      (status && status === uploadStatus.delivered)
+  )
+}
+
+export {
+  uploadStatus,
+  canBeQuarantined,
+  canBeScanned,
+  canBeDelivered,
+  canBeAcknowledged
+}
