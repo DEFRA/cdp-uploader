@@ -49,7 +49,7 @@ const uploadController = {
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`
       )
-     // return h.redirect(init.failureRedirect)
+      return h.redirect(init.failureRedirect)
     }
 
     init.fields = {}
@@ -67,13 +67,20 @@ const uploadController = {
             const fileKey = `${id}/${file.hapi.filename}`
 
             // TODO: check result of upload and redirect on error
-            await uploadStream(request.s3, quarantineBucket, fileKey, file, {
-              callback: init.scanResultCallback,
-              destination: init.destinationBucket
-            })
+            const uploadResults = await uploadStream(
+              request.s3,
+              quarantineBucket,
+              fileKey,
+              file,
+              {
+                callback: init.scanResultCallback,
+                destination: init.destinationBucket
+              }
+            )
             init.fields[f] = {
               fileName: file.hapi?.filename,
-              contentType: file.hapi?.headers['content-type'] ?? ''
+              contentType: file.hapi?.headers['content-type'] ?? '',
+              actualContentType: uploadResults.mimeType
             }
           } else {
             // save non-file fields

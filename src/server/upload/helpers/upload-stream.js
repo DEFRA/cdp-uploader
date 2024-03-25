@@ -9,7 +9,6 @@ const logger = createLogger()
 
 async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
   const passThrough = new stream.PassThrough()
-  const pass2 = new stream.PassThrough()
 
   const upload = new Upload({
     client: s3Client,
@@ -33,11 +32,13 @@ async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
     logger.debug(progress)
   })
 
-  fileStream.pipe(passThrough).pipe(pass2)
+  const fileTypeStream = await FileType.stream(fileStream.pipe(passThrough))
+  const uploadResult = await upload.done()
 
-  console.log(await FileType.fromStream(pass2))
-
-  return await upload.done()
+  return {
+    uploadResult,
+    mimeType: fileTypeStream.fileType // if the type isn't detectable (by looking at bytes) its null
+  }
 }
 
 export { uploadStream }
