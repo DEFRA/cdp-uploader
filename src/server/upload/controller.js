@@ -49,7 +49,7 @@ const uploadController = {
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`
       )
-      return h.redirect(init.failureRedirect)
+     // return h.redirect(init.failureRedirect)
     }
 
     init.fields = {}
