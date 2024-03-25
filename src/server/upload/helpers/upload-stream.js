@@ -33,6 +33,7 @@ async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
   })
 
   const fileTypeStream = await FileType.stream(fileStream.pipe(passThrough))
+  // TODO: if we want to prevent certain mime types we should do the check here and call upload.abort()
   const uploadResult = await upload.done()
 
   return {
