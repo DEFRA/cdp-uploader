@@ -84,7 +84,7 @@ const uploadController = {
 
       // update the record in redis
       init.uploadStatus = UploadStatus.Quarantined
-      init.quarentined = new Date()
+      init.quarantined = new Date()
       await storeUploadDetails(request.redis, id, init)
 
       // TODO: check all the files sizes match the size set in init
