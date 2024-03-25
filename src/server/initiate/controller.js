@@ -19,7 +19,7 @@ const initiateController = {
     const initiateRequest = request.payload
     initiateRequest.uploadStatus = uploadStatus.initiated
     initiateRequest.initiated = new Date()
-    await request.redis.set(uuid, JSON.stringify(initiateRequest))
+    await request.redis.client.set(uuid, JSON.stringify(initiateRequest))
 
     request.logger.info({ initiateRequest }, `request ${uuid}`)
 

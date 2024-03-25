@@ -11,10 +11,6 @@ import {
   canBeDelivered,
   canBeAcknowledged
 } from '~/src/server/common/helpers/upload-status'
-import {
-  storeUploadDetails,
-  findUploadDetails
-} from '~/src/server/common/helpers/upload-details-redis'
 
 const logger = createLogger()
 const quarantineBucket = config.get('quarantineBucket')
@@ -23,7 +19,7 @@ const scanResultQueue = config.get('sqsScanResults')
 async function handleScanResult(server, payload, receiptHandle) {
   const uploadId = findUploadId(payload.key)
 
-  const init = await findUploadDetails(server.redis, uploadId)
+  const init = await server.redis.findUploadDetails(uploadId)
   if (init == null) {
     logger.info(
       `No record of ID in ${payload.key} found in Redis, ignoring scan result. May be expired.`
@@ -45,7 +41,7 @@ async function handleScanResult(server, payload, receiptHandle) {
     init.scanResult = scanResult
     init.uploadStatus = uploadStatus.scanned
     init.scanned = new Date()
-    await storeUploadDetails(server.redis, uploadId, init)
+    await server.redis.storeUploadDetails(uploadId, init)
   }
 
   if (canBeDelivered(payload.safe, init.uploadStatus)) {
@@ -60,7 +56,7 @@ async function handleScanResult(server, payload, receiptHandle) {
     if (delivered) {
       init.uploadStatus = uploadStatus.delivered
       init.delivered = new Date()
-      await storeUploadDetails(server.redis, uploadId, init)
+      await server.redis.storeUploadDetails(uploadId, init)
       logger.info(
         `File from ${quarantineBucket}/${payload.key} was delivered to ${destination}`
       )
@@ -87,7 +83,7 @@ async function handleScanResult(server, payload, receiptHandle) {
   if (callbackResponse) {
     init.uploadStatus = uploadStatus.acknowledged
     init.acknowledged = new Date()
-    await storeUploadDetails(server.redis, uploadId, init)
+    await server.redis.storeUploadDetails(uploadId, init)
     await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)
   } else {
     logger.warn(`Callback to ${init.scanResultCallback} failed, will retry...`)

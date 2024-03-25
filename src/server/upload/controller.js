@@ -36,9 +36,10 @@ const uploadController = {
       return h.response('Failed to upload. No id').code(404)
     }
 
-    const init = await findUploadDetails(request.redis, id)
-    if (init === null) {
-      request.logger.info('Failed to upload, no init data')
+    const uploadDetails = await request.redis.findUploadDetails(id)
+
+    if (uploadDetails === null) {
+      request.logger.info('Failed to upload, no uploadDetails data')
       // TODO: Show user-friendly error page
       return h.response('Failed to upload, no init data').code(404)
     }

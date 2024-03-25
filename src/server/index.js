@@ -11,6 +11,7 @@ import { failAction } from '~/src/server/common/helpers/fail-action'
 import { buildSqsClient } from '~/src/server/common/helpers/sqs-client'
 import { buildS3client } from '~/src/server/common/helpers/s3-client'
 import { buildScanResultListener } from '~/src/server/scan/build-sqs-listener'
+import { RedisHelper } from '~/src/server/common/helpers/redis-helper'
 
 const isProduction = config.get('isProduction')
 
@@ -51,9 +52,11 @@ async function createServer() {
 
   await server.register(router)
 
-  const redisClient = buildRedisClient()
-  server.decorate('request', 'redis', redisClient)
-  server.decorate('server', 'redis', redisClient)
+  const redisHelper = new RedisHelper(buildRedisClient())
+
+  server.decorate('request', 'redis', redisHelper)
+  server.decorate('server', 'redis', redisHelper)
+
   server.ext('onPreResponse', catchAll)
 
   server.decorate('server', 'sqs', buildSqsClient())

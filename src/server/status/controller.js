@@ -5,7 +5,7 @@ const statusController = {
       return h.response({ message: 'Not Found' }).code(404)
     }
 
-    const result = await request.redis.get(id)
+    const result = await request.redis.client.get(id)
 
     if (result) {
       return h.response(JSON.parse(result)).code(200)
