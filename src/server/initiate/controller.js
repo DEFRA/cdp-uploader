@@ -1,6 +1,7 @@
 import * as crypto from 'node:crypto'
 
 import { initiateValidation } from '~/src/server/initiate/helpers/initiate-validation'
+import { uploadStatus } from '~/src/server/common/upload-status'
 
 const initiateController = {
   options: {
@@ -16,7 +17,8 @@ const initiateController = {
   handler: async (request, h) => {
     const uuid = crypto.randomUUID()
     const initiateRequest = request.payload
-    initiateRequest.created = new Date()
+    initiateRequest.uploadStatus = uploadStatus.initiated
+    initiateRequest.initiated = new Date()
     await request.redis.set(uuid, JSON.stringify(initiateRequest))
 
     request.logger.info({ initiateRequest }, `request ${uuid}`)

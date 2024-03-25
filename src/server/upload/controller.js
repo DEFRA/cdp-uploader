@@ -4,11 +4,11 @@ import {
   uploadPathValidation,
   uploadValidation
 } from '~/src/server/upload/helpers/upload-validation'
-import { UploadStatus, canBeUploaded } from '~/src/server/common/upload-status'
+import { uploadStatus, canBeUploaded } from '~/src/server/common/upload-status'
 import {
   storeUploadDetails,
   findUploadDetails
-} from '~/src/server/common/helpers/upload-details'
+} from '~/src/server/common/helpers/upload-details-redis'
 
 const quarantineBucket = config.get('quarantineBucket')
 
@@ -83,7 +83,7 @@ const uploadController = {
       )
 
       // update the record in redis
-      init.uploadStatus = UploadStatus.Quarantined
+      init.uploadStatus = uploadStatus.quarantined
       init.quarantined = new Date()
       await storeUploadDetails(request.redis, id, init)
 

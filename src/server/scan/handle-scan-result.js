@@ -5,11 +5,11 @@ import { DeleteSqsMessage } from '~/src/server/scan/delete-sqs-message'
 import { config } from '~/src/config'
 import { createLogger } from '~/src/server/common/helpers/logging/logger'
 import { triggerCallback } from '~/src/server/scan/trigger-callback'
-import { UploadStatus, canBeMoved } from '~/src/server/common/upload-status'
+import { uploadStatus, canBeMoved } from '~/src/server/common/upload-status'
 import {
   storeUploadDetails,
   findUploadDetails
-} from '~/src/server/common/helpers/upload-details'
+} from '~/src/server/common/helpers/upload-details-redis'
 
 const logger = createLogger()
 const quarantineBucket = config.get('quarantineBucket')
@@ -29,7 +29,7 @@ async function handleScanResult(server, payload, receiptHandle) {
   const destinationKey = `${init.destinationPath}/${payload.key}`
   const destination = `${init.destinationBucket}/${destinationKey}`
 
-  if (!init.uploadStatus && init.uploadStatus === UploadStatus.Quarantined) {
+  if (!init.uploadStatus && init.uploadStatus === uploadStatus.quarantined) {
     const scanResult = {
       safe: payload.safe,
       error: payload.error
@@ -38,7 +38,7 @@ async function handleScanResult(server, payload, receiptHandle) {
       scanResult.fileUrl = destination
     }
     init.scanResult = scanResult
-    init.uploadStatus = UploadStatus.Scanned
+    init.uploadStatus = uploadStatus.scanned
     init.scanned = new Date()
     await storeUploadDetails(server.redis, uploadId, init)
   }
@@ -53,7 +53,7 @@ async function handleScanResult(server, payload, receiptHandle) {
       destinationKey
     )
     if (delivered) {
-      init.uploadStatus = UploadStatus.Delivered
+      init.uploadStatus = uploadStatus.delivered
       init.delivered = new Date()
       await storeUploadDetails(server.redis, uploadId, init)
       logger.info(
@@ -76,7 +76,7 @@ async function handleScanResult(server, payload, receiptHandle) {
   )
 
   if (callbackResponse) {
-    init.uploadStatus = UploadStatus.Acknowledged
+    init.uploadStatus = uploadStatus.acknowledged
     init.acknowledged = new Date()
     await storeUploadDetails(server.redis, uploadId, init)
     await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)
