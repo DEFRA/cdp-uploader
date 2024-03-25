@@ -16,7 +16,9 @@ const logger = createLogger()
 const quarantineBucket = config.get('quarantineBucket')
 const scanResultQueue = config.get('sqsScanResults')
 
-async function handleScanResult(server, payload, receiptHandle) {
+async function handleScanResult(server, message) {
+  const receiptHandle = message.ReceiptHandle
+  const payload = JSON.parse(message.Body)
   const uploadId = findUploadId(payload.key)
 
   const init = await server.redis.findUploadDetails(uploadId)
