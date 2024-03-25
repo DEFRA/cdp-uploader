@@ -27,8 +27,10 @@ async function handleScanResult(server, payload, receiptHandle) {
     return
   }
 
-  const destinationKey = `${init.destinationPath}/${payload.key}`
-  const destination = `${init.destinationBucket}/${destinationKey}`
+  const destinationKey = [init.destinationPath, payload.key]
+    .filter(Boolean)
+    .join('/')
+  const destination = [init.destinationBucket, destinationKey].join('/')
 
   if (canBeScanned(init.uploadStatus)) {
     const scanResult = {
