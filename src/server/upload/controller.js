@@ -1,25 +1,22 @@
+import Boom from '@hapi/boom'
+
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
 import {
   uploadPathValidation,
-  uploadValidation
+  validateFilePayload
 } from '~/src/server/upload/helpers/upload-validation'
 import {
   uploadStatus,
   canBeQuarantined
 } from '~/src/server/common/helpers/upload-status'
-import {
-  storeUploadDetails,
-  findUploadDetails
-} from '~/src/server/common/helpers/upload-details-redis'
 
 const quarantineBucket = config.get('quarantineBucket')
 
 const uploadController = {
   options: {
     validate: {
-      params: uploadPathValidation,
-      payload: uploadValidation
+      params: uploadPathValidation
     },
     payload: {
       allow: 'multipart/form-data',
@@ -45,6 +42,18 @@ const uploadController = {
         Boom.notFound('Failed to upload, no uploadDetails data')
       )
     }
+
+    const validationResult = validateFilePayload.validate(
+      request.payload.file.hapi
+    )
+
+    if (validationResult?.error) {
+      await request.redis.storeError(id, validationResult.error.message)
+      return h.redirect(uploadDetails.failureRedirect)
+    }
+
+    if (!validationResult?.error) {
+      await request.redis.clearError(id)
     }
 
     // Upload link has already been used
