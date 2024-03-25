@@ -33,7 +33,7 @@ const uploadController = {
     const id = request.params.id
     if (!id) {
       request.logger.info('Failed to upload, no id')
-      return h.response('Failed to upload. No id').code(404)
+      return h.response(Boom.notFound('Failed to upload. No id'))
     }
 
     const uploadDetails = await request.redis.findUploadDetails(id)
@@ -41,7 +41,10 @@ const uploadController = {
     if (uploadDetails === null) {
       request.logger.info('Failed to upload, no uploadDetails data')
       // TODO: Show user-friendly error page
-      return h.response('Failed to upload, no init data').code(404)
+      return h.response(
+        Boom.notFound('Failed to upload, no uploadDetails data')
+      )
+    }
     }
 
     // Upload link has already been used
