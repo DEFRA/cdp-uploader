@@ -10,7 +10,7 @@ import {
   canBeScanned,
   canBeDelivered,
   canBeAcknowledged
-} from '~/src/server/common/upload-status'
+} from '~/src/server/common/helpers/upload-status'
 import {
   storeUploadDetails,
   findUploadDetails

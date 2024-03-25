@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto'
 
 import { initiateValidation } from '~/src/server/initiate/helpers/initiate-validation'
-import { uploadStatus } from '~/src/server/common/upload-status'
+import { uploadStatus } from '~/src/server/common/helpers/upload-status'
 
 const initiateController = {
   options: {
