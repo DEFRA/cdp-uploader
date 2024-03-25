@@ -1,63 +1,105 @@
+import path from 'path'
+
 import { moveS3Object } from '~/src/server/scan/move-s3-object'
 import { DeleteSqsMessage } from '~/src/server/scan/delete-sqs-message'
 import { config } from '~/src/config'
 import { createLogger } from '~/src/server/common/helpers/logging/logger'
 import { triggerCallback } from '~/src/server/scan/trigger-callback'
-import { buildS3client } from '~/src/server/common/helpers/s3-client'
+import {
+  uploadStatus,
+  canBeScanned,
+  canBeDelivered,
+  canBeAcknowledged
+} from '~/src/server/common/helpers/upload-status'
+import {
+  storeUploadDetails,
+  findUploadDetails
+} from '~/src/server/common/helpers/upload-details-redis'
 
 const logger = createLogger()
 const quarantineBucket = config.get('quarantineBucket')
 const scanResultQueue = config.get('sqsScanResults')
 
 async function handleScanResult(server, payload, receiptHandle) {
-  const init = JSON.parse(await server.redis.get(payload.key))
+  const uploadId = findUploadId(payload.key)
+
+  const init = await findUploadDetails(server.redis, uploadId)
   if (init == null) {
     logger.info(
-      `No record of ${payload.key} found in Redis, ignoring scan result. May be expired.`
+      `No record of ID in ${payload.key} found in Redis, ignoring scan result. May be expired.`
     )
     return
   }
 
-  const destinationKey = `${init.destinationPath}/${payload.key}` // do we want to strip id from the filename?
+  const destinationKey = `${init.destinationPath}/${payload.key}`
   const destination = `${init.destinationBucket}/${destinationKey}`
 
-  if (payload.safe) {
+  if (canBeScanned(init.uploadStatus)) {
+    const scanResult = {
+      safe: payload.safe,
+      error: payload.error
+    }
+    if (payload.safe) {
+      scanResult.fileUrl = destination
+    }
+    init.scanResult = scanResult
+    init.uploadStatus = uploadStatus.scanned
+    init.scanned = new Date()
+    await storeUploadDetails(server.redis, uploadId, init)
+  }
+
+  if (canBeDelivered(payload.safe, init.uploadStatus)) {
     // assume this will throw exception if it fails
-    init.delivered = await moveS3Object(
-      buildS3client(),
+    const delivered = await moveS3Object(
+      server.s3,
       quarantineBucket,
       payload.key,
       init.destinationBucket,
       destinationKey
     )
-    await server.redis.set(payload.key, JSON.stringify(init))
-
-    if (!init.delivered) {
+    if (delivered) {
+      init.uploadStatus = uploadStatus.delivered
+      init.delivered = new Date()
+      await storeUploadDetails(server.redis, uploadId, init)
+      logger.info(
+        `File from ${quarantineBucket}/${payload.key} was delivered to ${destination}`
+      )
+    } else {
       logger.error(
         `File from ${quarantineBucket}/${payload.key} could not be delivered to ${destination}`
       )
-      // if we fail to deliver, do we really want to delete the message?
-      // maybe a callback and message on the DLQ
-      await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)
       return
     }
+  } else {
+    logger.info(
+      `File from ${quarantineBucket}/${payload.key} should not be delivered to ${destination}`
+    )
   }
 
-  const scanResult = {
-    safe: payload.safe,
-    error: payload.error
+  if (!canBeAcknowledged(payload.safe, init.uploadStatus)) {
+    return
   }
-  if (payload.safe) {
-    scanResult.fileUrl = destination
-  }
+  const callbackResponse = await triggerCallback(
+    init.scanResultCallback,
+    init.scanResult
+  )
 
-  const callbackOk = await triggerCallback(init.scanResultCallback, scanResult)
-
-  if (callbackOk) {
+  if (callbackResponse) {
+    init.uploadStatus = uploadStatus.acknowledged
+    init.acknowledged = new Date()
+    await storeUploadDetails(server.redis, uploadId, init)
     await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)
   } else {
     logger.warn(`Callback to ${init.scanResultCallback} failed, will retry...`)
   }
+}
+
+function findUploadId(key) {
+  const id = path.dirname(key)
+  if (!id) {
+    return key
+  }
+  return id
 }
 
 export { handleScanResult }
