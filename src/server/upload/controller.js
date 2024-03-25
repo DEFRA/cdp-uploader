@@ -57,15 +57,15 @@ const uploadController = {
     }
 
     // Upload link has already been used
-    if (!canBeQuarantined(init?.uploadStatus)) {
+    if (!canBeQuarantined(uploadDetails?.uploadStatus)) {
       // TODO: how do we communicate this failure reason?
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`
       )
-      return h.redirect(init.failureRedirect)
+      return h.redirect(uploadDetails.failureRedirect)
     }
 
-    init.fields = {}
+    uploadDetails.fields = {}
 
     try {
       const files = request.payload
@@ -81,16 +81,16 @@ const uploadController = {
 
             // TODO: check result of upload and redirect on error
             await uploadStream(request.s3, quarantineBucket, fileKey, file, {
-              callback: init.scanResultCallback,
-              destination: init.destinationBucket
+              callback: uploadDetails.scanResultCallback,
+              destination: uploadDetails.destinationBucket
             })
-            init.fields[f] = {
+            uploadDetails.fields[f] = {
               fileName: file.hapi?.filename,
               contentType: file.hapi?.headers['content-type'] ?? ''
             }
           } else {
             // save non-file fields
-            init.fields[f] = files[f]
+            uploadDetails.fields[f] = files[f]
           }
         }
       }
@@ -99,15 +99,15 @@ const uploadController = {
       )
 
       // update the record in redis
-      init.uploadStatus = uploadStatus.quarantined
-      init.quarantined = new Date()
-      await storeUploadDetails(request.redis, id, init)
+      uploadDetails.uploadStatus = uploadStatus.quarantined
+      uploadDetails.quarantined = new Date()
+      await request.redis.storeUploadDetails(id, uploadDetails)
 
-      // TODO: check all the files sizes match the size set in init
-      return h.redirect(init.successRedirect)
+      // TODO: check all the files sizes match the size set in uploadDetails
+      return h.redirect(uploadDetails.successRedirect)
     } catch (e) {
       request.logger.error(e)
-      return h.redirect(init.failureRedirect)
+      return h.redirect(uploadDetails.failureRedirect)
     }
   }
 }
