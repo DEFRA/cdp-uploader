@@ -3,7 +3,11 @@ async function storeUploadDetails(redis, id, details) {
 }
 
 async function findUploadDetails(redis, id) {
-  return JSON.parse(await redis.get(id))
+  const details = await redis.get(id)
+  if (!details) {
+    return null
+  }
+  return JSON.parse(details)
 }
 
 async function updateUploadStatus(redis, id, status) {

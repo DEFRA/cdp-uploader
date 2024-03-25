@@ -7,14 +7,14 @@ const uploadStatus = Object.freeze({
 })
 
 function canBeUploaded(status) {
-  return !status || status === uploadStatus.initiated
+  return Boolean(!status || status === uploadStatus.initiated)
 }
 
 function canBeMoved(safe, status) {
-  return (
+  return Boolean(
     safe &&
-    status &&
-    (status === uploadStatus.quarantined || status === uploadStatus.scanned)
+      status &&
+      (status === uploadStatus.quarantined || status === uploadStatus.scanned)
   )
 }
 
