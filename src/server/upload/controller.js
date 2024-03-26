@@ -2,10 +2,7 @@ import Boom from '@hapi/boom'
 
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
-import {
-  uploadPathValidation,
-  validateFilePayload
-} from '~/src/server/upload/helpers/upload-validation'
+import { uploadPathValidation } from '~/src/server/upload/helpers/upload-validation'
 import {
   uploadStatus,
   canBeQuarantined
@@ -17,7 +14,6 @@ const uploadController = {
   options: {
     validate: {
       params: uploadPathValidation
-      // payload: uploadPayloadValidation // TODO
     },
     payload: {
       allow: 'multipart/form-data',
@@ -42,19 +38,6 @@ const uploadController = {
       return h.response(
         Boom.notFound('Failed to upload, no uploadDetails data')
       )
-    }
-
-    const validationResult = validateFilePayload.validate(
-      request.payload.file.hapi
-    )
-
-    if (validationResult?.error) {
-      await request.redis.storeError(id, validationResult.error.message)
-      return h.redirect(uploadDetails.failureRedirect)
-    }
-
-    if (!validationResult?.error) {
-      await request.redis.clearError(id)
     }
 
     // Upload link has already been used
@@ -99,12 +82,9 @@ const uploadController = {
         `Uploaded to ${JSON.stringify(result.data?.Location)}`
       )
 
-      // TODO there are two states here - the local uploadDetails variable and redis state. Feels like there should
-      //  just be one state
       // update the record in redis
       uploadDetails.uploadStatus = uploadStatus.quarantined
       uploadDetails.quarantined = new Date()
-      delete uploadDetails.error
 
       await request.redis.storeUploadDetails(id, uploadDetails)
 
