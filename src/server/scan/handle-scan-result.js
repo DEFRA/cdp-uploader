@@ -22,7 +22,7 @@ async function handleScanResult(server, message) {
   const uploadId = findUploadId(payload.key)
 
   const uploadDetails = await server.redis.findUploadDetails(uploadId)
-  if (uploadDetails == null) {
+  if (uploadDetails === null) {
     logger.info(
       `No record of ID in ${payload.key} found in Redis, ignoring scan result. May be expired.`
     )
