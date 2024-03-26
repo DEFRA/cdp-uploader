@@ -49,7 +49,7 @@ async function copyObject(s3Client, sourceObject, bucket, key) {
 async function deleteObject(s3Client, bucket, key) {
   const deleteCommand = new DeleteObjectCommand({
     Bucket: bucket,
-    Key: bucket
+    Key: key
   })
 
   try {
