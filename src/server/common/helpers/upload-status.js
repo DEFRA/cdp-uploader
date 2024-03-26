@@ -8,7 +8,7 @@ const uploadStatus = Object.freeze({
 
 function canBeQuarantined(details) {
   return Boolean(
-    details?.uploadStatus && details.uploadStatus === uploadStatus.initiated
+    !details?.uploadStatus || details.uploadStatus === uploadStatus.initiated
   )
 }
 

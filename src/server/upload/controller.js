@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom'
 import * as crypto from 'node:crypto'
+import { Stream } from 'node:stream'
 
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
@@ -54,53 +55,33 @@ const uploadController = {
     uploadDetails.files = []
 
     try {
-      const payload = request.payload
+      const multipart = request.payload
       const result = {}
 
-      for (const f in payload) {
-        // what is this?
-        if (payload[f]) {
-          const field = payload[f]
-          if (field.hapi?.filename) {
-            const filename = field.hapi.filename
-            const fileId = crypto.randomUUID()
-            request.logger.info(
-              `Uploading ${JSON.stringify(filename)} as ${fileId}`
-            )
-            const fileKey = `${uploadId}/${filename}`
-
-            // TODO: check result of upload and redirect on error
-            await uploadStream(request.s3, quarantineBucket, fileKey, field, {
-              callback: uploadDetails.scanResultCallback,
-              destination: uploadDetails.destinationBucket
-            })
-            uploadDetails.fields[f] = {
-              filename,
-              fileId,
-              contentType: field.hapi?.headers['content-type'] ?? ''
-            }
-            uploadDetails.files.push(fileId)
-            const fileDetails = {
-              uploadId,
-              fileId,
-              filename,
-              uploadStatus: uploadStatus.quarantined,
-              quarantined: new Date()
-            }
-            await request.redis.storeScanDetails(fileId, fileDetails)
-          } else {
-            // save non-file fields
-            uploadDetails.fields[f] = payload[f]
+      for (const part in multipart) {
+        const field = multipart[part]
+        const formElem = Array.isArray(field) ? field : [field]
+        const elemFields = []
+        for (const elem in formElem) {
+          const { fieldData, fileData } = await handleFileOrField(
+            request,
+            uploadId,
+            uploadDetails,
+            formElem[elem]
+          )
+          elemFields[elem] = fieldData
+          if (fileData) {
+            uploadDetails.files.push(fileData.fileId)
           }
         }
+
+        uploadDetails.fields[part] = elemFields
       }
       request.logger.info(
         `Uploaded to ${JSON.stringify(result.data?.Location)}`
       )
 
-      // update the record in redis
       uploadDetails.uploadStatus = uploadStatus.quarantined
-
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
       // TODO: check all the files sizes match the size set in uploadDetails
@@ -110,6 +91,45 @@ const uploadController = {
       return h.redirect(uploadDetails.failureRedirect)
     }
   }
+}
+
+function handleFileOrField(request, uploadId, uploadDetails, fieldData) {
+  return isFile(fieldData)
+    ? handleFile(request, uploadId, uploadDetails, fieldData)
+    : { fieldData }
+}
+
+async function handleFile(request, uploadId, uploadDetails, fieldData) {
+  const filename = fieldData.hapi.filename
+  const fileId = crypto.randomUUID()
+  request.logger.info(`Uploading ${JSON.stringify(filename)} as ${fileId}`)
+  const fileKey = `${uploadId}/${filename}`
+  // TODO: check result of upload and redirect on error
+  await uploadStream(request.s3, quarantineBucket, fileKey, fieldData, {
+    callback: uploadDetails.scanResultCallback,
+    destination: uploadDetails.destinationBucket
+  })
+
+  const fileDetails = {
+    uploadId,
+    fileId,
+    filename,
+    uploadStatus: uploadStatus.quarantined,
+    quarantined: new Date()
+  }
+  await request.redis.storeScanDetails(fileId, fileDetails)
+  return {
+    fieldData: {
+      filename,
+      fileId,
+      contentType: fieldData.hapi?.headers['content-type'] ?? ''
+    },
+    fileData: fileDetails
+  }
+}
+
+function isFile(fieldData) {
+  return fieldData instanceof Stream
 }
 
 export { uploadController }
