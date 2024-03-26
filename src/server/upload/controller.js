@@ -98,9 +98,13 @@ const uploadController = {
         `Uploaded to ${JSON.stringify(result.data?.Location)}`
       )
 
+      // TODO there are two states here - the local uploadDetails variable and redis state. Feels like there should
+      //  just be one state
       // update the record in redis
       uploadDetails.uploadStatus = uploadStatus.quarantined
       uploadDetails.quarantined = new Date()
+      delete uploadDetails.error
+
       await request.redis.storeUploadDetails(id, uploadDetails)
 
       // TODO: check all the files sizes match the size set in uploadDetails
