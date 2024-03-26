@@ -17,6 +17,7 @@ const uploadController = {
   options: {
     validate: {
       params: uploadPathValidation
+      // payload: uploadPayloadValidation // TODO
     },
     payload: {
       allow: 'multipart/form-data',
