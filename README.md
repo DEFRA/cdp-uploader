@@ -2,23 +2,32 @@
 
 Core delivery platform Node.js Frontend Template.
 
-- [Requirements](#requirements)
-  - [Node.js](#nodejs)
-- [Local development](#local-development)
-  - [Setup](#setup)
-  - [Development](#development)
-  - [Aws localstack](#aws-localstack)
-    - [Install and run LocalStack AWS](#install-and-run-localstack-aws)
-    - [Setup local buckets](#setup-local-buckets)
-    - [List local buckets](#list-local-buckets)
-  - [Local JSON API](#local-json-api)
-  - [Production](#production)
-  - [Npm scripts](#npm-scripts)
-- [Docker](#docker)
-  - [Development Image](#development-image)
-  - [Production Image](#production-image)
-- [Licence](#licence)
-  - [About the licence](#about-the-licence)
+- [cdp-uploader](#cdp-uploader)
+  - [Requirements](#requirements)
+    - [Node.js](#nodejs)
+  - [Local development](#local-development)
+    - [Setup](#setup)
+    - [Development](#development)
+    - [AWS CLI](#aws-cli)
+    - [AWS Local](#aws-local)
+      - [AWS local alias](#aws-local-alias)
+    - [LocalStack](#localstack)
+      - [Docker](#docker)
+    - [Localstack CLI](#localstack-cli)
+      - [Setup local S3 buckets](#setup-local-s3-buckets)
+      - [List local buckets](#list-local-buckets)
+      - [View bucket contents](#view-bucket-contents)
+      - [Empty bucket contents](#empty-bucket-contents)
+      - [Setup local queues](#setup-local-queues)
+      - [Purge local queues](#purge-local-queues)
+    - [Local JSON API](#local-json-api)
+    - [Production](#production)
+    - [Npm scripts](#npm-scripts)
+  - [Docker](#docker-1)
+    - [Development image](#development-image)
+    - [Production image](#production-image)
+  - [Licence](#licence)
+    - [About the licence](#about-the-licence)
 
 ## Requirements
 
@@ -139,10 +148,23 @@ http://localhost:4566/cdp-uploader-quarantine/
 http://localhost:4566/my-bucket/
 ```
 
-### Setup local queues
+#### Empty bucket contents
+
+```bash
+awslocal s3 rm s3://cdp-uploader-quarantine --recursive
+awslocal s3 rm s3://my-bucket --recursive
+```
+
+#### Setup local queues
 
 ```bash
 awslocal sqs create-queue --queue-name cdp-uploader-scan-results
+```
+
+#### Purge local queues
+
+```bash
+awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/000000000000/cdp-uploader-scan-results
 ```
 
 ### Local JSON API

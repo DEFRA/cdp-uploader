@@ -1,25 +1,19 @@
+import Boom from '@hapi/boom'
+
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
-import {
-  uploadPathValidation,
-  uploadValidation
-} from '~/src/server/upload/helpers/upload-validation'
+import { uploadPathValidation } from '~/src/server/upload/helpers/upload-validation'
 import {
   uploadStatus,
   canBeQuarantined
 } from '~/src/server/common/helpers/upload-status'
-import {
-  storeUploadDetails,
-  findUploadDetails
-} from '~/src/server/common/helpers/upload-details-redis'
 
 const quarantineBucket = config.get('quarantineBucket')
 
 const uploadController = {
   options: {
     validate: {
-      params: uploadPathValidation,
-      payload: uploadValidation
+      params: uploadPathValidation
     },
     payload: {
       allow: 'multipart/form-data',
@@ -33,26 +27,29 @@ const uploadController = {
     const id = request.params.id
     if (!id) {
       request.logger.info('Failed to upload, no id')
-      return h.response('Failed to upload. No id').code(404)
+      return h.response(Boom.notFound('Failed to upload. No id'))
     }
 
-    const init = await findUploadDetails(request.redis, id)
-    if (init === null) {
-      request.logger.info('Failed to upload, no init data')
+    const uploadDetails = await request.redis.findUploadDetails(id)
+
+    if (uploadDetails === null) {
+      request.logger.info('Failed to upload, no uploadDetails data')
       // TODO: Show user-friendly error page
-      return h.response('Failed to upload, no init data').code(404)
+      return h.response(
+        Boom.notFound('Failed to upload, no uploadDetails data')
+      )
     }
 
     // Upload link has already been used
-    if (!canBeQuarantined(init?.uploadStatus)) {
+    if (!canBeQuarantined(uploadDetails?.uploadStatus)) {
       // TODO: how do we communicate this failure reason?
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`
       )
-      return h.redirect(init.failureRedirect)
+      return h.redirect(uploadDetails.failureRedirect)
     }
 
-    init.fields = {}
+    uploadDetails.fields = {}
 
     try {
       const files = request.payload
@@ -68,16 +65,16 @@ const uploadController = {
 
             // TODO: check result of upload and redirect on error
             await uploadStream(request.s3, quarantineBucket, fileKey, file, {
-              callback: init.scanResultCallback,
-              destination: init.destinationBucket
+              callback: uploadDetails.scanResultCallback,
+              destination: uploadDetails.destinationBucket
             })
-            init.fields[f] = {
+            uploadDetails.fields[f] = {
               fileName: file.hapi?.filename,
               contentType: file.hapi?.headers['content-type'] ?? ''
             }
           } else {
             // save non-file fields
-            init.fields[f] = files[f]
+            uploadDetails.fields[f] = files[f]
           }
         }
       }
@@ -86,15 +83,16 @@ const uploadController = {
       )
 
       // update the record in redis
-      init.uploadStatus = uploadStatus.quarantined
-      init.quarantined = new Date()
-      await storeUploadDetails(request.redis, id, init)
+      uploadDetails.uploadStatus = uploadStatus.quarantined
+      uploadDetails.quarantined = new Date()
 
-      // TODO: check all the files sizes match the size set in init
-      return h.redirect(init.successRedirect)
+      await request.redis.storeUploadDetails(id, uploadDetails)
+
+      // TODO: check all the files sizes match the size set in uploadDetails
+      return h.redirect(uploadDetails.successRedirect)
     } catch (e) {
       request.logger.error(e)
-      return h.redirect(init.failureRedirect)
+      return h.redirect(uploadDetails.failureRedirect)
     }
   }
 }

@@ -11,30 +11,32 @@ import {
   canBeDelivered,
   canBeAcknowledged
 } from '~/src/server/common/helpers/upload-status'
-import {
-  storeUploadDetails,
-  findUploadDetails
-} from '~/src/server/common/helpers/upload-details-redis'
 
 const logger = createLogger()
 const quarantineBucket = config.get('quarantineBucket')
 const scanResultQueue = config.get('sqsScanResults')
 
-async function handleScanResult(server, payload, receiptHandle) {
+async function handleScanResult(server, message) {
+  const receiptHandle = message.ReceiptHandle
+  const payload = JSON.parse(message.Body)
   const uploadId = findUploadId(payload.key)
 
-  const init = await findUploadDetails(server.redis, uploadId)
-  if (init == null) {
+  const uploadDetails = await server.redis.findUploadDetails(uploadId)
+  if (uploadDetails === null) {
     logger.info(
       `No record of ID in ${payload.key} found in Redis, ignoring scan result. May be expired.`
     )
     return
   }
 
-  const destinationKey = `${init.destinationPath}/${payload.key}`
-  const destination = `${init.destinationBucket}/${destinationKey}`
+  const destinationKey = [uploadDetails.destinationPath, payload.key]
+    .filter(Boolean)
+    .join('/')
+  const destination = [uploadDetails.destinationBucket, destinationKey].join(
+    '/'
+  )
 
-  if (canBeScanned(init.uploadStatus)) {
+  if (canBeScanned(uploadDetails.uploadStatus)) {
     const scanResult = {
       safe: payload.safe,
       error: payload.error
@@ -42,25 +44,25 @@ async function handleScanResult(server, payload, receiptHandle) {
     if (payload.safe) {
       scanResult.fileUrl = destination
     }
-    init.scanResult = scanResult
-    init.uploadStatus = uploadStatus.scanned
-    init.scanned = new Date()
-    await storeUploadDetails(server.redis, uploadId, init)
+    uploadDetails.scanResult = scanResult
+    uploadDetails.uploadStatus = uploadStatus.scanned
+    uploadDetails.scanned = new Date()
+    await server.redis.storeUploadDetails(uploadId, uploadDetails)
   }
 
-  if (canBeDelivered(payload.safe, init.uploadStatus)) {
+  if (canBeDelivered(payload.safe, uploadDetails.uploadStatus)) {
     // assume this will throw exception if it fails
     const delivered = await moveS3Object(
       server.s3,
       quarantineBucket,
       payload.key,
-      init.destinationBucket,
+      uploadDetails.destinationBucket,
       destinationKey
     )
     if (delivered) {
-      init.uploadStatus = uploadStatus.delivered
-      init.delivered = new Date()
-      await storeUploadDetails(server.redis, uploadId, init)
+      uploadDetails.uploadStatus = uploadStatus.delivered
+      uploadDetails.delivered = new Date()
+      await server.redis.storeUploadDetails(uploadId, uploadDetails)
       logger.info(
         `File from ${quarantineBucket}/${payload.key} was delivered to ${destination}`
       )
@@ -76,21 +78,23 @@ async function handleScanResult(server, payload, receiptHandle) {
     )
   }
 
-  if (!canBeAcknowledged(payload.safe, init.uploadStatus)) {
+  if (!canBeAcknowledged(payload.safe, uploadDetails.uploadStatus)) {
     return
   }
   const callbackResponse = await triggerCallback(
-    init.scanResultCallback,
-    init.scanResult
+    uploadDetails.scanResultCallback,
+    uploadDetails.scanResult
   )
 
   if (callbackResponse) {
-    init.uploadStatus = uploadStatus.acknowledged
-    init.acknowledged = new Date()
-    await storeUploadDetails(server.redis, uploadId, init)
+    uploadDetails.uploadStatus = uploadStatus.acknowledged
+    uploadDetails.acknowledged = new Date()
+    await server.redis.storeUploadDetails(uploadId, uploadDetails)
     await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)
   } else {
-    logger.warn(`Callback to ${init.scanResultCallback} failed, will retry...`)
+    logger.warn(
+      `Callback to ${uploadDetails.scanResultCallback} failed, will retry...`
+    )
   }
 }
 
