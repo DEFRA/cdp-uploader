@@ -22,6 +22,20 @@ class RedisHelper {
   async storeUploadDetails(id, uploadDetails) {
     return await this.client.set(id, JSON.stringify(uploadDetails))
   }
+
+  async findScanDetails(id) {
+    const scanDetails = await this.client.get(id)
+
+    if (!scanDetails) {
+      return null
+    }
+
+    return JSON.parse(scanDetails)
+  }
+
+  async storeScanDetails(id, scanDetails) {
+    return await this.client.set(id, JSON.stringify(scanDetails))
+  }
 }
 
 export { RedisHelper }

@@ -1,4 +1,5 @@
 import Boom from '@hapi/boom'
+import * as crypto from 'node:crypto'
 
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
@@ -24,13 +25,13 @@ const uploadController = {
     }
   },
   handler: async (request, h) => {
-    const id = request.params.id
-    if (!id) {
+    const uploadId = request.params.id
+    if (!uploadId) {
       request.logger.info('Failed to upload, no id')
       return h.response(Boom.notFound('Failed to upload. No id'))
     }
 
-    const uploadDetails = await request.redis.findUploadDetails(id)
+    const uploadDetails = await request.redis.findUploadDetails(uploadId)
 
     if (uploadDetails === null) {
       request.logger.info('Failed to upload, no uploadDetails data')
@@ -44,12 +45,13 @@ const uploadController = {
     if (!canBeQuarantined(uploadDetails)) {
       // TODO: how do we communicate this failure reason?
       request.logger.info(
-        `upload id ${id} has already been used to upload a file.`
+        `upload id ${uploadId} has already been used to upload a file.`
       )
       return h.redirect(uploadDetails.failureRedirect)
     }
 
     uploadDetails.fields = {}
+    uploadDetails.files = []
 
     try {
       const payload = request.payload
@@ -61,8 +63,11 @@ const uploadController = {
           const field = payload[f]
           if (field.hapi?.filename) {
             const filename = field.hapi.filename
-            request.logger.info(`Uploading ${JSON.stringify(filename)}`)
-            const fileKey = `${id}/${filename}`
+            const fileId = crypto.randomUUID()
+            request.logger.info(
+              `Uploading ${JSON.stringify(filename)} as ${fileId}`
+            )
+            const fileKey = `${uploadId}/${filename}`
 
             // TODO: check result of upload and redirect on error
             await uploadStream(request.s3, quarantineBucket, fileKey, field, {
@@ -70,9 +75,19 @@ const uploadController = {
               destination: uploadDetails.destinationBucket
             })
             uploadDetails.fields[f] = {
-              fileName: filename,
+              filename,
+              fileId,
               contentType: field.hapi?.headers['content-type'] ?? ''
             }
+            uploadDetails.files.push(fileId)
+            const fileDetails = {
+              uploadId,
+              fileId,
+              filename,
+              uploadStatus: uploadStatus.quarantined,
+              quarantined: new Date()
+            }
+            await request.redis.storeScanDetails(fileId, fileDetails)
           } else {
             // save non-file fields
             uploadDetails.fields[f] = payload[f]
@@ -86,9 +101,7 @@ const uploadController = {
       // update the record in redis
       uploadDetails.uploadStatus = uploadStatus.quarantined
 
-      // uploadDetails.quarantined = new Date()
-
-      await request.redis.storeUploadDetails(id, uploadDetails)
+      await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
       // TODO: check all the files sizes match the size set in uploadDetails
       return h.redirect(uploadDetails.successRedirect)
