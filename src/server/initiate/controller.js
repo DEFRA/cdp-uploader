@@ -1,7 +1,10 @@
 import * as crypto from 'node:crypto'
 
+import { config } from '~/src/config'
 import { initiateValidation } from '~/src/server/initiate/helpers/initiate-validation'
 import { uploadStatus } from '~/src/server/common/helpers/upload-status'
+
+const appBaseUrl = config.get('appBaseUrl')
 
 const initiateController = {
   options: {
@@ -16,16 +19,16 @@ const initiateController = {
   },
   handler: async (request, h) => {
     const uuid = crypto.randomUUID()
-    const initiateRequest = request.payload
-    initiateRequest.uploadStatus = uploadStatus.initiated
-    initiateRequest.initiated = new Date()
-    await request.redis.client.set(uuid, JSON.stringify(initiateRequest))
+    const uploadDetails = request.payload
+    uploadDetails.uploadStatus = uploadStatus.initiated
+    uploadDetails.initiated = new Date()
+    await request.redis.client.set(uuid, JSON.stringify(uploadDetails))
 
-    request.logger.info({ initiateRequest }, `request ${uuid}`)
+    request.logger.info({ uploadDetails }, `request ${uuid}`)
 
     return h
       .response({
-        url: `http://localhost:7337/upload/${uuid}`,
+        url: `${appBaseUrl}/upload/${uuid}`,
         id: uuid
       })
       .code(200)

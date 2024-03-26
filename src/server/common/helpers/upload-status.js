@@ -6,8 +6,10 @@ const uploadStatus = Object.freeze({
   acknowledged: Symbol('acknowledged')
 })
 
-function canBeQuarantined(status) {
-  return Boolean(!status || status === uploadStatus.initiated)
+function canBeQuarantined(details) {
+  return Boolean(
+    details?.uploadStatus && details.uploadStatus === uploadStatus.initiated
+  )
 }
 
 function canBeScanned(status) {

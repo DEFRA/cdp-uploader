@@ -41,7 +41,7 @@ const uploadController = {
     }
 
     // Upload link has already been used
-    if (!canBeQuarantined(uploadDetails?.uploadStatus)) {
+    if (!canBeQuarantined(uploadDetails)) {
       // TODO: how do we communicate this failure reason?
       request.logger.info(
         `upload id ${id} has already been used to upload a file.`
@@ -52,29 +52,30 @@ const uploadController = {
     uploadDetails.fields = {}
 
     try {
-      const files = request.payload
+      const payload = request.payload
       const result = {}
-      for (const f in files) {
-        if (files[f]) {
-          const file = files[f]
-          if (file.hapi?.filename) {
-            request.logger.info(
-              `Uploading ${JSON.stringify(file.hapi.filename)}`
-            )
-            const fileKey = `${id}/${file.hapi.filename}`
+
+      for (const f in payload) {
+        // what is this?
+        if (payload[f]) {
+          const field = payload[f]
+          if (field.hapi?.filename) {
+            const filename = field.hapi.filename
+            request.logger.info(`Uploading ${JSON.stringify(filename)}`)
+            const fileKey = `${id}/${filename}`
 
             // TODO: check result of upload and redirect on error
-            await uploadStream(request.s3, quarantineBucket, fileKey, file, {
+            await uploadStream(request.s3, quarantineBucket, fileKey, field, {
               callback: uploadDetails.scanResultCallback,
               destination: uploadDetails.destinationBucket
             })
             uploadDetails.fields[f] = {
-              fileName: file.hapi?.filename,
-              contentType: file.hapi?.headers['content-type'] ?? ''
+              fileName: filename,
+              contentType: field.hapi?.headers['content-type'] ?? ''
             }
           } else {
             // save non-file fields
-            uploadDetails.fields[f] = files[f]
+            uploadDetails.fields[f] = payload[f]
           }
         }
       }
@@ -84,7 +85,8 @@ const uploadController = {
 
       // update the record in redis
       uploadDetails.uploadStatus = uploadStatus.quarantined
-      uploadDetails.quarantined = new Date()
+
+      // uploadDetails.quarantined = new Date()
 
       await request.redis.storeUploadDetails(id, uploadDetails)
 
