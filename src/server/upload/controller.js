@@ -52,7 +52,7 @@ const uploadController = {
     }
 
     uploadDetails.fields = {}
-    uploadDetails.files = []
+    uploadDetails.fileIds = []
 
     try {
       const multipart = request.payload
@@ -69,9 +69,11 @@ const uploadController = {
             uploadDetails,
             formElem[elem]
           )
+
           elemFields[elem] = fieldData
           if (fileData) {
-            uploadDetails.files.push(fileData.fileId)
+            // console.log('fileData', fileData)
+            uploadDetails.fileIds.push(fileData.fileId)
           }
         }
 
@@ -81,7 +83,8 @@ const uploadController = {
         `Uploaded to ${JSON.stringify(result.data?.Location)}`
       )
 
-      uploadDetails.uploadStatus = uploadStatus.quarantined
+      uploadDetails.uploadStatus = uploadStatus.pending.toString()
+      uploadDetails.pending = new Date()
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
       // TODO: check all the files sizes match the size set in uploadDetails
@@ -114,8 +117,8 @@ async function handleFile(request, uploadId, uploadDetails, fieldData) {
     uploadId,
     fileId,
     filename,
-    uploadStatus: uploadStatus.quarantined,
-    quarantined: new Date()
+    uploadStatus: uploadStatus.pending.toString(),
+    pending: new Date()
   }
   await request.redis.storeScanDetails(fileId, fileDetails)
   return {
