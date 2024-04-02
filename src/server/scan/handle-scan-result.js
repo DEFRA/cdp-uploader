@@ -20,11 +20,13 @@ async function handleScanResult(server, message) {
   const receiptHandle = message.ReceiptHandle
   const payload = JSON.parse(message.Body)
   const uploadId = findUploadId(payload.key)
+  const fileId = findFileId(payload.key)
 
   const uploadDetails = await server.redis.findUploadDetails(uploadId)
-  if (uploadDetails === null) {
-    logger.info(
-      `No record of ID in ${payload.key} found in Redis, ignoring scan result. May be expired.`
+  const fileDetails = await server.redis.findFileDetails(fileId)
+  if (uploadDetails === null || fileDetails === null) {
+    logger.warn(
+      `No record of upload or file ID in ${payload.key} found in Redis, ignoring scan result. May be expired.`
     )
     return
   }
@@ -36,7 +38,7 @@ async function handleScanResult(server, message) {
     '/'
   )
 
-  if (canBeScanned(uploadDetails.uploadStatus)) {
+  if (canBeScanned(fileDetails.uploadStatus)) {
     const scanResult = {
       safe: payload.safe,
       error: payload.error
@@ -44,8 +46,8 @@ async function handleScanResult(server, message) {
     if (payload.safe) {
       scanResult.fileUrl = destination
     }
-    uploadDetails.scanResult = scanResult
-    uploadDetails.uploadStatus = uploadStatus.scanned
+    //  uploadDetails.scanResult = scanResult
+    uploadDetails.uploadStatus = uploadStatus.scanned.description
     uploadDetails.scanned = new Date()
     await server.redis.storeUploadDetails(uploadId, uploadDetails)
   }
@@ -60,7 +62,7 @@ async function handleScanResult(server, message) {
       destinationKey
     )
     if (delivered) {
-      uploadDetails.uploadStatus = uploadStatus.delivered
+      uploadDetails.uploadStatus = uploadStatus.delivered.description
       uploadDetails.delivered = new Date()
       await server.redis.storeUploadDetails(uploadId, uploadDetails)
       logger.info(
@@ -87,7 +89,7 @@ async function handleScanResult(server, message) {
   )
 
   if (callbackResponse) {
-    uploadDetails.uploadStatus = uploadStatus.acknowledged
+    uploadDetails.uploadStatus = uploadStatus.acknowledged.description
     uploadDetails.acknowledged = new Date()
     await server.redis.storeUploadDetails(uploadId, uploadDetails)
     await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)
@@ -100,6 +102,14 @@ async function handleScanResult(server, message) {
 
 function findUploadId(key) {
   const id = path.dirname(key)
+  if (!id) {
+    return key
+  }
+  return id
+}
+
+function findFileId(key) {
+  const id = path.basename(key)
   if (!id) {
     return key
   }

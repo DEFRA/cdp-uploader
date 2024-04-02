@@ -7,36 +7,45 @@ const uploadStatus = Object.freeze({
   acknowledged: Symbol('acknowledged')
 })
 
-function canBeQuarantined(details) {
-  return Boolean(
-    !details?.uploadStatus ||
-      details.uploadStatus === uploadStatus.initiated.toString()
-  )
+function canBeUploaded(status) {
+  return Boolean(!status || isInitiated(status))
 }
 
 function canBeScanned(status) {
-  return Boolean(!status || status === uploadStatus.quarantined)
+  return Boolean(isPending(status))
+  //   return Boolean( !status || isPending(status))
 }
 
 function canBeDelivered(safe, status) {
-  return Boolean(
-    safe &&
-      status &&
-      (status === uploadStatus.quarantined ||
-        status === uploadStatus.scanned.toString())
-  )
+  return Boolean(safe && status && isScanned(status)) // || isPending(status))
 }
 
 function canBeAcknowledged(safe, status) {
   return Boolean(
-    (!safe && status && status === uploadStatus.scanned.toString()) ||
-      (status && status === uploadStatus.delivered)
+    (status && isDelivered(status)) || (!safe && status && isScanned(status))
   )
+  //   return Boolean( isReady(status) || isFailed(status))
+}
+
+function isInitiated(status) {
+  return status === uploadStatus.initiated.description
+}
+
+function isPending(status) {
+  return status === uploadStatus.pending.description
+}
+
+function isScanned(status) {
+  return status === uploadStatus.scanned.description
+}
+
+function isDelivered(status) {
+  return status === uploadStatus.delivered.description
 }
 
 export {
   uploadStatus,
-  canBeQuarantined,
+  canBeUploaded,
   canBeScanned,
   canBeDelivered,
   canBeAcknowledged

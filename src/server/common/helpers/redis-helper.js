@@ -6,11 +6,10 @@ class RedisHelper {
   async findUploadDetails(id) {
     const uploadDetails = await this.client.get(id)
 
-    if (!uploadDetails) {
-      throw new Error(`No uploadDetails found for upload ID ${id}`)
+    if (uploadDetails) {
+      // throw new Error(`No uploadDetails found for upload ID ${id}`)
+      return JSON.parse(uploadDetails)
     }
-
-    return JSON.parse(uploadDetails)
   }
 
   async updateUploadStatus(id, uploadStatus) {
@@ -23,18 +22,32 @@ class RedisHelper {
     return await this.client.set(id, JSON.stringify(uploadDetails))
   }
 
-  async findScanDetails(id) {
-    const scanDetails = await this.client.get(id)
+  async findFileDetails(id) {
+    const fileDetails = await this.client.get(id)
 
-    if (!scanDetails) {
-      return null
+    if (fileDetails) {
+      return JSON.parse(fileDetails)
     }
-
-    return JSON.parse(scanDetails)
   }
 
-  async storeScanDetails(id, scanDetails) {
-    return await this.client.set(id, JSON.stringify(scanDetails))
+  async storeFileDetails(id, fileDetails) {
+    return await this.client.set(id, JSON.stringify(fileDetails))
+  }
+
+  async findUploadWithFiles(id) {
+    const result = await this.findUploadDetails(id)
+    if (!result || !result.fileIds) {
+      return result
+    }
+    const fileDetails = {}
+    for (const fileId of result.fileIds) {
+      const file = await this.findFileDetails(fileId)
+      if (file) {
+        fileDetails[fileId] = file
+      }
+    }
+    result.fileDetails = fileDetails
+    return result
   }
 }
 

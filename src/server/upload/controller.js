@@ -7,7 +7,7 @@ import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
 import { uploadPathValidation } from '~/src/server/upload/helpers/upload-validation'
 import {
   uploadStatus,
-  canBeQuarantined
+  canBeUploaded
 } from '~/src/server/common/helpers/upload-status'
 
 const quarantineBucket = config.get('quarantineBucket')
@@ -43,7 +43,7 @@ const uploadController = {
     }
 
     // Upload link has already been used
-    if (!canBeQuarantined(uploadDetails)) {
+    if (!canBeUploaded(uploadDetails.uploadStatus)) {
       // TODO: how do we communicate this failure reason?
       request.logger.info(
         `upload id ${uploadId} has already been used to upload a file.`
@@ -63,14 +63,13 @@ const uploadController = {
         const formElem = Array.isArray(field) ? field : [field]
         const elemFields = []
         for (const elem in formElem) {
-          const { fieldData, fileData } = await handleFileOrField(
-            request,
+          const { formPart, fileData } = await handleFormPart(
             uploadId,
-            uploadDetails,
-            formElem[elem]
+            formElem[elem],
+            request
           )
 
-          elemFields[elem] = fieldData
+          elemFields[elem] = formPart
           if (fileData) {
             // console.log('fileData', fileData)
             uploadDetails.fileIds.push(fileData.fileId)
@@ -83,7 +82,7 @@ const uploadController = {
         `Uploaded to ${JSON.stringify(result.data?.Location)}`
       )
 
-      uploadDetails.uploadStatus = uploadStatus.pending.toString()
+      uploadDetails.uploadStatus = uploadStatus.pending.description
       uploadDetails.pending = new Date()
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
@@ -96,43 +95,52 @@ const uploadController = {
   }
 }
 
-function handleFileOrField(request, uploadId, uploadDetails, fieldData) {
-  return isFile(fieldData)
-    ? handleFile(request, uploadId, uploadDetails, fieldData)
-    : { fieldData }
+function handleFormPart(uploadId, formPart, request) {
+  return isFile(formPart)
+    ? handleFile(uploadId, formPart, request)
+    : { formPart }
 }
 
-async function handleFile(request, uploadId, uploadDetails, fieldData) {
-  const filename = fieldData.hapi.filename
+async function handleFile(uploadId, filePart, request) {
+  const hapiFilename = filePart.hapi?.filename
+  const filename = { ...(hapiFilename && { filename: hapiFilename }) }
+  const hapiContentType = filePart.hapi?.headers['content-type']
+  const contentType = {
+    ...(hapiContentType && { contentType: hapiContentType })
+  }
   const fileId = crypto.randomUUID()
-  request.logger.info(`Uploading ${JSON.stringify(filename)} as ${fileId}`)
-  const fileKey = `${uploadId}/${filename}`
+  const fileKey = `${uploadId}/${fileId}`
+  request.logger.info(`Uploading ${fileId} to ${uploadId}`)
   // TODO: check result of upload and redirect on error
-  await uploadStream(request.s3, quarantineBucket, fileKey, fieldData, {
-    callback: uploadDetails.scanResultCallback,
-    destination: uploadDetails.destinationBucket
+  await uploadStream(request.s3, quarantineBucket, fileKey, filePart, {
+    uploadId,
+    fileId,
+    ...contentType,
+    ...filename
   })
 
   const fileDetails = {
     uploadId,
     fileId,
-    filename,
-    uploadStatus: uploadStatus.pending.toString(),
-    pending: new Date()
+    uploadStatus: uploadStatus.pending.description,
+    pending: new Date(),
+    ...contentType,
+    ...filename
   }
-  await request.redis.storeScanDetails(fileId, fileDetails)
+  await request.redis.storeFileDetails(fileId, fileDetails)
   return {
-    fieldData: {
-      filename,
+    formPart: {
       fileId,
-      contentType: fieldData.hapi?.headers['content-type'] ?? ''
+      // Todo: add detected content type
+      ...filename,
+      ...contentType
     },
     fileData: fileDetails
   }
 }
 
-function isFile(fieldData) {
-  return fieldData instanceof Stream
+function isFile(formPart) {
+  return formPart instanceof Stream
 }
 
 export { uploadController }

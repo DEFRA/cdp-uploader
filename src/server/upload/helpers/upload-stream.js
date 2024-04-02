@@ -14,13 +14,11 @@ async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
       Bucket,
       Key,
       Metadata: {
-        callback: metadata.callback,
-        destination: metadata.destination
+        ...metadata
       },
       Body: passThrough
     },
     // tags:[],
-
     queueSize: 4,
     partSize: 1024 * 1024 * 5,
     leavePartsOnError: false
