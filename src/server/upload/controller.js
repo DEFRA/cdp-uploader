@@ -112,18 +112,25 @@ async function handleFile(uploadId, filePart, request) {
   const fileKey = `${uploadId}/${fileId}`
   request.logger.info(`Uploading ${fileId} to ${uploadId}`)
   // TODO: check result of upload and redirect on error
-  await uploadStream(request.s3, quarantineBucket, fileKey, filePart, {
-    uploadId,
-    fileId,
-    ...contentType,
-    ...filename
-  })
+  const uploadResult = await uploadStream(
+    request.s3,
+    quarantineBucket,
+    fileKey,
+    filePart,
+    {
+      uploadId,
+      fileId,
+      ...contentType,
+      ...filename
+    }
+  )
 
   const fileDetails = {
     uploadId,
     fileId,
     uploadStatus: uploadStatus.pending.description,
     pending: new Date(),
+    actualContentType: uploadResult.mimeType,
     ...contentType,
     ...filename
   }
@@ -131,7 +138,7 @@ async function handleFile(uploadId, filePart, request) {
   return {
     formPart: {
       fileId,
-      // Todo: add detected content type
+      actualContentType: uploadResult.mimeType,
       ...filename,
       ...contentType
     },
