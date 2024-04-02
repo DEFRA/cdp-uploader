@@ -64,13 +64,21 @@ const uploadController = {
             const fileKey = `${id}/${file.hapi.filename}`
 
             // TODO: check result of upload and redirect on error
-            await uploadStream(request.s3, quarantineBucket, fileKey, file, {
-              callback: uploadDetails.scanResultCallback,
-              destination: uploadDetails.destinationBucket
-            })
+            const uploadResult = await uploadStream(
+              request.s3,
+              quarantineBucket,
+              fileKey,
+              file,
+              {
+                callback: uploadDetails.scanResultCallback,
+                destination: uploadDetails.destinationBucket
+              }
+            )
+
             uploadDetails.fields[f] = {
               fileName: file.hapi?.filename,
-              contentType: file.hapi?.headers['content-type'] ?? ''
+              contentType: file.hapi?.headers['content-type'] ?? '',
+              actualContentType: uploadResult.mimeType
             }
           } else {
             // save non-file fields

@@ -48,6 +48,7 @@
     "babel-plugin-module-resolver": "5.0.0",
     "convict": "6.2.4",
     "date-fns": "3.3.1",
+    "file-type": "16.5.4",
     "flat": "5.0.2",
     "govuk-frontend": "5.1.0",
     "hapi-pino": "12.1.0",
