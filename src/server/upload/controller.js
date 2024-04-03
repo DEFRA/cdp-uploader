@@ -78,7 +78,7 @@ const uploadController = {
             uploadDetails.fields[f] = {
               fileName: file.hapi?.filename,
               contentType: file.hapi?.headers['content-type'] ?? '',
-              actualContentType: uploadResult.mimeType
+              actualContentType: uploadResult.contentType
             }
           } else {
             // save non-file fields
