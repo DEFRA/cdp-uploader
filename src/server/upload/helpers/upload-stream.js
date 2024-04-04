@@ -1,43 +1,46 @@
+import { PassThrough } from 'node:stream'
+import FileType from 'file-type'
 import { Upload } from '@aws-sdk/lib-storage'
 
-import stream from 'stream'
-
 import { createLogger } from '~/src/server/common/helpers/logging/logger'
-import FileType from 'file-type'
 
 const logger = createLogger()
 
-async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
-  const passThrough = new stream.PassThrough()
+async function uploadStream(s3Client, bucket, key, fileStream, metadata) {
+  const fileTypeStream = fileStream.pipe(new PassThrough())
+
   const upload = new Upload({
     client: s3Client,
     params: {
-      Bucket,
-      Key,
+      Bucket: bucket,
+      Key: key,
       Metadata: {
         callback: metadata.callback,
         destination: metadata.destination
       },
-      Body: passThrough
+      Body: fileStream
     },
-    // tags:[],
-
     queueSize: 4,
     partSize: 1024 * 1024 * 5,
     leavePartsOnError: false
   })
 
   upload.on('httpUploadProgress', (progress) => {
-    logger.debug(progress)
+    logger.info(progress, 'Progress:')
   })
 
-  const fileTypeStream = await FileType.stream(fileStream.pipe(passThrough))
-  // TODO: if we want to prevent certain mime types we should do the check here and call upload.abort()
+  fileStream.on('error', (error) => {
+    logger.info(error, 'Error:')
+
+    fileTypeStream.end()
+  })
+
   const uploadResult = await upload.done()
+  const fileTypeResult = await FileType.fromStream(fileTypeStream)
 
   return {
-    uploadResult,
-    contentType: fileTypeStream.fileType // if the type isn't detectable (by looking at bytes) its null
+    ...uploadResult,
+    fileTypeResult
   }
 }
 

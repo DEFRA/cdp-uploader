@@ -58,9 +58,8 @@ const uploadController = {
         if (files[f]) {
           const file = files[f]
           if (file.hapi?.filename) {
-            request.logger.info(
-              `Uploading ${JSON.stringify(file.hapi.filename)}`
-            )
+            request.logger.info(`Uploading ${file.hapi.filename}`)
+
             const fileKey = `${id}/${file.hapi.filename}`
 
             // TODO: check result of upload and redirect on error
@@ -78,7 +77,7 @@ const uploadController = {
             uploadDetails.fields[f] = {
               fileName: file.hapi?.filename,
               contentType: file.hapi?.headers['content-type'] ?? '',
-              actualContentType: uploadResult.mimeType
+              actualContentType: uploadResult.fileTypeResult?.mime
             }
           } else {
             // save non-file fields
