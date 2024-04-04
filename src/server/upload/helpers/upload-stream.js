@@ -6,8 +6,8 @@ import FileType from 'file-type'
 const logger = createLogger()
 
 async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
-  const passThrough = new stream.PassThrough()
-  const pass2 = new stream.PassThrough()
+  const s3Stream = new stream.PassThrough()
+  const mimeStream = new stream.PassThrough()
 
   const upload = new Upload({
     client: s3Client,
@@ -18,7 +18,7 @@ async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
         callback: metadata.callback,
         destination: metadata.destination
       },
-      Body: passThrough
+      Body: s3Stream
     },
     // tags:[],
 
@@ -28,17 +28,25 @@ async function uploadStream(s3Client, Bucket, Key, fileStream, metadata) {
   })
 
   upload.on('httpUploadProgress', (progress) => {
-    logger.info(progress)
+    logger.debug(progress)
   })
 
-  const fileTypePromise = FileType.fromStream(pass2)
-  fileStream.pipe(passThrough).pipe(pass2)
+  const fileTypePromise = FileType.fromStream(mimeStream)
 
-  const uploadResult = await upload.done()
+  fileStream.on('data', (chunk) => {
+    s3Stream.write(chunk)
+    mimeStream.write(chunk)
+  })
+
+  fileStream.on('end', () => {
+    s3Stream.end()
+    mimeStream.end()
+  })
+
+  const uploadResult = await upload.done() // TODO: do we need to call abort on exceptions?
   const fileType = await fileTypePromise
-
   return {
-    uploadResult,
+    uploadResult, // upload result has fields like Key, Bucket and Location
     contentType: fileType?.mime // if the type isn't detectable (by looking at bytes) its null
   }
 }
