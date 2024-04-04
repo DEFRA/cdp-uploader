@@ -12,6 +12,7 @@ import {
 
 const quarantineBucket = config.get('quarantineBucket')
 
+// Todo return a nice error message for http://localhost:7337/upload (uuid missing)
 const uploadController = {
   options: {
     validate: {
@@ -28,27 +29,25 @@ const uploadController = {
   handler: async (request, h) => {
     const uploadId = request.params.id
     if (!uploadId) {
-      request.logger.info('Failed to upload, no id')
-      return h.response(Boom.notFound('Failed to upload. No id'))
+      request.logger.info('Failed to upload, no uploadId')
+      return Boom.notFound('Failed to upload. No uploadId provided')
     }
 
     const uploadDetails = await request.redis.findUploadDetails(uploadId)
 
-    if (uploadDetails === null) {
-      request.logger.info('Failed to upload, no uploadDetails data')
-      // TODO: Show user-friendly error page
-      return h.response(
-        Boom.notFound('Failed to upload, no uploadDetails data')
-      )
+    request.logger.info(`upload details ${uploadDetails}`)
+
+    if (!uploadDetails) {
+      request.logger.info('Failed to upload, uploadId does not exist')
+      return Boom.notFound('Failed to upload. UploadId does not exist')
     }
 
     // Upload link has already been used
     if (!canBeUploaded(uploadDetails.uploadStatus)) {
-      // TODO: how do we communicate this failure reason?
       request.logger.info(
         `upload id ${uploadId} has already been used to upload a file.`
       )
-      return h.redirect(uploadDetails.failureRedirect)
+      return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
     }
 
     uploadDetails.fields = {}
@@ -56,32 +55,34 @@ const uploadController = {
 
     try {
       const multipart = request.payload
-      const result = {}
 
-      for (const part in multipart) {
-        const field = multipart[part]
-        const formElem = Array.isArray(field) ? field : [field]
-        const elemFields = []
-        for (const elem in formElem) {
-          const { formPart, fileData } = await handleFormPart(
+      for (const [partKey, multipartValue] of Object.entries(multipart)) {
+        if (Array.isArray(multipartValue)) {
+          const elemFields = []
+          for (const partValue of multipartValue) {
+            const { responseValue, fileId } = await handleMultipart(
+              partValue,
+              uploadId,
+              request
+            )
+            if (fileId) {
+              uploadDetails.fileIds.push(fileId)
+            }
+            elemFields.push(responseValue)
+          }
+          uploadDetails.fields[partKey] = elemFields
+        } else {
+          const { responseValue, fileId } = await handleMultipart(
+            multipartValue,
             uploadId,
-            formElem[elem],
             request
           )
-
-          elemFields[elem] = formPart
-          if (fileData) {
-            // console.log('fileData', fileData)
-            uploadDetails.fileIds.push(fileData.fileId)
+          if (fileId) {
+            uploadDetails.fileIds.push(fileId)
           }
+          uploadDetails.fields[partKey] = responseValue
         }
-
-        uploadDetails.fields[part] = elemFields
       }
-      request.logger.info(
-        `Uploaded to ${JSON.stringify(result.data?.Location)}`
-      )
-
       uploadDetails.uploadStatus = uploadStatus.pending.description
       uploadDetails.pending = new Date()
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
@@ -90,25 +91,28 @@ const uploadController = {
       return h.redirect(uploadDetails.successRedirect)
     } catch (e) {
       request.logger.error(e)
-      return h.redirect(uploadDetails.failureRedirect)
+      return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
     }
   }
 }
 
-function handleFormPart(uploadId, formPart, request) {
-  return isFile(formPart)
-    ? handleFile(uploadId, formPart, request)
-    : { formPart }
+async function handleMultipart(multipartValue, uploadId, request) {
+  if (isFile(multipartValue)) {
+    const fileId = crypto.randomUUID()
+    const filePart = await handleFile(uploadId, fileId, multipartValue, request)
+    return { responseValue: filePart, fileId }
+  } else {
+    return { responseValue: multipartValue }
+  }
 }
 
-async function handleFile(uploadId, filePart, request) {
-  const hapiFilename = filePart.hapi?.filename
+async function handleFile(uploadId, fileId, fileStream, request) {
+  const hapiFilename = fileStream.hapi?.filename
   const filename = { ...(hapiFilename && { filename: hapiFilename }) }
-  const hapiContentType = filePart.hapi?.headers['content-type']
+  const hapiContentType = fileStream.hapi?.headers['content-type']
   const contentType = {
     ...(hapiContentType && { contentType: hapiContentType })
   }
-  const fileId = crypto.randomUUID()
   const fileKey = `${uploadId}/${fileId}`
   request.logger.info(`Uploading ${fileId} to ${uploadId}`)
   // TODO: check result of upload and redirect on error
@@ -116,7 +120,7 @@ async function handleFile(uploadId, filePart, request) {
     request.s3,
     quarantineBucket,
     fileKey,
-    filePart,
+    fileStream,
     {
       uploadId,
       fileId,
@@ -128,7 +132,7 @@ async function handleFile(uploadId, filePart, request) {
   const fileDetails = {
     uploadId,
     fileId,
-    uploadStatus: uploadStatus.pending.description,
+    fileStatus: uploadStatus.pending.description,
     pending: new Date(),
     actualContentType: uploadResult.mimeType,
     ...contentType,
@@ -136,13 +140,10 @@ async function handleFile(uploadId, filePart, request) {
   }
   await request.redis.storeFileDetails(fileId, fileDetails)
   return {
-    formPart: {
-      fileId,
-      actualContentType: uploadResult.mimeType,
-      ...filename,
-      ...contentType
-    },
-    fileData: fileDetails
+    fileId,
+    actualContentType: uploadResult.mimeType,
+    ...filename,
+    ...contentType
   }
 }
 

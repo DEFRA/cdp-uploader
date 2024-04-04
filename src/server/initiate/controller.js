@@ -18,18 +18,18 @@ const initiateController = {
     }
   },
   handler: async (request, h) => {
-    const uuid = crypto.randomUUID()
+    const uploadId = crypto.randomUUID()
     const uploadDetails = request.payload
     uploadDetails.uploadStatus = uploadStatus.initiated.description
     uploadDetails.initiated = new Date()
-    await request.redis.client.set(uuid, JSON.stringify(uploadDetails))
+    await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
-    request.logger.info({ uploadDetails }, `request ${uuid}`)
+    request.logger.info({ uploadDetails }, `request ${uploadId}`)
 
     return h
       .response({
-        url: `${appBaseUrl}/upload/${uuid}`,
-        id: uuid
+        url: `${appBaseUrl}/upload/${uploadId}`,
+        id: uploadId
       })
       .code(200)
   }

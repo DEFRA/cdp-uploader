@@ -4,16 +4,16 @@ const statusController = {
   handler: async (request, h) => {
     const id = request.params.id
     if (!id) {
-      return h.response(Boom.notFound())
+      return Boom.notFound()
     }
 
     const result = await request.redis.findUploadWithFiles(id)
 
-    if (result) {
-      return h.response(result).code(200)
+    if (!result) {
+      return Boom.notFound()
     }
 
-    return h.response(Boom.notFound())
+    return h.response(result).code(200)
   }
 }
 
