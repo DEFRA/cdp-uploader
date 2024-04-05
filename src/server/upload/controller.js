@@ -6,8 +6,8 @@ import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
 import { uploadPathValidation } from '~/src/server/upload/helpers/upload-validation'
 import {
-  uploadStatus,
-  canBeUploaded
+  isInitiated,
+  uploadStatus
 } from '~/src/server/common/helpers/upload-status'
 
 const quarantineBucket = config.get('quarantineBucket')
@@ -35,7 +35,7 @@ const uploadController = {
 
     const uploadDetails = await request.redis.findUploadDetails(uploadId)
 
-    request.logger.info(`upload details ${uploadDetails}`)
+    request.logger.info(`upload details ${JSON.stringify(uploadDetails)}`)
 
     if (!uploadDetails) {
       request.logger.info('Failed to upload, uploadId does not exist')
@@ -43,8 +43,8 @@ const uploadController = {
     }
 
     // Upload link has already been used
-    if (!canBeUploaded(uploadDetails.uploadStatus)) {
-      request.logger.info(
+    if (!isInitiated(uploadDetails.uploadStatus)) {
+      request.logger.warn(
         `upload id ${uploadId} has already been used to upload a file.`
       )
       return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
@@ -114,7 +114,7 @@ async function handleFile(uploadId, fileId, fileStream, request) {
     ...(hapiContentType && { contentType: hapiContentType })
   }
   const fileKey = `${uploadId}/${fileId}`
-  request.logger.info(`Uploading ${fileId} to ${uploadId}`)
+  request.logger.info(`Uploading fileId ${fileId} to uploadId ${uploadId}`)
   // TODO: check result of upload and redirect on error
   const uploadResult = await uploadStream(
     request.s3,
@@ -129,7 +129,7 @@ async function handleFile(uploadId, fileId, fileStream, request) {
     }
   )
 
-  const fileDetails = {
+  const files = {
     uploadId,
     fileId,
     fileStatus: uploadStatus.pending.description,
@@ -138,7 +138,7 @@ async function handleFile(uploadId, fileId, fileStream, request) {
     ...contentType,
     ...filename
   }
-  await request.redis.storeFileDetails(fileId, fileDetails)
+  await request.redis.storeFileDetails(fileId, files)
   return {
     fileId,
     actualContentType: uploadResult.mimeType,

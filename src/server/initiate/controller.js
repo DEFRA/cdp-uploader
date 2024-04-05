@@ -29,7 +29,7 @@ const initiateController = {
     return h
       .response({
         url: `${appBaseUrl}/upload/${uploadId}`,
-        id: uploadId
+        uploadId
       })
       .code(200)
   }

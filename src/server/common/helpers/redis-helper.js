@@ -5,8 +5,8 @@ class RedisHelper {
     this.client = redis
   }
 
-  async findUploadDetails(id) {
-    const uploadDetails = await this.client.get(id)
+  async findUploadDetails(uploadId) {
+    const uploadDetails = await this.client.get(uploadId)
 
     if (uploadDetails) {
       // throw new Error(`No uploadDetails found for upload ID ${id}`)
@@ -14,41 +14,35 @@ class RedisHelper {
     }
   }
 
-  async updateUploadStatus(id, uploadStatus) {
-    const uploadDetails = this.findUploadDetails(id)
-
-    await this.storeUploadDetails(id, { ...uploadDetails, uploadStatus })
+  async storeUploadDetails(uploadId, uploadDetails) {
+    return await this.client.set(uploadId, JSON.stringify(uploadDetails))
   }
 
-  async storeUploadDetails(id, uploadDetails) {
-    return await this.client.set(id, JSON.stringify(uploadDetails))
-  }
-
-  async findFileDetails(id) {
-    const fileDetails = await this.client.get(id)
+  async findFileDetails(fileId) {
+    const fileDetails = await this.client.get(fileId)
 
     if (fileDetails) {
       return JSON.parse(fileDetails)
     }
   }
 
-  async storeFileDetails(id, fileDetails) {
-    return await this.client.set(id, JSON.stringify(fileDetails))
+  async storeFileDetails(fileId, fileDetails) {
+    return await this.client.set(fileId, JSON.stringify(fileDetails))
   }
 
-  async findUploadWithFiles(id) {
-    const result = await this.findUploadDetails(id)
+  async findUploadWithFiles(uploadId) {
+    const result = await this.findUploadDetails(uploadId)
     if (!result || !result.fileIds) {
       return result
     }
-    const fileDetails = {}
+    const files = {}
     for (const fileId of result.fileIds) {
       const file = await this.findFileDetails(fileId)
       if (file) {
-        fileDetails[fileId] = file
+        files[fileId] = file
       }
     }
-    result.fileDetails = fileDetails
+    result.files = files
     return result
   }
 }
@@ -80,8 +74,8 @@ class RedisHashHelpers {
     let i = 0
     let res = 0
     while (res === 0) {
-      // We dont know how big the array is unless we read it, which would make it not thread-safe.
-      // We can solve this position using `hsetnx` which only inserts if it doesnt exist.
+      // We don't know how big the array is unless we read it, which would make it not thread-safe.
+      // We can solve this position using `hsetnx` which only inserts if it doesn't exist.
       // O(n) but as long as we're sensible the update should be ok.
       res = await this.client.hsetnx(key, field + '.' + i, value)
       i = i + 1

@@ -144,8 +144,14 @@ const config = convict({
   sqsScanResults: {
     doc: 'Queue for virus scan results',
     format: String,
-    default: 'cdp-uploader-scan-results',
+    default: 'cdp-clamav-results',
     env: 'SQS_SCAN_RESULTS'
+  },
+  sqsUploadReady: {
+    doc: 'Queue for upload ready results',
+    format: String,
+    default: 'cdp-uploader-upload-ready',
+    env: 'SQS_UPLOAD_READY'
   }
 })
 

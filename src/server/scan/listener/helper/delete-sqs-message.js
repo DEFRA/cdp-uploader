@@ -1,6 +1,6 @@
 import { DeleteMessageCommand } from '@aws-sdk/client-sqs'
 
-async function DeleteSqsMessage(sqs, queue, receipt) {
+async function deleteSqsMessage(sqs, queue, receipt) {
   await sqs.send(
     new DeleteMessageCommand({
       QueueUrl: queue,
@@ -9,4 +9,4 @@ async function DeleteSqsMessage(sqs, queue, receipt) {
   )
 }
 
-export { DeleteSqsMessage }
+export { deleteSqsMessage }
