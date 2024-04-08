@@ -1,7 +1,7 @@
 import path from 'path'
 
-import { moveS3Object } from '~/src/server/scan/listener/helper/move-s3-object'
-import { deleteSqsMessage } from '~/src/server/scan/listener/helper/delete-sqs-message'
+import { moveS3Object } from '~/src/server/common/helpers/s3/move-s3-object'
+import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
 import { config } from '~/src/config'
 import {
   isClean,
@@ -9,7 +9,7 @@ import {
   isInfected,
   toFileStatus
 } from '~/src/server/common/helpers/file-status'
-import { processScanComplete } from '~/src/server/scan/listener/helper/process-scan-complete'
+import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete'
 
 const quarantineBucket = config.get('quarantineBucket')
 

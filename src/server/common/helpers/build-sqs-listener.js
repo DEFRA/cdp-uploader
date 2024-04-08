@@ -2,7 +2,7 @@ import { Consumer } from 'sqs-consumer'
 
 import { config } from '~/src/config'
 import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result'
-import { handleScanResultsCallback } from '~/src/server/callback/listener/helpers/handle-scan-results-callback'
+import { handleScanResultsCallback } from '~/src/server/callback/listener/handle-scan-results-callback'
 
 function sqsListener(name, queueUrl, messageHandler) {
   return {

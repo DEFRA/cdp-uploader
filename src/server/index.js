@@ -5,13 +5,13 @@ import { config } from '~/src/config'
 import { router } from '~/src/server/router'
 import { catchAll } from '~/src/server/common/helpers/errors'
 import { failAction } from '~/src/server/common/helpers/fail-action'
-import { buildS3client } from '~/src/server/common/helpers/s3-client'
+import { buildS3client } from '~/src/server/common/helpers/s3/s3-client'
 import { RedisHelper } from '~/src/server/common/helpers/redis-helper'
 import {
   scanResultListener,
   scanResultsCallbackListener
 } from '~/src/server/common/helpers/build-sqs-listener'
-import { buildSqsClient } from '~/src/server/common/helpers/sqs-client'
+import { buildSqsClient } from '~/src/server/common/helpers/sqs/sqs-client'
 import { secureContext } from '~/src/server/common/helpers/secure-context'
 import { buildRedisClient } from '~/src/server/common/helpers/redis-client'
 import { requestLogger } from '~/src/server/common/helpers/logging/request-logger'

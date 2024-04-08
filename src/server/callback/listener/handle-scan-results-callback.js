@@ -1,6 +1,6 @@
 import { fetcher } from '~/src/server/common/helpers/fetcher'
 import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
-import { deleteSqsMessage } from '~/src/server/scan/listener/helper/delete-sqs-message'
+import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
 import {
   isAcknowledged,
   uploadStatus
@@ -21,7 +21,6 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
     } else if (!isAcknowledged(uploadDetails.uploadStatus)) {
       const scanResult = toScanResultResponse(payload.uploadId, uploadDetails)
       const url = uploadDetails.scanResultCallbackUrl
-      server.logger.error(`Failed to ${JSON.stringify(payload)}`)
       const { json, response } = await fetcher(url, {
         method: 'post',
         body: JSON.stringify(scanResult)

@@ -2,7 +2,7 @@ import {
   isUploadPending,
   uploadStatus
 } from '~/src/server/common/helpers/upload-status'
-import { sendSqsMessage } from '~/src/server/scan/listener/helper/send-sqs-message'
+import { sendSqsMessage } from '~/src/server/common/helpers/sqs/send-sqs-message'
 import { isInfected } from '~/src/server/common/helpers/file-status'
 import { config } from '~/src/config'
 
