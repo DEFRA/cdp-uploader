@@ -16,9 +16,7 @@ async function uploadStream(s3Client, bucket, key, fileStream, metadata) {
       Bucket: bucket,
       Key: key,
       Metadata: {
-        callback: metadata.callback,
-        destination: metadata.destination,
-        filename: metadata.filename
+        ...metadata
       },
       Body: fileStream
     },

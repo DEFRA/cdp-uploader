@@ -1,19 +1,20 @@
 import Boom from '@hapi/boom'
+import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
 
 const statusController = {
   handler: async (request, h) => {
-    const id = request.params.id
-    if (!id) {
-      return h.response(Boom.notFound())
+    const uploadId = request.params.id
+    if (!uploadId) {
+      return Boom.notFound()
     }
 
-    const result = await request.redis.client.get(id)
+    const result = await request.redis.findUploadWithFiles(uploadId)
 
-    if (result) {
-      return h.response(JSON.parse(result)).code(200)
+    if (!result) {
+      return Boom.notFound()
     }
-
-    return h.response(Boom.notFound())
+    const response = toScanResultResponse(uploadId, result)
+    return h.response(response).code(200)
   }
 }
 

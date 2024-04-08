@@ -7,7 +7,10 @@ import { catchAll } from '~/src/server/common/helpers/errors'
 import { failAction } from '~/src/server/common/helpers/fail-action'
 import { buildS3client } from '~/src/server/common/helpers/s3-client'
 import { RedisHelper } from '~/src/server/common/helpers/redis-helper'
-import { sqsListener } from '~/src/server/scan/build-sqs-listener'
+import {
+  scanResultListener,
+  scanResultsCallbackListener
+} from '~/src/server/common/helpers/build-sqs-listener'
 import { buildSqsClient } from '~/src/server/common/helpers/sqs-client'
 import { secureContext } from '~/src/server/common/helpers/secure-context'
 import { buildRedisClient } from '~/src/server/common/helpers/redis-client'
@@ -60,7 +63,11 @@ async function createServer() {
     await server.register(secureContext)
   }
 
-  await server.register([router, sqsListener])
+  await server.register([
+    router,
+    scanResultListener,
+    scanResultsCallbackListener
+  ])
 
   server.ext('onPreResponse', catchAll)
 
