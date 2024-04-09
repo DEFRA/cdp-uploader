@@ -17,6 +17,12 @@ const config = convict({
     default: 7337,
     env: 'PORT'
   },
+  appBaseUrl: {
+    doc: 'Application base URL',
+    format: String,
+    default: 'http://localhost:7337',
+    env: 'APP_BASE_URL'
+  },
   staticCacheTimeout: {
     doc: 'Static cache timeout in milliseconds',
     format: Number,
