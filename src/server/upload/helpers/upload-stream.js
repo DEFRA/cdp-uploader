@@ -1,4 +1,5 @@
 import { PassThrough } from 'node:stream'
+
 import FileType from 'file-type'
 import { Upload } from '@aws-sdk/lib-storage'
 
