@@ -4,7 +4,7 @@
   "description": "CDP Frontend Template",
   "main": "src/index.js",
   "engines": {
-    "node": "20.3.0"
+    "node": ">=20.11.1"
   },
   "scripts": {
     "build": "run-s build:frontend build:server",
