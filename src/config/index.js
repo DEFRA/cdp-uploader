@@ -100,8 +100,9 @@ const config = convict({
   },
   redisUsername: {
     doc: 'Redis cache username',
-    format: String,
+    format: '*',
     default: '',
+    sensitive: true,
     env: 'REDIS_USERNAME'
   },
   redisPassword: {
