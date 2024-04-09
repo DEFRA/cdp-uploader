@@ -152,7 +152,7 @@ const config = convict({
     doc: 'Queue for upload ready results',
     format: String,
     default: 'cdp-uploader-scan-results-callback',
-    env: 'SQS_UPLOAD_READY'
+    env: 'SQS_SCAN_RESULTS_CALLBACK'
   }
 })
 

@@ -8,18 +8,15 @@ import { config } from '~/src/config'
 
 const callbackQueue = config.get('sqsScanResultsCallback')
 async function processScanComplete(server, uploadId) {
-  const uploadDetails = await server.redis.findUploadWithFiles(uploadId)
-  if (
-    isUploadPending(uploadDetails.uploadStatus) &&
-    isScanningComplete(uploadDetails)
-  ) {
-    uploadDetails.uploadStatus = uploadStatus.ready.description
-    uploadDetails.numberOfInfectedFiles = numberOfInfectedFiles(uploadDetails)
-    await server.redis.storeUploadDetails(uploadId, uploadDetails)
-    if (uploadDetails.scanResultCallbackUrl) {
+  const upload = await server.redis.findUploadWithFiles(uploadId)
+  if (isUploadPending(upload.uploadStatus) && isScanningComplete(upload)) {
+    upload.uploadStatus = uploadStatus.ready.description
+    upload.numberOfInfectedFiles = numberOfInfectedFiles(upload)
+    await server.redis.storeUploadDetails(uploadId, upload)
+    if (upload.scanResultCallbackUrl) {
       await sendSqsMessage(server.sqs, callbackQueue, { uploadId })
     }
-    server.logger.info(`UploadId ${uploadId} has been marked as ready`)
+    server.logger.info(`uploadId ${uploadId} has been marked as ready`)
   }
 }
 

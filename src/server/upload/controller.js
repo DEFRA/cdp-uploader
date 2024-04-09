@@ -35,17 +35,18 @@ const uploadController = {
 
     const uploadDetails = await request.redis.findUploadDetails(uploadId)
 
-    request.logger.info(`upload details ${JSON.stringify(uploadDetails)}`)
+    request.logger.info(uploadDetails, `Upload request received`)
 
     if (!uploadDetails) {
-      request.logger.info('Failed to upload, uploadId does not exist')
+      request.logger.info(`uploadId ${uploadId} does not exist - upload failed`)
       return Boom.notFound('Failed to upload. UploadId does not exist')
     }
 
     // Upload link has already been used
     if (!isInitiated(uploadDetails.uploadStatus)) {
       request.logger.warn(
-        `upload id ${uploadId} has already been used to upload a file.`
+        uploadDetails,
+        `uploadId ${uploadId} has already been used to upload files`
       )
       return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
     }
@@ -63,6 +64,7 @@ const uploadController = {
             const { responseValue, fileId } = await handleMultipart(
               partValue,
               uploadId,
+              uploadDetails,
               request
             )
             if (fileId) {
@@ -75,6 +77,7 @@ const uploadController = {
           const { responseValue, fileId } = await handleMultipart(
             multipartValue,
             uploadId,
+            uploadDetails,
             request
           )
           if (fileId) {
@@ -96,17 +99,34 @@ const uploadController = {
   }
 }
 
-async function handleMultipart(multipartValue, uploadId, request) {
+async function handleMultipart(
+  multipartValue,
+  uploadId,
+  uploadDetails,
+  request
+) {
   if (isFile(multipartValue)) {
     const fileId = crypto.randomUUID()
-    const filePart = await handleFile(uploadId, fileId, multipartValue, request)
+    const filePart = await handleFile(
+      uploadId,
+      uploadDetails,
+      fileId,
+      multipartValue,
+      request
+    )
     return { responseValue: filePart, fileId }
   } else {
     return { responseValue: multipartValue }
   }
 }
 
-async function handleFile(uploadId, fileId, fileStream, request) {
+async function handleFile(
+  uploadId,
+  uploadDetails,
+  fileId,
+  fileStream,
+  request
+) {
   const hapiFilename = fileStream.hapi?.filename
   const filename = { ...(hapiFilename && { filename: hapiFilename }) }
   const hapiContentType = fileStream.hapi?.headers['content-type']
@@ -114,7 +134,10 @@ async function handleFile(uploadId, fileId, fileStream, request) {
     ...(hapiContentType && { contentType: hapiContentType })
   }
   const fileKey = `${uploadId}/${fileId}`
-  request.logger.info(`Uploading fileId ${fileId} to uploadId ${uploadId}`)
+  request.logger.info(
+    uploadDetails,
+    `uploadId ${uploadId} - uploading fileId ${fileId}`
+  )
   // TODO: check result of upload and redirect on error
   const uploadResult = await uploadStream(
     request.s3,

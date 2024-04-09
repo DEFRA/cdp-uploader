@@ -14,9 +14,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
       payload.uploadId
     )
     if (!uploadDetails) {
-      server.logger.error(
-        `Upload Id ${uploadDetails} not found. Deleting SQS message`
-      )
+      server.logger.error(payload, `Upload Id not found. Deleting SQS message`)
       await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
     } else if (!isAcknowledged(uploadDetails.uploadStatus)) {
       const scanResult = toScanResultResponse(payload.uploadId, uploadDetails)
@@ -31,7 +29,10 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
         uploadDetails.uploadStatus = uploadStatus.acknowledged.description
         await server.redis.storeUploadDetails(uploadDetails)
       } else {
-        server.logger.error(`Failed to trigger callback ${url}, ${json}`)
+        server.logger.error(
+          payload,
+          `Failed to trigger callback ${url}, ${json}`
+        )
       }
     } else if (isAcknowledged(uploadDetails.uploadStatus)) {
       // Duplicate SQS message so don't attempt callback

@@ -22,9 +22,16 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
   const uploadDetails = await server.redis.findUploadDetails(uploadId)
   const fileDetails = await server.redis.findFileDetails(fileId)
 
-  if (!uploadDetails || !fileDetails) {
+  if (!uploadDetails) {
     server.logger.warn(
-      `No record of upload or file ID in ${payload.key} found in Redis, ignoring scan result. May be expired.`
+      `No record of uploadId found in Redis for ${payload.key}, ignoring scan result. May be expired`
+    )
+    return
+  }
+  if (!fileDetails) {
+    server.logger.warn(
+      uploadDetails,
+      `uploadId ${uploadId} - No record of ${payload.key} found in Redis, ignoring scan result. May be expired`
     )
     return
   }
@@ -38,7 +45,8 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     if (isInfected(fileDetails.fileStatus)) {
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
       server.logger.warn(
-        `UploadId: ${uploadId}, fileId: ${fileId} - Virus found. message: ${payload.message}`
+        uploadDetails,
+        `uploadId ${uploadId}, fileId: ${fileId} - Virus found. message: ${payload.message}`
       )
     }
   }
@@ -65,16 +73,19 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
       await server.redis.storeFileDetails(fileId, fileDetails)
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
       server.logger.info(
-        `UploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} was delivered to ${destination}`
+        uploadDetails,
+        `uploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} was delivered to ${destination}`
       )
     } else {
       server.logger.error(
-        `UploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} could not be delivered to ${destination}`
+        uploadDetails,
+        `uploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} could not be delivered to ${destination}`
       )
     }
   } else {
     server.logger.info(
-      `UploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} should not be delivered to ${destination}`
+      uploadDetails,
+      `uploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} should not be delivered to ${destination}`
     )
   }
   await processScanComplete(server, uploadId)

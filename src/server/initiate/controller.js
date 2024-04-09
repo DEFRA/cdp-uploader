@@ -24,7 +24,7 @@ const initiateController = {
     uploadDetails.initiated = new Date()
     await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
-    request.logger.info({ uploadDetails }, `request ${uploadId}`)
+    request.logger.info(uploadDetails, `request ${uploadId}`)
 
     return h
       .response({
