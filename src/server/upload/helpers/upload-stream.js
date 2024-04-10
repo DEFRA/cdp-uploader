@@ -18,7 +18,8 @@ async function uploadStream(s3Client, bucket, key, fileStream, metadata) {
       Metadata: {
         ...metadata
       },
-      Body: fileStream
+      Body: fileStream,
+      ContentType: metadata.contentType
     },
     queueSize: 4,
     partSize: 1024 * 1024 * 5,

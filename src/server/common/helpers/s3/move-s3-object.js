@@ -30,7 +30,8 @@ async function copyObject(s3Client, sourceObject, bucket, key) {
   const command = new CopyObjectCommand({
     CopySource: sourceObject,
     Bucket: bucket,
-    Key: key
+    Key: key,
+    ContentType: sourceObject.ContentType
   })
 
   try {
