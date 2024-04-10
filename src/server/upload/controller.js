@@ -91,7 +91,7 @@ const uploadController = {
       )
 
       // update the record in redis
-      uploadDetails.uploadStatus = uploadStatus.quarantined
+      uploadDetails.uploadStatus = uploadStatus.quarantined.description
       uploadDetails.quarantined = new Date()
 
       await request.redis.storeUploadDetails(id, uploadDetails)

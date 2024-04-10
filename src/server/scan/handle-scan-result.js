@@ -38,19 +38,20 @@ async function handleScanResult(server, message) {
 
   if (canBeScanned(uploadDetails.uploadStatus)) {
     const scanResult = {
-      safe: payload.safe,
-      error: payload.error
+      ...(payload.status === 'CLEAN' ? { safe: true } : { safe: false })
     }
-    if (payload.safe) {
+    if (scanResult.safe) {
       scanResult.fileUrl = destination
     }
     uploadDetails.scanResult = scanResult
-    uploadDetails.uploadStatus = uploadStatus.scanned
+    uploadDetails.uploadStatus = uploadStatus.scanned.description
     uploadDetails.scanned = new Date()
     await server.redis.storeUploadDetails(uploadId, uploadDetails)
   }
 
-  if (canBeDelivered(payload.safe, uploadDetails.uploadStatus)) {
+  if (
+    canBeDelivered(uploadDetails.scanResult.safe, uploadDetails.uploadStatus)
+  ) {
     // assume this will throw exception if it fails
     const delivered = await moveS3Object(
       server.s3,
@@ -60,7 +61,7 @@ async function handleScanResult(server, message) {
       destinationKey
     )
     if (delivered) {
-      uploadDetails.uploadStatus = uploadStatus.delivered
+      uploadDetails.uploadStatus = uploadStatus.delivered.description
       uploadDetails.delivered = new Date()
       await server.redis.storeUploadDetails(uploadId, uploadDetails)
       logger.info(
@@ -78,7 +79,12 @@ async function handleScanResult(server, message) {
     )
   }
 
-  if (!canBeAcknowledged(payload.safe, uploadDetails.uploadStatus)) {
+  if (
+    !canBeAcknowledged(
+      uploadDetails.scanResult.safe,
+      uploadDetails.uploadStatus
+    )
+  ) {
     return
   }
   const callbackResponse = await triggerCallback(
@@ -87,7 +93,7 @@ async function handleScanResult(server, message) {
   )
 
   if (callbackResponse) {
-    uploadDetails.uploadStatus = uploadStatus.acknowledged
+    uploadDetails.uploadStatus = uploadStatus.acknowledged.description
     uploadDetails.acknowledged = new Date()
     await server.redis.storeUploadDetails(uploadId, uploadDetails)
     await DeleteSqsMessage(server.sqs, scanResultQueue, receiptHandle)

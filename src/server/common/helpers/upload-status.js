@@ -7,25 +7,26 @@ const uploadStatus = Object.freeze({
 })
 
 function canBeQuarantined(status) {
-  return Boolean(!status || status === uploadStatus.initiated)
+  return Boolean(!status || status === uploadStatus.initiated.description)
 }
 
 function canBeScanned(status) {
-  return Boolean(!status || status === uploadStatus.quarantined)
+  return Boolean(!status || status === uploadStatus.quarantined.description)
 }
 
 function canBeDelivered(safe, status) {
   return Boolean(
     safe &&
       status &&
-      (status === uploadStatus.quarantined || status === uploadStatus.scanned)
+      (status === uploadStatus.quarantined.description ||
+        status === uploadStatus.scanned.description)
   )
 }
 
 function canBeAcknowledged(safe, status) {
   return Boolean(
-    (!safe && status && status === uploadStatus.scanned) ||
-      (status && status === uploadStatus.delivered)
+    (!safe && status && status === uploadStatus.scanned.description) ||
+      (status && status === uploadStatus.delivered.description)
   )
 }
 
