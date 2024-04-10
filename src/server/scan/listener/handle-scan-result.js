@@ -23,13 +23,13 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
   const fileDetails = await server.redis.findFileDetails(fileId)
 
   if (!uploadDetails) {
-    server.logger.warn(
+    server.logger.error(
       `No record of uploadId found in Redis for ${payload.key}, ignoring scan result. May be expired`
     )
     return
   }
   if (!fileDetails) {
-    server.logger.warn(
+    server.logger.error(
       uploadDetails,
       `uploadId ${uploadId} - No record of ${payload.key} found in Redis, ignoring scan result. May be expired`
     )
@@ -44,9 +44,9 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
 
     if (isInfected(fileDetails.fileStatus)) {
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-      server.logger.warn(
+      server.logger.info(
         uploadDetails,
-        `uploadId ${uploadId}, fileId: ${fileId} - Virus found. message: ${payload.message}`
+        `uploadId ${uploadId}, fileId: ${fileId} - Virus found. Message: ${payload.message}`
       )
     }
   }
@@ -58,7 +58,12 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     '/'
   )
 
-  if (isClean(fileDetails.fileStatus) && !fileDetails.delivered) {
+  if (fileDetails.delivered) {
+    server.logger.warn(
+      uploadDetails,
+      `uploadId ${uploadId} - File ${fileId} has already been delivered to ${destination}`
+    )
+  } else if (isClean(fileDetails.fileStatus)) {
     // assume this will throw exception if it fails
     const delivered = await moveS3Object(
       server.s3,
@@ -69,23 +74,24 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     )
     if (delivered) {
       fileDetails.delivered = new Date()
-      fileDetails.destination = `s3://${destination}`
+      fileDetails.s3Bucket = uploadDetails.destinationBucket
+      fileDetails.s3Key = destinationKey
       await server.redis.storeFileDetails(fileId, fileDetails)
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
       server.logger.info(
         uploadDetails,
-        `uploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} was delivered to ${destination}`
+        `uploadId ${uploadId} - File ${fileId} was delivered to ${destination}`
       )
     } else {
       server.logger.error(
         uploadDetails,
-        `uploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} could not be delivered to ${destination}`
+        `uploadId ${uploadId} - File ${fileId} could not be delivered to ${destination}`
       )
     }
   } else {
-    server.logger.info(
+    server.logger.debug(
       uploadDetails,
-      `uploadId ${uploadId} - File from ${quarantineBucket}/${payload.key} should not be delivered to ${destination}`
+      `uploadId ${uploadId} - File ${fileId} is infected so should not be delivered`
     )
   }
   await processScanComplete(server, uploadId)

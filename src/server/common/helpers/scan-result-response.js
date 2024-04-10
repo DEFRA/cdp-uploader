@@ -5,7 +5,9 @@ function toScanResultResponse(uploadId, redisData) {
       fileId: file.fileId,
       fileStatus: file.fileStatus,
       contentType: file.contentType,
-      filename: file.filename
+      filename: file.filename,
+      s3Bucket: file.s3Bucket,
+      s3Key: file.s3Key
     }
   })
   return {
