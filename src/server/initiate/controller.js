@@ -21,7 +21,7 @@ const initiateController = {
     const uuid = crypto.randomUUID()
     const initiateRequest = request.payload
 
-    initiateRequest.uploadStatus = uploadStatus.initiated
+    initiateRequest.uploadStatus = uploadStatus.initiated.description
     initiateRequest.initiated = new Date()
     await request.redis.client.set(uuid, JSON.stringify(initiateRequest))
 
