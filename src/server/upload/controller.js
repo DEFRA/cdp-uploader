@@ -70,7 +70,8 @@ const uploadController = {
               file,
               {
                 callback: uploadDetails.scanResultCallback,
-                destination: uploadDetails.destinationBucket
+                destination: uploadDetails.destinationBucket,
+                filename: file.hapi.filename
               }
             )
 
