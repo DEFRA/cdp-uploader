@@ -1,0 +1,53 @@
+version: "3.4"
+services:
+  localstack:
+    image: localstack/localstack:3.0.2
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+    environment:
+      AWS_REGION: eu-west-2
+      AWS_DEFAULT_REGION: eu-west-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      DEBUG: ${DEBUG:-1}
+      LS_LOG: WARN  # Localstack DEBUG Level
+      SERVICES: s3,sqs,sns,firehose
+    volumes:
+      - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
+      - ./start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
+    healthcheck:
+      test: ["CMD", "curl", "localhost:4566"]
+      interval: 5s
+      start_period: 5s
+      retries: 3
+
+  redis:
+    image: redis:7.2.3-alpine3.18
+    ports:
+      - "6379:6379"
+    restart: always
+
+  cdp-uploader:
+    image: defradigital/cdp-uploader:${CDP_UPLOADER_VERSION:-latest}
+    container_name: cdp-uploader
+    ports:
+      - "7337:7337"
+    links:
+      - "localstack:localstack"
+      - "redis:redis"
+    depends_on:
+      localstack:
+          condition: service_healthy
+    environment:
+      PORT: 7337
+      AWS_REGION: eu-west-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      NODE_ENV: development
+      REDIS_HOST: redis
+      LOCALSTACK_ENDPOINT: http://localstack:4566
+      SQS_ENDPOINT: http://localstack:4566
+      USE_SINGLE_INSTANCE_CACHE: true
+      SQS_SCAN_RESULTS_CALLBACK: http://localstack:4566/000000000000/cdp-uploader-scan-results-callback
+      SQS_SCAN_RESULTS: http://localstack:4566/000000000000/cdp-clamav-results
