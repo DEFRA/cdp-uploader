@@ -39,10 +39,41 @@ class RedisHelper {
       const file = await this.findFileDetails(fileId)
       if (file) {
         files[fileId] = file
+        this.updateField(result.fields, fileId, {
+          s3Key: file?.s3Key,
+          s3Bucket: file?.s3Bucket,
+          fileStatus: file?.fileStatus
+        })
       }
     }
     result.files = files
     return result
+  }
+
+  updateField(root, fileId, details) {
+    if (typeof root !== 'object') {
+      return false
+    }
+
+    for (const key of Object.keys(root)) {
+      const value = root[key]
+
+      if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; i++) {
+          if (value[i]?.fileId === fileId) {
+            Object.assign(root[key][i], details)
+            return true
+          }
+        }
+      }
+
+      if (typeof value === 'object' && value?.fileId === fileId) {
+        Object.assign(root[key], details)
+        return true
+      }
+    }
+
+    return false
   }
 }
 
