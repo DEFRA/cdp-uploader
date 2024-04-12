@@ -1,13 +1,8 @@
 const uploadStatus = Object.freeze({
   initiated: Symbol('initiated'),
   pending: Symbol('pending'),
-  ready: Symbol('ready'),
-  acknowledged: Symbol('acknowledged')
+  ready: Symbol('ready')
 })
-
-function isAcknowledged(status) {
-  return status === uploadStatus.acknowledged.description
-}
 
 function isInitiated(status) {
   return status === uploadStatus.initiated.description
@@ -21,4 +16,4 @@ function isUploadPending(status) {
   return status === uploadStatus.pending.description
 }
 
-export { isAcknowledged, isInitiated, isReady, isUploadPending, uploadStatus }
+export { isInitiated, isReady, isUploadPending, uploadStatus }

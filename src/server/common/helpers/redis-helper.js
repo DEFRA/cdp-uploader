@@ -29,56 +29,23 @@ class RedisHelper {
     return await this.client.set(fileId, JSON.stringify(fileDetails))
   }
 
-  async findUploadWithFiles(uploadId) {
-    const result = await this.findUploadDetails(uploadId)
-    if (!result || !result.fileIds) {
-      return result
+  async findUploadAndFiles(uploadId) {
+    const uploadDetails = await this.findUploadDetails(uploadId)
+    const files = []
+
+    if (uploadDetails?.fileIds) {
+      const fileDetailsPromises = uploadDetails.fileIds.map((fileId) =>
+        this.findFileDetails(fileId)
+      )
+
+      await Promise.all(fileDetailsPromises).then((fileDetails) => {
+        fileDetails.filter(Boolean).map((r) => files.push(r))
+      })
     }
-    const files = {}
-    for (const fileId of result.fileIds) {
-      const file = await this.findFileDetails(fileId)
-      if (file) {
-        files[fileId] = file
-        this.updateField(result.fields, fileId, {
-          s3Key: file?.s3Key,
-          s3Bucket: file?.s3Bucket,
-          fileStatus: file?.fileStatus
-        })
-      }
+    return {
+      uploadDetails,
+      files
     }
-    result.files = files
-    return result
-  }
-
-  /**
-   * Updates matching file fields in the form-data with the s3 keys & status.
-   */
-  updateField(root, fileId, details) {
-    if (typeof root !== 'object') {
-      return false
-    }
-
-    for (const key of Object.keys(root)) {
-      const value = root[key]
-
-      // Forms with duplicate field names result in arrays
-      if (Array.isArray(value)) {
-        for (let i = 0; i < value.length; i++) {
-          if (value[i]?.fileId && value[i]?.fileId === fileId) {
-            Object.assign(value[i], details)
-            return true
-          }
-        }
-      }
-
-      // Unique fields are always at root level (no recursion needed).
-      if (value?.fileId && value?.fileId === fileId) {
-        Object.assign(value, details)
-        return true
-      }
-    }
-
-    return false
   }
 }
 

@@ -15,7 +15,7 @@ const sqsListener = {
         attributeNames: ['SentTimestamp'],
         messageAttributeNames: ['All'],
         waitTimeSeconds: 10,
-        visibilityTimeout: 400,
+        visibilityTimeout: options.visibilityTimeout,
         pollingWaitTimeMs: 1000,
         shouldDeleteMessages: false,
         handleMessage: (message) =>
