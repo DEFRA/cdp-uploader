@@ -5,13 +5,17 @@ import { config } from '~/src/config'
 import { router } from '~/src/server/router'
 import { catchAll } from '~/src/server/common/helpers/errors'
 import { failAction } from '~/src/server/common/helpers/fail-action'
-import { buildS3client } from '~/src/server/common/helpers/s3-client'
+import { buildS3client } from '~/src/server/common/helpers/s3/s3-client'
 import { RedisHelper } from '~/src/server/common/helpers/redis-helper'
-import { sqsListener } from '~/src/server/scan/build-sqs-listener'
-import { buildSqsClient } from '~/src/server/common/helpers/sqs-client'
+
+import { sqsListener } from '~/src/server/common/helpers/sqs/build-sqs-listener'
+import { buildSqsClient } from '~/src/server/common/helpers/sqs/sqs-client'
+
 import { secureContext } from '~/src/server/common/helpers/secure-context'
 import { buildRedisClient } from '~/src/server/common/helpers/redis-client'
 import { requestLogger } from '~/src/server/common/helpers/logging/request-logger'
+import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result'
+import { handleScanResultsCallback } from '~/src/server/callback/listener/handle-scan-results-callback'
 
 const isProduction = config.get('isProduction')
 
@@ -60,7 +64,25 @@ async function createServer() {
     await server.register(secureContext)
   }
 
-  await server.register([router, sqsListener])
+  await server.register([router])
+
+  await server.register({
+    plugin: sqsListener,
+    options: {
+      queueUrl: config.get('sqsScanResults'),
+      messageHandler: async (message, queueUrl, server) =>
+        await handleScanResult(message, queueUrl, server)
+    }
+  })
+
+  await server.register({
+    plugin: sqsListener,
+    options: {
+      queueUrl: config.get('sqsScanResultsCallback'),
+      messageHandler: async (message, queueUrl, server) =>
+        await handleScanResultsCallback(message, queueUrl, server)
+    }
+  })
 
   server.ext('onPreResponse', catchAll)
 

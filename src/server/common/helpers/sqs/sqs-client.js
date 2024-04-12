@@ -4,7 +4,9 @@ import { config } from '~/src/config'
 function buildSqsClient() {
   return new SQSClient({
     region: config.get('awsRegion'),
-    endpoint: config.get('sqsEndpoint')
+    ...(config.get('isDevelopment') && {
+      endpoint: config.get('localstackEndpoint')
+    })
   })
 }
 

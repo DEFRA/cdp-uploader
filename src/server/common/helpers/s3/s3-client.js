@@ -5,9 +5,10 @@ import { fromNodeProviderChain } from '@aws-sdk/credential-providers'
 function buildS3client() {
   return new S3Client({
     credentials: fromNodeProviderChain(),
-    region: config.get('awsRegion'),
-    endpoint: config.get('s3Endpoint'),
-    forcePathStyle: true
+    ...(config.get('isDevelopment') && {
+      endpoint: config.get('localstackEndpoint'),
+      forcePathStyle: true
+    })
   })
 }
 

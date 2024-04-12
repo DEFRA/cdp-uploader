@@ -1,39 +1,24 @@
 const uploadStatus = Object.freeze({
   initiated: Symbol('initiated'),
-  quarantined: Symbol('quarantined'),
-  scanned: Symbol('scanned'),
-  delivered: Symbol('delivered'),
+  pending: Symbol('pending'),
+  ready: Symbol('ready'),
   acknowledged: Symbol('acknowledged')
 })
 
-function canBeQuarantined(status) {
-  return Boolean(!status || status === uploadStatus.initiated.description)
+function isAcknowledged(status) {
+  return status === uploadStatus.acknowledged.description
 }
 
-function canBeScanned(status) {
-  return Boolean(!status || status === uploadStatus.quarantined.description)
+function isInitiated(status) {
+  return status === uploadStatus.initiated.description
 }
 
-function canBeDelivered(safe, status) {
-  return Boolean(
-    safe &&
-      status &&
-      (status === uploadStatus.quarantined.description ||
-        status === uploadStatus.scanned.description)
-  )
+function isReady(status) {
+  return status === uploadStatus.ready.description
 }
 
-function canBeAcknowledged(safe, status) {
-  return Boolean(
-    (!safe && status && status === uploadStatus.scanned.description) ||
-      (status && status === uploadStatus.delivered.description)
-  )
+function isUploadPending(status) {
+  return status === uploadStatus.pending.description
 }
 
-export {
-  uploadStatus,
-  canBeQuarantined,
-  canBeScanned,
-  canBeDelivered,
-  canBeAcknowledged
-}
+export { isAcknowledged, isInitiated, isReady, isUploadPending, uploadStatus }

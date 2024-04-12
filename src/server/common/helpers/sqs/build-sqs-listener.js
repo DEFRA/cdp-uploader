@@ -1,27 +1,25 @@
 import { Consumer } from 'sqs-consumer'
 
-import { config } from '~/src/config'
-import { handleScanResult } from '~/src/server/scan/handle-scan-result'
-
 const sqsListener = {
   plugin: {
     name: 'sqsListener',
+    multiple: true,
     version: '0.1.0',
-    register: async (server) => {
-      const queueUrl = config.get('sqsScanResults')
-
-      server.logger.info(`Listening for scan result events on ${queueUrl}`)
+    register: async (server, options) => {
+      server.logger.info(
+        `Listening for scan result events on ${options.queueUrl}`
+      )
 
       const listener = Consumer.create({
-        queueUrl,
+        queueUrl: options.queueUrl,
         attributeNames: ['SentTimestamp'],
         messageAttributeNames: ['All'],
         waitTimeSeconds: 10,
         visibilityTimeout: 400,
         pollingWaitTimeMs: 1000,
         shouldDeleteMessages: false,
-        handleMessage: async (message) =>
-          await handleScanResult(server, message),
+        handleMessage: (message) =>
+          options.messageHandler(message, options.queueUrl, server),
         sqs: server.sqs
       })
 

@@ -158,13 +158,14 @@ awslocal s3 rm s3://my-bucket --recursive
 #### Setup local queues
 
 ```bash
-awslocal sqs create-queue --queue-name cdp-uploader-scan-results
+awslocal sqs create-queue --queue-name cdp-clamav-results
+awslocal sqs create-queue --queue-name cdp-uploader-scan-results-callback
 ```
 
 #### Purge local queues
 
 ```bash
-awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/000000000000/cdp-uploader-scan-results
+awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/000000000000/cdp-clamav-results
 ```
 
 ### Local JSON API

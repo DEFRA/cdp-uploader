@@ -1,15 +1,18 @@
 import Boom from '@hapi/boom'
+import * as crypto from 'node:crypto'
+import { Stream } from 'node:stream'
 
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
 import { uploadPathValidation } from '~/src/server/upload/helpers/upload-validation'
 import {
-  uploadStatus,
-  canBeQuarantined
+  isInitiated,
+  uploadStatus
 } from '~/src/server/common/helpers/upload-status'
 
 const quarantineBucket = config.get('quarantineBucket')
 
+// Todo return a nice error message for http://localhost:7337/upload (uuid missing)
 const uploadController = {
   options: {
     validate: {
@@ -24,85 +27,151 @@ const uploadController = {
     }
   },
   handler: async (request, h) => {
-    const id = request.params.id
-    if (!id) {
-      request.logger.info('Failed to upload, no id')
-      return h.response(Boom.notFound('Failed to upload. No id'))
+    const uploadId = request.params.id
+    if (!uploadId) {
+      request.logger.info('Failed to upload, no uploadId')
+      return Boom.notFound('Failed to upload. No uploadId provided')
     }
 
-    const uploadDetails = await request.redis.findUploadDetails(id)
+    const uploadDetails = await request.redis.findUploadDetails(uploadId)
 
-    if (uploadDetails === null) {
-      request.logger.info('Failed to upload, no uploadDetails data')
-      // TODO: Show user-friendly error page
-      return h.response(
-        Boom.notFound('Failed to upload, no uploadDetails data')
-      )
+    request.logger.info(uploadDetails, `Upload request received`)
+
+    if (!uploadDetails) {
+      request.logger.info(`uploadId ${uploadId} does not exist - upload failed`)
+      return Boom.notFound('Failed to upload. UploadId does not exist')
     }
 
     // Upload link has already been used
-    if (!canBeQuarantined(uploadDetails?.uploadStatus)) {
-      // TODO: how do we communicate this failure reason?
-      request.logger.info(
-        `upload id ${id} has already been used to upload a file.`
+    if (!isInitiated(uploadDetails.uploadStatus)) {
+      request.logger.warn(
+        uploadDetails,
+        `uploadId ${uploadId} has already been used to upload files`
       )
-      return h.redirect(uploadDetails.failureRedirect)
+      return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
     }
 
     uploadDetails.fields = {}
+    uploadDetails.fileIds = []
 
     try {
-      const files = request.payload
-      const result = {}
-      for (const f in files) {
-        if (files[f]) {
-          const file = files[f]
-          if (file.hapi?.filename) {
-            request.logger.info(`Uploading ${file.hapi.filename}`)
+      const multipart = request.payload
 
-            const fileKey = `${id}/${file.hapi.filename}`
-
-            // TODO: check result of upload and redirect on error
-            const uploadResult = await uploadStream(
-              request.s3,
-              quarantineBucket,
-              fileKey,
-              file,
-              {
-                callback: uploadDetails.scanResultCallback,
-                destination: uploadDetails.destinationBucket,
-                filename: file.hapi.filename
-              }
+      for (const [partKey, multipartValue] of Object.entries(multipart)) {
+        if (Array.isArray(multipartValue)) {
+          const elemFields = []
+          for (const partValue of multipartValue) {
+            const { responseValue, fileId } = await handleMultipart(
+              partValue,
+              uploadId,
+              uploadDetails,
+              request
             )
-
-            uploadDetails.fields[f] = {
-              fileName: file.hapi?.filename,
-              contentType: file.hapi?.headers['content-type'] ?? '',
-              actualContentType: uploadResult.fileTypeResult?.mime
+            if (fileId) {
+              uploadDetails.fileIds.push(fileId)
             }
-          } else {
-            // save non-file fields
-            uploadDetails.fields[f] = files[f]
+            elemFields.push(responseValue)
           }
+          uploadDetails.fields[partKey] = elemFields
+        } else {
+          const { responseValue, fileId } = await handleMultipart(
+            multipartValue,
+            uploadId,
+            uploadDetails,
+            request
+          )
+          if (fileId) {
+            uploadDetails.fileIds.push(fileId)
+          }
+          uploadDetails.fields[partKey] = responseValue
         }
       }
-      request.logger.info(
-        `Uploaded to ${JSON.stringify(result.data?.Location)}`
-      )
-
-      // update the record in redis
-      uploadDetails.uploadStatus = uploadStatus.quarantined.description
-      uploadDetails.quarantined = new Date()
-
-      await request.redis.storeUploadDetails(id, uploadDetails)
+      uploadDetails.uploadStatus = uploadStatus.pending.description
+      uploadDetails.pending = new Date()
+      await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
       // TODO: check all the files sizes match the size set in uploadDetails
       return h.redirect(uploadDetails.successRedirect)
     } catch (e) {
       request.logger.error(e)
-      return h.redirect(uploadDetails.failureRedirect)
+      return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
     }
   }
+}
+
+async function handleMultipart(
+  multipartValue,
+  uploadId,
+  uploadDetails,
+  request
+) {
+  if (isFile(multipartValue)) {
+    const fileId = crypto.randomUUID()
+    const filePart = await handleFile(
+      uploadId,
+      uploadDetails,
+      fileId,
+      multipartValue,
+      request
+    )
+    return { responseValue: filePart, fileId }
+  } else {
+    return { responseValue: multipartValue }
+  }
+}
+
+async function handleFile(
+  uploadId,
+  uploadDetails,
+  fileId,
+  fileStream,
+  request
+) {
+  const hapiFilename = fileStream.hapi?.filename
+  const filename = { ...(hapiFilename && { filename: hapiFilename }) }
+  const hapiContentType = fileStream.hapi?.headers['content-type']
+  const contentType = {
+    ...(hapiContentType && { contentType: hapiContentType })
+  }
+  const fileKey = `${uploadId}/${fileId}`
+  request.logger.info(
+    uploadDetails,
+    `uploadId ${uploadId} - uploading fileId ${fileId}`
+  )
+  // TODO: check result of upload and redirect on error
+  const uploadResult = await uploadStream(
+    request.s3,
+    quarantineBucket,
+    fileKey,
+    fileStream,
+    {
+      uploadId,
+      fileId,
+      ...contentType,
+      ...filename
+    }
+  )
+  const actualContentType = uploadResult.fileTypeResult?.mime
+  const files = {
+    uploadId,
+    fileId,
+    fileStatus: uploadStatus.pending.description,
+    pending: new Date(),
+    actualContentType,
+    ...contentType,
+    ...filename
+  }
+  await request.redis.storeFileDetails(fileId, files)
+  return {
+    fileId,
+    actualContentType,
+    ...filename,
+    ...contentType
+  }
+}
+
+function isFile(formPart) {
+  return formPart instanceof Stream
 }
 
 export { uploadController }
