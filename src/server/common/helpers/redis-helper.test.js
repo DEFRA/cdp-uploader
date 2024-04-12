@@ -65,4 +65,23 @@ describe('#redis-helper', () => {
       })
     ).toBe(false)
   })
+
+  test('doesnt update anything with a null fileID', () => {
+    const helper = new RedisHelper(null)
+
+    const fields = {
+      foo: 'bar',
+      file: {
+        fileId: '1111'
+      },
+      filelist: [{ fileId: '2222' }, { fileId: '3333' }]
+    }
+
+    expect(
+      helper.updateField(fields, null, {
+        s3Key: '9999-9999',
+        s3Bucket: 'bar'
+      })
+    ).toBe(false)
+  })
 })

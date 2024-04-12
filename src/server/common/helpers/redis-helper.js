@@ -60,14 +60,18 @@ class RedisHelper {
 
       if (Array.isArray(value)) {
         for (let i = 0; i < value.length; i++) {
-          if (value[i]?.fileId === fileId) {
+          if (value[i]?.fileId && value[i]?.fileId === fileId) {
             Object.assign(root[key][i], details)
             return true
           }
         }
       }
 
-      if (typeof value === 'object' && value?.fileId === fileId) {
+      if (
+        typeof value === 'object' &&
+        value?.fileId &&
+        value?.fileId === fileId
+      ) {
         Object.assign(root[key], details)
         return true
       }
