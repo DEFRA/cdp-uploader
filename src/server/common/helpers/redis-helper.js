@@ -50,6 +50,9 @@ class RedisHelper {
     return result
   }
 
+  /**
+   * Updates matching file fields in the form-data with the s3 keys & status.
+   */
   updateField(root, fileId, details) {
     if (typeof root !== 'object') {
       return false
@@ -58,21 +61,19 @@ class RedisHelper {
     for (const key of Object.keys(root)) {
       const value = root[key]
 
+      // Forms with duplicate field names result in arrays
       if (Array.isArray(value)) {
         for (let i = 0; i < value.length; i++) {
           if (value[i]?.fileId && value[i]?.fileId === fileId) {
-            Object.assign(root[key][i], details)
+            Object.assign(value[i], details)
             return true
           }
         }
       }
 
-      if (
-        typeof value === 'object' &&
-        value?.fileId &&
-        value?.fileId === fileId
-      ) {
-        Object.assign(root[key], details)
+      // Unique fields are always at root level (no recursion needed).
+      if (value?.fileId && value?.fileId === fileId) {
+        Object.assign(value, details)
         return true
       }
     }
