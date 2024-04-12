@@ -21,7 +21,8 @@ function toScanResultResponse(uploadId, redisData) {
     acceptedMimeTypes: redisData.acceptedMimeTypes,
     maxFileSize: redisData.maxFileSize,
     ...(files && { files }),
-    fields: redisData.fields
+    fields: redisData.fields,
+    metadata: redisData?.metadata
   }
 }
 
