@@ -20,6 +20,7 @@ const initiateController = {
   handler: async (request, h) => {
     const uploadId = crypto.randomUUID()
     const uploadDetails = request.payload
+    uploadDetails.uploadId = uploadId
     uploadDetails.uploadStatus = uploadStatus.initiated.description
     uploadDetails.initiated = new Date()
     await request.redis.storeUploadDetails(uploadId, uploadDetails)

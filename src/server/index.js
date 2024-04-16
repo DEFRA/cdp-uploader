@@ -71,7 +71,8 @@ async function createServer() {
     options: {
       queueUrl: config.get('sqsScanResults'),
       messageHandler: async (message, queueUrl, server) =>
-        await handleScanResult(message, queueUrl, server)
+        await handleScanResult(message, queueUrl, server),
+      visibilityTimeout: config.get('sqsScanResultsVisibilityTimeout')
     }
   })
 
@@ -80,7 +81,8 @@ async function createServer() {
     options: {
       queueUrl: config.get('sqsScanResultsCallback'),
       messageHandler: async (message, queueUrl, server) =>
-        await handleScanResultsCallback(message, queueUrl, server)
+        await handleScanResultsCallback(message, queueUrl, server),
+      visibilityTimeout: config.get('sqsScanResultsCallbackVisibilityTimeout')
     }
   })
 

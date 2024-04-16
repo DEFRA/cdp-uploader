@@ -8,12 +8,13 @@ const statusController = {
       return Boom.notFound()
     }
 
-    const result = await request.redis.findUploadWithFiles(uploadId)
+    const { files, uploadDetails } =
+      await request.redis.findUploadAndFiles(uploadId)
 
-    if (!result) {
+    if (!uploadDetails) {
       return Boom.notFound()
     }
-    const response = toScanResultResponse(uploadId, result)
+    const response = toScanResultResponse(uploadId, uploadDetails, files)
     return h.response(response).code(200)
   }
 }

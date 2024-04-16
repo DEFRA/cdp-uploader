@@ -35,6 +35,25 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     )
     return
   }
+  const destinationKey = [uploadDetails.destinationPath, payload.key]
+    .filter(Boolean)
+    .join('/')
+  const destination = [uploadDetails.destinationBucket, destinationKey].join(
+    '/'
+  )
+  if (isInfected(fileDetails.fileStatus)) {
+    await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
+    server.logger.warn(uploadDetails, `Duplicate SQS message - Infected file`)
+    return
+  }
+  if (fileDetails.delivered) {
+    await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
+    server.logger.warn(
+      uploadDetails,
+      `Duplicate SQS message - Clean file (already delivered)`
+    )
+    return
+  }
 
   if (isFilePending(fileDetails.fileStatus)) {
     fileDetails.fileStatus = toFileStatus(payload.status)
@@ -46,53 +65,39 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
       server.logger.info(
         uploadDetails,
-        `uploadId ${uploadId}, fileId: ${fileId} - Virus found. Message: ${payload.message}`
+        `Virus found. Message: ${payload.message}`
       )
-    }
-  }
-
-  const destinationKey = [uploadDetails.destinationPath, payload.key]
-    .filter(Boolean)
-    .join('/')
-  const destination = [uploadDetails.destinationBucket, destinationKey].join(
-    '/'
-  )
-
-  if (fileDetails.delivered) {
-    server.logger.warn(
-      uploadDetails,
-      `uploadId ${uploadId} - File ${fileId} has already been delivered to ${destination}`
-    )
-  } else if (isClean(fileDetails.fileStatus)) {
-    // assume this will throw exception if it fails
-    const delivered = await moveS3Object(
-      server.s3,
-      quarantineBucket,
-      payload.key,
-      uploadDetails.destinationBucket,
-      destinationKey
-    )
-    if (delivered) {
-      fileDetails.delivered = new Date()
-      fileDetails.s3Bucket = uploadDetails.destinationBucket
-      fileDetails.s3Key = destinationKey
-      await server.redis.storeFileDetails(fileId, fileDetails)
-      await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-      server.logger.info(
-        uploadDetails,
-        `uploadId ${uploadId} - File ${fileId} was delivered to ${destination}`
+    } else if (isClean(fileDetails.fileStatus)) {
+      // assume this will throw exception if it fails
+      const delivered = await moveS3Object(
+        server.s3,
+        quarantineBucket,
+        payload.key,
+        uploadDetails.destinationBucket,
+        destinationKey
       )
+      if (delivered) {
+        fileDetails.delivered = new Date()
+        fileDetails.s3Bucket = uploadDetails.destinationBucket
+        fileDetails.s3Key = destinationKey
+        await server.redis.storeFileDetails(fileId, fileDetails)
+        await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
+        server.logger.info(
+          uploadDetails,
+          `File ${fileId} was delivered to ${destination}`
+        )
+      } else {
+        server.logger.error(
+          uploadDetails,
+          `File ${fileId} could not be delivered to ${destination}`
+        )
+      }
     } else {
       server.logger.error(
         uploadDetails,
-        `uploadId ${uploadId} - File ${fileId} could not be delivered to ${destination}`
+        `Unexpected status ${fileDetails.fileStatus}`
       )
     }
-  } else {
-    server.logger.debug(
-      uploadDetails,
-      `uploadId ${uploadId} - File ${fileId} is infected so should not be delivered`
-    )
   }
   await processScanComplete(server, uploadId)
 }

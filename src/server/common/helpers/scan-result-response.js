@@ -1,5 +1,23 @@
-function toScanResultResponse(uploadId, redisData) {
-  const files = Object.values(redisData.files || {}).map((file) => {
+function toScanResultResponse(uploadId, uploadDetails, files) {
+  // return { uploadDetails, files }
+  return {
+    uploadStatus: uploadDetails.uploadStatus,
+    numberOfInfectedFiles: uploadDetails.numberOfInfectedFiles,
+    successRedirect: uploadDetails.successRedirect,
+    failureRedirect: uploadDetails.failureRedirect,
+    scanResultCallbackUrl: uploadDetails.scanResultCallbackUrl,
+    destinationBucket: uploadDetails.destinationBucket,
+    destinationPath: uploadDetails.destinationPath,
+    acceptedMimeTypes: uploadDetails.acceptedMimeTypes,
+    maxFileSize: uploadDetails.maxFileSize,
+    files: toFilesResponse(uploadId, files),
+    fields: updateFieldsResponse(uploadDetails.fields, files),
+    metadata: uploadDetails.metadata
+  }
+}
+
+function toFilesResponse(uploadId, files) {
+  return files.map((file) => {
     return {
       uploadId,
       fileId: file.fileId,
@@ -10,20 +28,34 @@ function toScanResultResponse(uploadId, redisData) {
       s3Key: file.s3Key
     }
   })
-  return {
-    uploadStatus: redisData.uploadStatus,
-    numberOfInfectedFiles: redisData.numberOfInfectedFiles,
-    successRedirect: redisData.successRedirect,
-    failureRedirect: redisData.failureRedirect,
-    scanResultCallbackUrl: redisData.scanResultCallbackUrl,
-    destinationBucket: redisData.destinationBucket,
-    destinationPath: redisData.destinationPath,
-    acceptedMimeTypes: redisData.acceptedMimeTypes,
-    maxFileSize: redisData.maxFileSize,
-    ...(files && { files }),
-    fields: redisData.fields,
-    metadata: redisData?.metadata
-  }
 }
 
-export { toScanResultResponse }
+/**
+ * Updates matching file fields in the form-data with the s3 keys & status.
+ */
+function updateFieldsResponse(fields, files) {
+  Object.values(fields).forEach((field) => {
+    files.forEach((file) => {
+      const details = {
+        s3Key: file.s3Key,
+        s3Bucket: file.s3Bucket,
+        fileStatus: file.fileStatus
+      }
+
+      if (Array.isArray(field)) {
+        field
+          .filter((f) => f?.fileId === file.fileId)
+          .forEach((f) => Object.assign(f, details))
+        field.forEach((f) => delete f.fileId)
+      } else {
+        if (field?.fileId === file.fileId) {
+          Object.assign(field, details)
+        }
+        delete field.fileId
+      }
+    })
+  })
+  return fields
+}
+
+export { toScanResultResponse, updateFieldsResponse }

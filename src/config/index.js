@@ -141,11 +141,23 @@ const config = convict({
     default: 'cdp-clamav-results',
     env: 'SQS_SCAN_RESULTS'
   },
+  sqsScanResultsVisibilityTimeout: {
+    doc: 'Queue visibility timeout for virus scan results',
+    format: Number,
+    default: 400,
+    env: 'SQS_SCAN_RESULTS_VISIBILITY_TIMEOUT'
+  },
   sqsScanResultsCallback: {
     doc: 'Queue for upload ready results',
     format: String,
-    default: 'cdp-uploader-scan-results-callback',
+    default: 'cdp-uploader-scan-results-callback.fifo',
     env: 'SQS_SCAN_RESULTS_CALLBACK'
+  },
+  sqsScanResultsCallbackVisibilityTimeout: {
+    doc: 'Queue visibility timeout for virus scan results callback',
+    format: Number,
+    default: 400,
+    env: 'SQS_SCAN_RESULTS_CALLBACK_VISIBILITY_TIMEOUT'
   }
 })
 

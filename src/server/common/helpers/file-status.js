@@ -14,11 +14,6 @@ function isInfected(status) {
 function isClean(status) {
   return status === fileStatus.clean.description
 }
-
-function isVirusScanned(status) {
-  return isInfected(status) || isClean(status)
-}
-
 function toFileStatus(clamavStatus) {
   switch (clamavStatus) {
     case 'CLEAN':
@@ -28,4 +23,4 @@ function toFileStatus(clamavStatus) {
   }
 }
 
-export { isClean, isFilePending, isInfected, isVirusScanned, toFileStatus }
+export { isClean, isFilePending, isInfected, toFileStatus }
