@@ -149,7 +149,8 @@ async function handleFile(
       fileId,
       ...contentType,
       ...filename
-    }
+    },
+    request.logger
   )
   const actualContentType = uploadResult.fileTypeResult?.mime
   const files = {
@@ -158,6 +159,7 @@ async function handleFile(
     fileStatus: uploadStatus.pending.description,
     pending: new Date(),
     actualContentType,
+    contentLength: uploadResult.fileLength,
     ...contentType,
     ...filename
   }
