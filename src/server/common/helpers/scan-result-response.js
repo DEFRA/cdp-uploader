@@ -23,6 +23,7 @@ function toFilesResponse(uploadId, files) {
       fileId: file.fileId,
       fileStatus: file.fileStatus,
       contentType: file.contentType,
+      contentLength: file.contentLength,
       filename: file.filename,
       s3Bucket: file.s3Bucket,
       s3Key: file.s3Key
