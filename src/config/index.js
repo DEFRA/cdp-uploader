@@ -158,6 +158,12 @@ const config = convict({
     format: Number,
     default: 400,
     env: 'SQS_SCAN_RESULTS_CALLBACK_VISIBILITY_TIMEOUT'
+  },
+  logFullContext: {
+    doc: 'Log full context in development mode',
+    format: Boolean,
+    default: true,
+    env: 'LOG_FULL_CONTEXT'
   }
 })
 
