@@ -35,6 +35,9 @@ function toFilesResponse(uploadId, files) {
  * Updates matching file fields in the form-data with the s3 keys & status.
  */
 function updateFieldsResponse(fields, files) {
+  if (!fields) {
+    return fields
+  }
   Object.values(fields).forEach((field) => {
     files.forEach((file) => {
       const details = {

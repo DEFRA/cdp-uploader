@@ -152,6 +152,15 @@ async function handleFile(
     },
     request.logger
   )
+
+  if (uploadResult.contentLength > config.get('maxFileSize')) {
+    const fileSize = Math.floor(uploadResult.contentLength / 1024 / 1024)
+    request.logger.warn(
+      uploadDetails,
+      `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSize}MB`
+    )
+  }
+
   const actualContentType = uploadResult.fileTypeResult?.mime
   const files = {
     uploadId,
