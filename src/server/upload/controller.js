@@ -153,11 +153,41 @@ async function handleFile(
     request.logger
   )
 
-  if (uploadResult.contentLength > config.get('maxFileSize')) {
-    const fileSize = Math.floor(uploadResult.contentLength / 1024 / 1024)
+  const maxFileSizeMb = Math.floor(config.get('maxFileSize') / 1024 / 1024)
+  request.logger.debug(`Service max file size ${maxFileSizeMb} megabytes`)
+  request.logger.debug(
+    `Tenant max file size ${uploadDetails.maxFileSize} kilobytes`
+  )
+  // Unsure if we should default to bytes, kilobytes or megabytes. For config and API.
+  if (uploadResult.fileLength) {
+    request.logger.debug(
+      {
+        uploadDetails: uploadDetails,
+        uploadResult: uploadResult
+      },
+      `uploadId ${uploadId} - fileId ${fileId} uploaded with size ${uploadResult.fileLength} bytes`
+    )
+    if (uploadResult.fileLength > config.get('maxFileSize')) {
+      const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024)
+      request.logger.warn(
+        { uploadDetails },
+        `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSizeMb}mb`
+      )
+    }
+    if (uploadDetails.maxFileSize) {
+      const uploadMaxFileSize = Math.floor(uploadDetails.maxFileSize / 1024)
+      if (uploadResult.fileLength > uploadMaxFileSize) {
+        const fileSizeKb = Math.floor(uploadResult.fileLength / 1024)
+        request.logger.warn(
+          { uploadDetails },
+          `uploadId ${uploadId} - fileId ${fileId} is larger than Tenant's limit: ${fileSizeKb}kb > ${uploadDetails.maxFileSize}kb`
+        )
+      }
+    }
+  } else {
     request.logger.warn(
-      uploadDetails,
-      `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSize}MB`
+      { uploadDetails },
+      `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
     )
   }
 

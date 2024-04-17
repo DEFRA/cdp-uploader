@@ -164,6 +164,12 @@ const config = convict({
     format: Number,
     default: 200 * 1024 * 1024,
     env: 'MAX_FILE_SIZE'
+  },
+  logFullContext: {
+    doc: 'Log full context in development mode',
+    format: Boolean,
+    default: true,
+    env: 'LOG_FULL_CONTEXT'
   }
 })
 

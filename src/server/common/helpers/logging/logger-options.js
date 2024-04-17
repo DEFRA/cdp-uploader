@@ -1,31 +1,21 @@
 import ecsFormat from '@elastic/ecs-pino-format'
 
 import { config } from '~/src/config'
+import {
+  findUploadContext,
+  swapUploadContext
+} from '~/src/server/common/helpers/logging/upload-context'
 
 const isDevelopment = config.get('isDevelopment')
+const logFullContext = config.get('logFullContext')
 
 const hooks = {
   logMethod(inputArgs, method, level) {
-    if (
-      inputArgs.length === 2 &&
-      typeof inputArgs[0] === 'object' &&
-      level !== 'debug' &&
-      inputArgs[0].uploadId
-    ) {
-      const arg1 = inputArgs.shift()
-
-      const loggingContext = {
-        uploadDetails: {
-          uploadId: arg1.uploadId,
-          initiated: arg1.initiated,
-          uploadStatus: arg1.uploadStatus,
-          fileIds: arg1.fileIds
-        }
-      }
-      return method.apply(this, [loggingContext, ...inputArgs])
-    } else {
-      return method.apply(this, inputArgs)
+    const uploadContext = findUploadContext(inputArgs[0])
+    if (notLogFullContext(level, inputArgs, uploadContext)) {
+      inputArgs[0] = swapUploadContext(inputArgs[0], uploadContext)
     }
+    return method.apply(this, inputArgs)
   }
 }
 const loggerOptions = {
@@ -44,6 +34,18 @@ const loggerOptions = {
   hooks,
   level: config.get('logLevel'),
   ...(isDevelopment ? { transport: { target: 'pino-pretty' } } : ecsFormat())
+}
+
+function notLogFullContext(level, inputArgs, context) {
+  return (
+    inputArgs.length > 1 &&
+    context &&
+    (!isDevelopment || !logFullContext || !isDebugOrLower(level))
+  )
+}
+
+function isDebugOrLower(level) {
+  return level <= 20
 }
 
 export { loggerOptions }
