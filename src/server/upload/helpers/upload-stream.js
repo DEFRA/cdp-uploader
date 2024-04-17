@@ -1,13 +1,18 @@
 import { PassThrough } from 'node:stream'
-
 import FileType from 'file-type'
+
 import { Upload } from '@aws-sdk/lib-storage'
 
-import { createLogger } from '~/src/server/common/helpers/logging/logger'
+import { findS3ContentLength } from '~/src/server/common/helpers/s3/find-s3-content-length'
 
-const logger = createLogger()
-
-async function uploadStream(s3Client, bucket, key, fileStream, metadata) {
+async function uploadStream(
+  s3Client,
+  bucket,
+  key,
+  fileStream,
+  metadata,
+  logger
+) {
   const fileTypeStream = fileStream.pipe(new PassThrough())
 
   const upload = new Upload({
@@ -39,9 +44,12 @@ async function uploadStream(s3Client, bucket, key, fileStream, metadata) {
   const uploadResult = await upload.done()
   const fileTypeResult = await FileType.fromStream(fileTypeStream)
 
+  const fileLength = await findS3ContentLength(s3Client, bucket, key, logger)
+
   return {
     ...uploadResult,
-    fileTypeResult
+    fileTypeResult,
+    fileLength
   }
 }
 
