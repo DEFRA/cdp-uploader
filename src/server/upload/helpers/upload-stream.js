@@ -31,10 +31,6 @@ async function uploadStream(
     leavePartsOnError: false
   })
 
-  upload.on('httpUploadProgress', (progress) => {
-    logger.info(progress, 'Progress:')
-  })
-
   fileStream.on('error', (error) => {
     logger.info(error, 'Error:')
 

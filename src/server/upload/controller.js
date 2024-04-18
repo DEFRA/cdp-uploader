@@ -152,6 +152,33 @@ async function handleFile(
     },
     request.logger
   )
+
+  // Unsure if we should default to bytes, kilobytes or megabytes. For config and API.
+  if (uploadResult.fileLength) {
+    if (uploadResult.fileLength > config.get('maxFileSize')) {
+      const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024) // MB
+      request.logger.warn(
+        { uploadDetails },
+        `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSizeMb}mb`
+      )
+    }
+    if (uploadDetails.maxFileSize) {
+      const uploadMaxFileSize = Math.floor(uploadDetails.maxFileSize / 1024) // KB
+      if (uploadResult.fileLength > uploadMaxFileSize) {
+        const fileSizeKb = Math.floor(uploadResult.fileLength / 1024)
+        request.logger.info(
+          { uploadDetails },
+          `uploadId ${uploadId} - fileId ${fileId} is larger than Tenant's limit: ${fileSizeKb}kb > ${uploadDetails.maxFileSize}kb`
+        )
+      }
+    }
+  } else {
+    request.logger.warn(
+      { uploadDetails },
+      `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
+    )
+  }
+
   const actualContentType = uploadResult.fileTypeResult?.mime
   const files = {
     uploadId,

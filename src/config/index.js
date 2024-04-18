@@ -158,6 +158,12 @@ const config = convict({
     format: Number,
     default: 400,
     env: 'SQS_SCAN_RESULTS_CALLBACK_VISIBILITY_TIMEOUT'
+  },
+  maxFileSize: {
+    doc: 'Maximum file size in bytes',
+    format: Number,
+    default: 200 * 1024 * 1024,
+    env: 'MAX_FILE_SIZE'
   }
 })
 

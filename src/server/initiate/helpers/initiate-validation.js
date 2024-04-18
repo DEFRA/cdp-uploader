@@ -6,8 +6,8 @@ const initiateValidation = Joi.object({
   scanResultCallbackUrl: Joi.string().uri().optional(),
   destinationBucket: Joi.string().required(),
   destinationPath: Joi.string().default(''),
-  acceptedMimeTypes: Joi.array().items(Joi.string()),
-  maxFileSize: Joi.number().positive(),
+  acceptedMimeTypes: Joi.array().items(Joi.string()).optional(),
+  maxFileSize: Joi.number().positive().optional(),
   metadata: Joi.object().unknown(true).default({})
 })
 
