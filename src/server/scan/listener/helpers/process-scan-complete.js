@@ -11,26 +11,46 @@ const callbackQueueUrl = config.get('sqsScanResultsCallback')
 async function processScanComplete(server, uploadId) {
   const { files, uploadDetails } =
     await server.redis.findUploadAndFiles(uploadId)
-  if (
-    uploadDetails &&
-    isUploadPending(uploadDetails.uploadStatus) &&
-    isScanningComplete(files)
-  ) {
-    if (uploadDetails.scanResultCallbackUrl) {
-      await sendSqsMessage(server.sqs, callbackQueueUrl, { uploadId })
-    }
-    uploadDetails.uploadStatus = uploadStatus.ready.description
-    uploadDetails.ready = new Date()
-    uploadDetails.numberOfInfectedFiles = numberOfInfectedFiles(files)
-    await server.redis.storeUploadDetails(uploadId, uploadDetails)
-    server.logger.info(
-      uploadDetails,
-      `uploadId ${uploadId} has been marked as ready`
-    )
-  } else if (isReady(uploadDetails.uploadStatus)) {
+  if (!uploadDetails) {
     server.logger.error(
-      uploadDetails,
+      { uploadId },
+      `uploadId ${uploadId} not found, can not process scan completion.`
+    )
+    return
+  }
+  if (uploadDetails && isUploadPending(uploadDetails.uploadStatus)) {
+    if (isScanningComplete(files)) {
+      if (uploadDetails.scanResultCallbackUrl) {
+        try {
+          await sendSqsMessage(server.sqs, callbackQueueUrl, { uploadId })
+        } catch (error) {
+          server.logger.error({ error }, `Failed to send scan result callback`)
+          return
+        }
+      }
+      uploadDetails.uploadStatus = uploadStatus.ready.description
+      uploadDetails.ready = new Date()
+      uploadDetails.numberOfInfectedFiles = numberOfInfectedFiles(files)
+      await server.redis.storeUploadDetails(uploadId, uploadDetails)
+      server.logger.info(
+        { uploadDetails },
+        `uploadId ${uploadId} has been marked as ready`
+      )
+    } else {
+      server.logger.debug(
+        { uploadDetails },
+        `uploadId ${uploadId} scans not yet completed`
+      )
+    }
+  } else if (isReady(uploadDetails.uploadStatus)) {
+    server.logger.warn(
+      { uploadDetails },
       `uploadId ${uploadId} was already marked as ready`
+    )
+  } else {
+    server.logger.error(
+      { uploadDetails },
+      `uploadId ${uploadId} unexpected upload status: ${uploadDetails.uploadStatus}`
     )
   }
 }
