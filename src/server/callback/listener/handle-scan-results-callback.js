@@ -8,22 +8,20 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
   const uploadId = payload.uploadId
   const { files, uploadDetails } =
     await server.redis.findUploadAndFiles(uploadId)
+  const childLogger = server.logger.child({
+    uploadId,
+    uploadDetails
+  })
   if (!uploadDetails) {
     await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
-    server.logger.error(
-      uploadDetails,
-      `uploadId ${uploadId} not found. Deleting SQS message`
-    )
+    childLogger.debug(`uploadId ${uploadId} not found. Deleting SQS message`)
     return
   }
 
   if (uploadDetails.acknowledged) {
     // Duplicate SQS message so don't attempt callback
     await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
-    server.logger.warn(
-      uploadDetails,
-      `Duplicate SQS message - callback already acknowledged`
-    )
+    childLogger.warn(`Duplicate SQS message - callback already acknowledged`)
     return
   }
 
@@ -34,7 +32,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
       files
     )
     const url = uploadDetails.scanResultCallbackUrl
-    server.logger.debug(uploadDetails, `Requesting callback to ${url}`)
+    childLogger.debug(`Requesting callback to ${url}`)
     const response = await fetchCallback(
       url,
       scanResultResponse,
@@ -46,10 +44,9 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
       await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
       uploadDetails.acknowledged = new Date()
       await server.redis.storeUploadDetails(uploadId, uploadDetails)
-      server.logger.info(uploadDetails, `Callback to ${url} successful`)
+      childLogger.debug(`Callback to ${url} successful`)
     } else {
-      server.logger.error(
-        uploadDetails,
+      childLogger.debug(
         `Failed to trigger callback ${url}, ${response?.status}`
       )
     }

@@ -34,18 +34,21 @@ const uploadController = {
     }
 
     const uploadDetails = await request.redis.findUploadDetails(uploadId)
+    const childLogger = request.logger.child({
+      uploadId,
+      uploadDetails
+    })
 
-    request.logger.info(uploadDetails, `Upload request received`)
+    childLogger.debug(`Upload request received`)
 
     if (!uploadDetails) {
-      request.logger.info(`uploadId ${uploadId} does not exist - upload failed`)
+      childLogger.info(`uploadId ${uploadId} does not exist - upload failed`)
       return Boom.notFound('Failed to upload. UploadId does not exist')
     }
 
     // Upload link has already been used
     if (!isInitiated(uploadDetails.uploadStatus)) {
-      request.logger.warn(
-        uploadDetails,
+      childLogger.debug(
         `uploadId ${uploadId} has already been used to upload files`
       )
       return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
@@ -133,10 +136,13 @@ async function handleFile(
     ...(hapiContentType && { contentType: hapiContentType })
   }
   const fileKey = `${uploadId}/${fileId}`
-  request.logger.info(
-    uploadDetails,
-    `uploadId ${uploadId} - uploading fileId ${fileId}`
-  )
+
+  const childLogger = request.logger.child({
+    uploadId,
+    uploadDetails
+  })
+
+  childLogger.debug(`uploadId ${uploadId} - uploading fileId ${fileId}`)
   // TODO: check result of upload and redirect on error
   const uploadResult = await uploadStream(
     request.s3,
@@ -156,8 +162,7 @@ async function handleFile(
   if (uploadResult.fileLength > 0) {
     if (uploadResult.fileLength > config.get('maxFileSize')) {
       const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024) // MB
-      request.logger.warn(
-        { uploadDetails },
+      childLogger.debug(
         `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSizeMb}mb`
       )
     }
@@ -165,16 +170,14 @@ async function handleFile(
       const uploadMaxFileSize = Math.floor(uploadDetails.maxFileSize / 1024) // KB
       if (uploadResult.fileLength > uploadMaxFileSize) {
         const fileSizeKb = Math.floor(uploadResult.fileLength / 1024)
-        request.logger.info(
-          { uploadDetails },
+        childLogger.debug(
           `uploadId ${uploadId} - fileId ${fileId} is larger than Tenant's limit: ${fileSizeKb}kb > ${uploadDetails.maxFileSize}kb`
         )
       }
     }
   } else {
-    request.logger.warn(
-      { uploadDetails },
-      `uploadId ${uploadId} - fileId ${fileId} uploaded with zero (0) size`
+    childLogger.debug(
+      `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
     )
 
     return null

@@ -25,7 +25,12 @@ const initiateController = {
     uploadDetails.initiated = new Date()
     await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
-    request.logger.info(uploadDetails, `request ${uploadId}`)
+    const childLogger = request.logger.child({
+      uploadId,
+      uploadDetails
+    })
+
+    childLogger.debug(`request ${uploadId}`)
 
     return h
       .response({

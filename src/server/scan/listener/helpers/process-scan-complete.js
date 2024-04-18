@@ -11,9 +11,13 @@ const callbackQueueUrl = config.get('sqsScanResultsCallback')
 async function processScanComplete(server, uploadId) {
   const { files, uploadDetails } =
     await server.redis.findUploadAndFiles(uploadId)
+  const childLogger = server.logger.child({
+    uploadId,
+    uploadDetails
+  })
+
   if (!uploadDetails) {
-    server.logger.error(
-      { uploadId },
+    childLogger.error(
       `uploadId ${uploadId} not found, can not process scan completion.`
     )
     return
@@ -24,8 +28,8 @@ async function processScanComplete(server, uploadId) {
         try {
           await sendSqsMessage(server.sqs, callbackQueueUrl, { uploadId })
         } catch (error) {
-          server.logger.error(
-            { uploadDetails, error },
+          childLogger.error(
+            { error },
             `Failed to send SQS for scan result callback`
           )
           return
@@ -35,24 +39,14 @@ async function processScanComplete(server, uploadId) {
       uploadDetails.ready = new Date()
       uploadDetails.numberOfInfectedFiles = numberOfInfectedFiles(files)
       await server.redis.storeUploadDetails(uploadId, uploadDetails)
-      server.logger.info(
-        { uploadDetails },
-        `uploadId ${uploadId} has been marked as ready`
-      )
+      childLogger.info(`uploadId ${uploadId} has been marked as ready`)
     } else {
-      server.logger.debug(
-        { uploadDetails },
-        `uploadId ${uploadId} scans not yet completed`
-      )
+      childLogger.debug(`uploadId ${uploadId} scans not yet completed`)
     }
   } else if (isReady(uploadDetails.uploadStatus)) {
-    server.logger.warn(
-      { uploadDetails },
-      `uploadId ${uploadId} was already marked as ready`
-    )
+    childLogger.warn(`uploadId ${uploadId} was already marked as ready`)
   } else {
-    server.logger.error(
-      { uploadDetails },
+    childLogger.error(
       `uploadId ${uploadId} unexpected upload status: ${uploadDetails.uploadStatus}`
     )
   }
