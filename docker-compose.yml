@@ -1,49 +1,66 @@
-version: "3.4"
+version: '3.4'
 services:
+  proxy:
+    image: nginxproxy/nginx-proxy:1.4
+    ports:
+      - '7300:80'
+    environment:
+      - ENABLE_IPV6=true
+      - DEFAULT_ROOT="418"
+      - DEFAULT_HOST=~^uploader\..*\.sslip\.io
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - cdpuploader
+
   localstack:
     image: localstack/localstack:3.0.2
     ports:
-      - "127.0.0.1:4566:4566"            # LocalStack Gateway
-      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+      - '4566:4566' # LocalStack Gateway
+      - '4510-4559:4510-4559' # external services port range
+    env_file:
+      - 'compose/aws.env'
     environment:
-      AWS_REGION: eu-west-2
-      AWS_DEFAULT_REGION: eu-west-2
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
       DEBUG: ${DEBUG:-1}
-      LS_LOG: WARN  # Localstack DEBUG Level
+      LS_LOG: WARN # Localstack DEBUG Level
       SERVICES: s3,sqs,sns,firehose
+      LOCALSTACK_HOST: 127.0.0.1
     volumes:
-      - "${TMPDIR:-/tmp}/localstack:/var/lib/localstack"
-      - ./start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
+      - '${TMPDIR:-/tmp}/localstack:/var/lib/localstack'
+      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
     healthcheck:
-      test: ["CMD", "curl", "localhost:4566"]
+      test: ['CMD', 'curl', 'localhost:4566']
       interval: 5s
       start_period: 5s
       retries: 3
+    networks:
+      - cdpuploader
 
   redis:
     image: redis:7.2.3-alpine3.18
     ports:
-      - "6379:6379"
+      - '6379:6379'
     restart: always
+    networks:
+      - cdpuploader
 
   cdp-uploader:
     image: defradigital/cdp-uploader:${CDP_UPLOADER_VERSION:-latest}
-    container_name: cdp-uploader
     ports:
-      - "7337:7337"
+      - '7337:7337'
     links:
-      - "localstack:localstack"
-      - "redis:redis"
+      - 'localstack:localstack'
+      - 'redis:redis'
     depends_on:
       localstack:
-          condition: service_healthy
+        condition: service_healthy
+    env_file:
+      - 'compose/aws.env'
     environment:
+      VIRTUAL_HOST: ~^uploader\..*\.sslip\.io
+      VIRTUAL_PATH: /
+      VIRTUAL_PORT: 7337
       PORT: 7337
-      AWS_REGION: eu-west-2
-      AWS_ACCESS_KEY_ID: test
-      AWS_SECRET_ACCESS_KEY: test
       NODE_ENV: development
       REDIS_HOST: redis
       LOCALSTACK_ENDPOINT: http://localstack:4566
@@ -51,3 +68,16 @@ services:
       USE_SINGLE_INSTANCE_CACHE: true
       SQS_SCAN_RESULTS_CALLBACK: http://localstack:4566/000000000000/cdp-uploader-scan-results-callback
       SQS_SCAN_RESULTS: http://localstack:4566/000000000000/cdp-clamav-results
+    networks:
+      - cdpuploader
+
+  # httpstatus:
+  #   image: ghcr.io/aaronpowell/httpstatus
+  #   ports:
+  #     - '7080:80'
+  #   networks:
+  #     - cdpuploader
+
+networks:
+  cdpuploader:
+    driver: bridge
