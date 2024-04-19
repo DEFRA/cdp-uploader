@@ -61,6 +61,7 @@ const uploadController = {
         if (Array.isArray(multipartValue)) {
           const elemFields = []
           for (const partValue of multipartValue) {
+            // TODO guard this destructuring
             const { responseValue, fileId } = await handleMultipart(
               partValue,
               uploadId,
@@ -70,10 +71,15 @@ const uploadController = {
             if (fileId) {
               uploadDetails.fileIds.push(fileId)
             }
-            elemFields.push(responseValue)
+            if (responseValue) {
+              elemFields.push(responseValue)
+            }
           }
-          uploadDetails.fields[partKey] = elemFields
+          if (elemFields.length > 0) {
+            uploadDetails.fields[partKey] = elemFields
+          }
         } else {
+          // TODO guard this destructuring
           const { responseValue, fileId } = await handleMultipart(
             multipartValue,
             uploadId,
@@ -83,7 +89,9 @@ const uploadController = {
           if (fileId) {
             uploadDetails.fileIds.push(fileId)
           }
-          uploadDetails.fields[partKey] = responseValue
+          if (responseValue) {
+            uploadDetails.fields[partKey] = responseValue
+          }
         }
       }
       uploadDetails.uploadStatus = uploadStatus.pending.description
@@ -114,6 +122,11 @@ async function handleMultipart(
       multipartValue,
       request
     )
+
+    if (filePart === null) {
+      return {}
+    }
+
     return { responseValue: filePart, fileId }
   } else {
     return { responseValue: multipartValue }
@@ -154,7 +167,7 @@ async function handleFile(
   )
 
   // Unsure if we should default to bytes, kilobytes or megabytes. For config and API.
-  if (uploadResult.fileLength) {
+  if (uploadResult.fileLength > 0) {
     if (uploadResult.fileLength > config.get('maxFileSize')) {
       const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024) // MB
       request.logger.warn(
@@ -175,8 +188,10 @@ async function handleFile(
   } else {
     request.logger.warn(
       { uploadDetails },
-      `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
+      `uploadId ${uploadId} - fileId ${fileId} uploaded with zero (0) size`
     )
+
+    return null
   }
 
   const actualContentType = uploadResult.fileTypeResult?.mime
