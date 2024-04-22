@@ -16,6 +16,7 @@ import { buildRedisClient } from '~/src/server/common/helpers/redis-client'
 import { requestLogger } from '~/src/server/common/helpers/logging/request-logger'
 import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result'
 import { handleScanResultsCallback } from '~/src/server/callback/listener/handle-scan-results-callback'
+import { handleMockVirusScanner } from '~/src/server/test-harness/mock-virus-scanner'
 
 const isProduction = config.get('isProduction')
 
@@ -85,6 +86,19 @@ async function createServer() {
       visibilityTimeout: config.get('sqsScanResultsCallbackVisibilityTimeout')
     }
   })
+
+  // Local development & testing only
+  if (config.get('mockVirusScanEnabled')) {
+    await server.register({
+      plugin: sqsListener,
+      options: {
+        queueUrl: 'mock-clamav',
+        messageHandler: async (message, queueUrl, server) =>
+          await handleMockVirusScanner(message, queueUrl, server),
+        visibilityTimeout: config.get('sqsScanResultsCallbackVisibilityTimeout')
+      }
+    })
+  }
 
   server.ext('onPreResponse', catchAll)
 

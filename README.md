@@ -169,6 +169,29 @@ awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/00
 awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/000000000000/cdp-uploader-scan-results-callback.fifo
 ```
 
+#### Setup local test harness
+
+When running locally there is a built-in test harness to simulate scan results. This requires an extra setup step
+
+```bash
+awslocal sqs create-queue --queue-name mock-clamav
+awslocal s3api put-bucket-notification-configuration\
+    --bucket $BUCKET_NAME\
+    --notification-configuration '{
+                                      "QueueConfigurations": [
+                                         {
+                                           "QueueArn": "arn:aws:sqs:eu-west-2:000000000000:mock-clamav",
+                                           "Events": ["s3:ObjectCreated:*"]
+                                         }
+                                       ]
+	                                }'
+```
+
+When running from the IDE the test harness is enabled by default. It can be enabled/disabled via the `MOCK_VIRUS_SCAN_ENABLED` environment variable.
+The test harness will listen for files being uploaded to the quarantine bucket.
+When a file arrives, it checks if the original filename matches the regex set in `MOCK_VIRUS_REGEX` (defaults to checking if the file has 'virus' in the name).
+There is a short delay (set via `MOCK_VIRUS_RESULT_DELAY`) to simulate scan time before the response is sent.
+
 ### Local JSON API
 
 Whilst the APIs are being developed this app uses a local JSON mock API. To start this locally run:
