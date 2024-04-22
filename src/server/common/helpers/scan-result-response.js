@@ -1,5 +1,4 @@
 function toScanResultResponse(uploadId, uploadDetails, files) {
-  // return { uploadDetails, files }
   return {
     uploadStatus: uploadDetails.uploadStatus,
     numberOfInfectedFiles: uploadDetails.numberOfInfectedFiles,

@@ -157,7 +157,7 @@ async function handleFile(
     if (uploadResult.fileLength > config.get('maxFileSize')) {
       const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024) // MB
       request.logger.warn(
-        { uploadDetails },
+        uploadDetails,
         `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSizeMb}mb`
       )
     }
@@ -166,14 +166,14 @@ async function handleFile(
       if (uploadResult.fileLength > uploadMaxFileSize) {
         const fileSizeKb = Math.floor(uploadResult.fileLength / 1024)
         request.logger.info(
-          { uploadDetails },
+          uploadDetails,
           `uploadId ${uploadId} - fileId ${fileId} is larger than Tenant's limit: ${fileSizeKb}kb > ${uploadDetails.maxFileSize}kb`
         )
       }
     }
   } else {
     request.logger.warn(
-      { uploadDetails },
+      uploadDetails,
       `uploadId ${uploadId} - fileId ${fileId} uploaded with zero (0) size`
     )
 

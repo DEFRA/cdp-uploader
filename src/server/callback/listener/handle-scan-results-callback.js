@@ -38,7 +38,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
     const response = await fetchCallback(
       url,
       scanResultResponse,
-      payload,
+      uploadDetails,
       server.logger
     )
 
@@ -56,7 +56,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
   }
 }
 
-async function fetchCallback(url, scanResultResponse, sqsMessage, logger) {
+async function fetchCallback(url, scanResultResponse, uploadDetails, logger) {
   let response
   try {
     response = await fetch(url, {
@@ -65,7 +65,7 @@ async function fetchCallback(url, scanResultResponse, sqsMessage, logger) {
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (error) {
-    logger.error(sqsMessage, `Could not make callback. Error: ${error}`)
+    logger.error(uploadDetails, `Could not make callback. Error: ${error}`)
   }
   return response
 }
