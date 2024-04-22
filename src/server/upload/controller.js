@@ -57,41 +57,27 @@ const uploadController = {
     try {
       const multipart = request.payload
 
-      for (const [partKey, multipartValue] of Object.entries(multipart)) {
-        if (Array.isArray(multipartValue)) {
-          const elemFields = []
-          for (const partValue of multipartValue) {
-            // TODO guard this destructuring
-            const { responseValue, fileId } = await handleMultipart(
-              partValue,
-              uploadId,
-              uploadDetails,
-              request
-            )
-            if (fileId) {
-              uploadDetails.fileIds.push(fileId)
-            }
-            if (responseValue) {
-              elemFields.push(responseValue)
-            }
-          }
-          if (elemFields.length > 0) {
-            uploadDetails.fields[partKey] = elemFields
-          }
-        } else {
-          // TODO guard this destructuring
+      for (const [partKey, mValue] of Object.entries(multipart)) {
+        const partValues = Array.isArray(mValue) ? mValue : [mValue]
+        const elemFields = []
+        for (const partValue of partValues) {
           const { responseValue, fileId } = await handleMultipart(
-            multipartValue,
+            partValue,
             uploadId,
             uploadDetails,
             request
           )
-          if (fileId) {
+          if (responseValue && fileId) {
             uploadDetails.fileIds.push(fileId)
           }
           if (responseValue) {
-            uploadDetails.fields[partKey] = responseValue
+            elemFields.push(responseValue)
           }
+        }
+        if (elemFields.length > 1) {
+          uploadDetails.fields[partKey] = elemFields
+        } else if (elemFields.length === 1) {
+          uploadDetails.fields[partKey] = elemFields[0]
         }
       }
       uploadDetails.uploadStatus = uploadStatus.pending.description
@@ -113,7 +99,9 @@ async function handleMultipart(
   uploadDetails,
   request
 ) {
-  if (isFile(multipartValue)) {
+  if (!isFile(multipartValue)) {
+    return { responseValue: multipartValue }
+  } else {
     const fileId = crypto.randomUUID()
     const filePart = await handleFile(
       uploadId,
@@ -128,8 +116,6 @@ async function handleMultipart(
     }
 
     return { responseValue: filePart, fileId }
-  } else {
-    return { responseValue: multipartValue }
   }
 }
 
