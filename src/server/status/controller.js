@@ -17,7 +17,8 @@ const statusController = {
 
     const childLogger = request.logger.child({
       uploadId,
-      uploadDetails
+      uploadStatus: uploadDetails.uploadStatus,
+      fileIds: uploadDetails.fileIds
     })
 
     childLogger.debug({ uploadDetails }, `Status found for ${uploadId}`)

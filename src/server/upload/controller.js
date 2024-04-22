@@ -36,7 +36,7 @@ const uploadController = {
     const uploadDetails = await request.redis.findUploadDetails(uploadId)
     const childLogger = request.logger.child({
       uploadId,
-      uploadDetails
+      uploadStatus: uploadDetails.uploadStatus
     })
 
     childLogger.debug(`Upload request received`)

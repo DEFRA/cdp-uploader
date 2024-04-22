@@ -4,15 +4,13 @@ import { config } from '~/src/config'
 import { redactedUploadContext } from '~/src/server/common/helpers/logging/logging-context-upload-redaction'
 
 const isDevelopment = config.get('isDevelopment')
-let redactionPaths = [
+const redactionPaths = [
   'req.headers.authorization',
   'req.headers.cookie',
   'res.headers'
 ]
 
-if (!isDevelopment) {
-  redactionPaths = redactionPaths.concat(redactedUploadContext())
-}
+redactionPaths.push(...redactedUploadContext)
 
 if (isDevelopment) {
   redactionPaths.push('req')

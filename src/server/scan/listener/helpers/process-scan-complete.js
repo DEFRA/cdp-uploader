@@ -13,7 +13,8 @@ async function processScanComplete(server, uploadId) {
     await server.redis.findUploadAndFiles(uploadId)
   const childLogger = server.logger.child({
     uploadId,
-    uploadDetails
+    uploadStatus: uploadDetails.uploadStatus,
+    fileIds: uploadDetails.fileIds
   })
 
   if (!uploadDetails) {
