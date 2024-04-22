@@ -139,7 +139,8 @@ async function handleFile(
 
   const childLogger = request.logger.child({
     uploadId,
-    uploadDetails
+    uploadStatus: uploadDetails.uploadStatus,
+    fileId
   })
 
   childLogger.debug(`uploadId ${uploadId} - uploading fileId ${fileId}`)

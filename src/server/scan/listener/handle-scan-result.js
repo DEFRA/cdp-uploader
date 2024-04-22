@@ -26,7 +26,9 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     payLoadKey: payload.key,
     uploadId,
     uploadStatus: uploadDetails.uploadStatus,
-    fileIds: uploadDetails.fileIds
+    fileIds: uploadDetails.fileIds,
+    fileId,
+    fileStatus: fileDetails.fileStatus
   })
 
   if (!uploadDetails) {
