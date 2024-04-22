@@ -24,7 +24,10 @@ async function processScanComplete(server, uploadId) {
         try {
           await sendSqsMessage(server.sqs, callbackQueueUrl, { uploadId })
         } catch (error) {
-          server.logger.error({ error }, `Failed to send scan result callback`)
+          server.logger.error(
+            { uploadDetails, error },
+            `Failed to send SQS for scan result callback`
+          )
           return
         }
       }
