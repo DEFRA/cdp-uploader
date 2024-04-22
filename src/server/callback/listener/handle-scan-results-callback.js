@@ -15,7 +15,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
   })
   if (!uploadDetails) {
     await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
-    childLogger.debug(`uploadId ${uploadId} not found. Deleting SQS message`)
+    childLogger.error(`uploadId ${uploadId} not found. Deleting SQS message`)
     return
   }
 
@@ -45,9 +45,9 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
       await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
       uploadDetails.acknowledged = new Date()
       await server.redis.storeUploadDetails(uploadId, uploadDetails)
-      childLogger.debug(`Callback to ${url} successful`)
+      childLogger.info(`Callback to ${url} successful`)
     } else {
-      childLogger.debug(
+      childLogger.error(
         `Failed to trigger callback ${url}, ${response?.status}`
       )
     }

@@ -48,7 +48,7 @@ const uploadController = {
 
     // Upload link has already been used
     if (!isInitiated(uploadDetails.uploadStatus)) {
-      childLogger.debug(
+      childLogger.warn(
         `uploadId ${uploadId} has already been used to upload files`
       )
       return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
@@ -162,7 +162,7 @@ async function handleFile(
   if (uploadResult.fileLength > 0) {
     if (uploadResult.fileLength > config.get('maxFileSize')) {
       const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024) // MB
-      childLogger.debug(
+      childLogger.warn(
         `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSizeMb}mb`
       )
     }
@@ -170,13 +170,13 @@ async function handleFile(
       const uploadMaxFileSize = Math.floor(uploadDetails.maxFileSize / 1024) // KB
       if (uploadResult.fileLength > uploadMaxFileSize) {
         const fileSizeKb = Math.floor(uploadResult.fileLength / 1024)
-        childLogger.debug(
+        childLogger.info(
           `uploadId ${uploadId} - fileId ${fileId} is larger than Tenant's limit: ${fileSizeKb}kb > ${uploadDetails.maxFileSize}kb`
         )
       }
     }
   } else {
-    childLogger.debug(
+    childLogger.warn(
       `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
     )
 
