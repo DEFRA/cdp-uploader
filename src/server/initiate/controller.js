@@ -27,7 +27,7 @@ const initiateController = {
 
     const childLogger = request.logger.child({
       uploadId,
-      uploadDetails
+      uploadStatus: uploadDetails.uploadStatus
     })
 
     childLogger.debug(`request ${uploadId}`)

@@ -24,7 +24,9 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
 
   const childLogger = server.logger.child({
     payLoadKey: payload.key,
-    uploadDetails
+    uploadId,
+    uploadStatus: uploadDetails.uploadStatus,
+    fileIds: uploadDetails.fileIds
   })
 
   if (!uploadDetails) {
