@@ -15,7 +15,12 @@ const statusController = {
       return Boom.notFound()
     }
 
-    request.logger.debug({ uploadDetails }, `Status found for ${uploadId}`)
+    const childLogger = request.logger.child({
+      uploadId,
+      uploadDetails
+    })
+
+    childLogger.debug({ uploadDetails }, `Status found for ${uploadId}`)
     const response = toScanResultResponse(uploadId, uploadDetails, files)
     return h.response(response).code(200)
   }

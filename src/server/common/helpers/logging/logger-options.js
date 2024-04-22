@@ -1,16 +1,17 @@
 import ecsFormat from '@elastic/ecs-pino-format'
 
 import { config } from '~/src/config'
+import { redactedUploadContext } from '~/src/server/common/helpers/logging/logging-context-upload-redaction'
 
 const isDevelopment = config.get('isDevelopment')
-const redactionPaths = [
+let redactionPaths = [
   'req.headers.authorization',
   'req.headers.cookie',
   'res.headers'
 ]
 
 if (!isDevelopment) {
-  redactionPaths.push('uploadDetails', 'uploadId')
+  redactionPaths = redactionPaths.concat(redactedUploadContext())
 }
 
 if (isDevelopment) {
