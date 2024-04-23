@@ -57,33 +57,27 @@ const uploadController = {
     try {
       const multipart = request.payload
 
-      for (const [partKey, multipartValue] of Object.entries(multipart)) {
-        if (Array.isArray(multipartValue)) {
-          const elemFields = []
-          for (const partValue of multipartValue) {
-            const { responseValue, fileId } = await handleMultipart(
-              partValue,
-              uploadId,
-              uploadDetails,
-              request
-            )
-            if (fileId) {
-              uploadDetails.fileIds.push(fileId)
-            }
-            elemFields.push(responseValue)
-          }
-          uploadDetails.fields[partKey] = elemFields
-        } else {
+      for (const [partKey, mValue] of Object.entries(multipart)) {
+        const partValues = Array.isArray(mValue) ? mValue : [mValue]
+        const elemFields = []
+        for (const partValue of partValues) {
           const { responseValue, fileId } = await handleMultipart(
-            multipartValue,
+            partValue,
             uploadId,
             uploadDetails,
             request
           )
-          if (fileId) {
+          if (responseValue && fileId) {
             uploadDetails.fileIds.push(fileId)
           }
-          uploadDetails.fields[partKey] = responseValue
+          if (responseValue) {
+            elemFields.push(responseValue)
+          }
+        }
+        if (elemFields.length > 1) {
+          uploadDetails.fields[partKey] = elemFields
+        } else if (elemFields.length === 1) {
+          uploadDetails.fields[partKey] = elemFields[0]
         }
       }
       uploadDetails.uploadStatus = uploadStatus.pending.description
@@ -105,7 +99,9 @@ async function handleMultipart(
   uploadDetails,
   request
 ) {
-  if (isFile(multipartValue)) {
+  if (!isFile(multipartValue)) {
+    return { responseValue: multipartValue }
+  } else {
     const fileId = crypto.randomUUID()
     const filePart = await handleFile(
       uploadId,
@@ -114,9 +110,12 @@ async function handleMultipart(
       multipartValue,
       request
     )
+
+    if (filePart === null) {
+      return {}
+    }
+
     return { responseValue: filePart, fileId }
-  } else {
-    return { responseValue: multipartValue }
   }
 }
 
@@ -154,7 +153,7 @@ async function handleFile(
   )
 
   // Unsure if we should default to bytes, kilobytes or megabytes. For config and API.
-  if (uploadResult.fileLength) {
+  if (uploadResult.fileLength > 0) {
     if (uploadResult.fileLength > config.get('maxFileSize')) {
       const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024) // MB
       request.logger.warn(
@@ -175,8 +174,10 @@ async function handleFile(
   } else {
     request.logger.warn(
       { uploadDetails },
-      `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
+      `uploadId ${uploadId} - fileId ${fileId} uploaded with zero (0) size`
     )
+
+    return null
   }
 
   const actualContentType = uploadResult.fileTypeResult?.mime
