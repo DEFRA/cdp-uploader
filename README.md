@@ -174,9 +174,9 @@ awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/00
 When running locally there is a built-in test harness to simulate scan results. This requires an extra setup step
 
 ```bash
-awslocal sqs create-queue --queue-name mock-clamav
+awslocal sqs create-queue --region eu-west-2 --queue-name mock-clamav
 awslocal s3api put-bucket-notification-configuration\
-    --bucket $BUCKET_NAME\
+    --bucket cdp-uploader-quarantine\
     --notification-configuration '{
                                       "QueueConfigurations": [
                                          {

@@ -45,7 +45,8 @@ services:
       - cdpuploader
 
   cdp-uploader:
-    image: defradigital/cdp-uploader:${CDP_UPLOADER_VERSION:-latest}
+    #image: defradigital/cdp-uploader:${CDP_UPLOADER_VERSION:-latest}
+    image: cdp-uploader:${CDP_UPLOADER_VERSION:-latest}
     ports:
       - '7337:7337'
     links:
@@ -64,10 +65,9 @@ services:
       NODE_ENV: development
       REDIS_HOST: redis
       LOCALSTACK_ENDPOINT: http://localstack:4566
-      SQS_ENDPOINT: http://localstack:4566
       USE_SINGLE_INSTANCE_CACHE: true
-      SQS_SCAN_RESULTS_CALLBACK: http://localstack:4566/000000000000/cdp-uploader-scan-results-callback
-      SQS_SCAN_RESULTS: http://localstack:4566/000000000000/cdp-clamav-results
+      MOCK_VIRUS_SCAN_ENABLED: true
+      MOCK_VIRUS_RESULT_DELAY: 3
     networks:
       - cdpuploader
 
