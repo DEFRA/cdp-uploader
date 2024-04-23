@@ -4,7 +4,11 @@ import { config } from '~/src/config'
 
 const hooks = {
   logMethod(inputArgs, method, level) {
-    if (inputArgs.length === 2 && typeof inputArgs[0] === 'object') {
+    if (
+      inputArgs.length === 2 &&
+      typeof inputArgs[0] === 'object' &&
+      inputArgs[0].uploadId
+    ) {
       const arg1 = inputArgs.shift()
 
       const loggingContext = {
