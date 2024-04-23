@@ -24,15 +24,19 @@ const sqsListener = {
       })
 
       listener.on('error', (error) => {
-        server.logger.error(error.message)
+        server.logger.error(`error ${options.queueUrl} : ${error.message}`)
       })
 
       listener.on('processing_error', (error) => {
-        server.logger.error(error.message)
+        server.logger.error(
+          `processing error ${options.queueUrl} : ${error.message}`
+        )
       })
 
       listener.on('timeout_error', (error) => {
-        server.logger.error(error.message)
+        server.logger.error(
+          `timeout error ${options.queueUrl} : ${error.message}`
+        )
       })
 
       listener.start()
