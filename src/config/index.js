@@ -48,7 +48,8 @@ const config = convict({
   localstackEndpoint: {
     doc: 'Localstack endpoint',
     format: String,
-    default: 'http://localhost:4566'
+    default: 'http://localhost:4566',
+    env: 'LOCALSTACK_ENDPOINT'
   },
   isProduction: {
     doc: 'If this application running in the production environment',
