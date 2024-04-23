@@ -24,29 +24,35 @@ async function processScanComplete(server, uploadId) {
   }
   if (uploadDetails && isUploadPending(uploadDetails.uploadStatus)) {
     if (isScanningComplete(files)) {
+      uploadDetails.uploadStatus = uploadStatus.ready.description
+      uploadDetails.ready = new Date()
+      uploadDetails.numberOfInfectedFiles = numberOfInfectedFiles(files)
+      await server.redis.storeUploadDetails(uploadId, uploadDetails)
+      childLogger.info(`uploadId ${uploadId} has been marked as ready`)
       if (uploadDetails.scanResultCallbackUrl) {
         try {
           await sendSqsMessage(server.sqs, callbackQueueUrl, { uploadId })
         } catch (error) {
           childLogger.error(
             { error },
-            `Failed to send SQS for scan result callback`
+            `Failed to send SQS for scan result callback. Error: ${error}`
           )
-          return
         }
       }
-      uploadDetails.uploadStatus = uploadStatus.ready.description
-      uploadDetails.ready = new Date()
-      uploadDetails.numberOfInfectedFiles = numberOfInfectedFiles(files)
-      await server.redis.storeUploadDetails(uploadId, uploadDetails)
-      childLogger.info(`uploadId ${uploadId} has been marked as ready`)
     } else {
-      childLogger.debug(`uploadId ${uploadId} scans not yet completed`)
+      childLogger.debug(
+        { uploadDetails },
+        `uploadId ${uploadId} scans not yet completed`
+      )
     }
   } else if (isReady(uploadDetails.uploadStatus)) {
-    childLogger.warn(`uploadId ${uploadId} was already marked as ready`)
+    childLogger.warn(
+      { uploadDetails },
+      `uploadId ${uploadId} was already marked as ready`
+    )
   } else {
     childLogger.error(
+      { uploadDetails },
       `uploadId ${uploadId} unexpected upload status: ${uploadDetails.uploadStatus}`
     )
   }
