@@ -164,6 +164,24 @@ const config = convict({
     format: Number,
     default: 200 * 1024 * 1024,
     env: 'MAX_FILE_SIZE'
+  },
+  mockVirusRegex: {
+    doc: 'Filename pattern used by test harness to simulate viruses',
+    format: String,
+    default: '.*virus.*',
+    env: 'MOCK_VIRUS_REGEX'
+  },
+  mockVirusResultDelay: {
+    doc: 'how many seconds to wait before mocking the scan result',
+    format: Number,
+    default: 5,
+    env: 'MOCK_VIRUS_RESULT_DELAY'
+  },
+  mockVirusScanEnabled: {
+    doc: 'Simulate scan results locally',
+    format: Boolean,
+    default: process.env.NODE_ENV !== 'production',
+    env: 'MOCK_VIRUS_SCAN_ENABLED'
   }
 })
 
