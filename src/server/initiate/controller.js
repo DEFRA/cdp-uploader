@@ -21,20 +21,25 @@ const initiateController = {
   },
   handler: async (request, h) => {
     const uploadId = crypto.randomUUID()
-    const payload = request.payload
-    const uploadDetails = payload
+    const uploadDetails = request.payload
 
     uploadDetails.uploadId = uploadId
     uploadDetails.uploadStatus = uploadStatus.initiated.description
     uploadDetails.initiated = new Date()
     uploadDetails.fields = {}
     uploadDetails.fileIds = []
-    uploadDetails.successRedirect = withQueryParams(payload.successRedirect, {
-      uploadId
-    })
-    uploadDetails.failureRedirect = withQueryParams(payload.failureRedirect, {
-      uploadId
-    })
+    uploadDetails.successRedirect = withQueryParams(
+      uploadDetails.successRedirect,
+      {
+        uploadId
+      }
+    )
+    uploadDetails.failureRedirect = withQueryParams(
+      uploadDetails.failureRedirect,
+      {
+        uploadId
+      }
+    )
 
     await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
