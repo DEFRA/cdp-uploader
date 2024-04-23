@@ -1,7 +1,7 @@
 import ecsFormat from '@elastic/ecs-pino-format'
 
 import { config } from '~/src/config'
-import { redactedUploadContext } from '~/src/server/common/helpers/logging/logging-context-upload-redaction'
+import { redactedUploadContext } from '~/src/server/common/helpers/logging/upload-redaction'
 
 const isDevelopment = config.get('isDevelopment')
 const redactionPaths = [

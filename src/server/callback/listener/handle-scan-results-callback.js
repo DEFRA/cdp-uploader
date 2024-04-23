@@ -10,7 +10,6 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
     await server.redis.findUploadAndFiles(uploadId)
   const childLogger = server.logger.child({
     uploadId,
-    uploadStatus: uploadDetails.uploadStatus,
     fileIds: uploadDetails.fileIds
   })
   if (!uploadDetails) {

@@ -17,7 +17,6 @@ const statusController = {
 
     const childLogger = request.logger.child({
       uploadId,
-      uploadStatus: uploadDetails.uploadStatus,
       fileIds: uploadDetails.fileIds
     })
 

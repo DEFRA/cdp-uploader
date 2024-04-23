@@ -34,10 +34,7 @@ const uploadController = {
     }
 
     const uploadDetails = await request.redis.findUploadDetails(uploadId)
-    const childLogger = request.logger.child({
-      uploadId,
-      uploadStatus: uploadDetails.uploadStatus
-    })
+    const childLogger = request.logger.child({ uploadId })
 
     childLogger.debug(`Upload request received`)
 
@@ -137,13 +134,9 @@ async function handleFile(
   }
   const fileKey = `${uploadId}/${fileId}`
 
-  const childLogger = request.logger.child({
-    uploadId,
-    uploadStatus: uploadDetails.uploadStatus,
-    fileId
-  })
+  const fileLogger = request.logger.child({ uploadId, fileId })
 
-  childLogger.debug(`uploadId ${uploadId} - uploading fileId ${fileId}`)
+  fileLogger.debug(`uploadId ${uploadId} - uploading fileId ${fileId}`)
   // TODO: check result of upload and redirect on error
   const uploadResult = await uploadStream(
     request.s3,
@@ -161,9 +154,10 @@ async function handleFile(
 
   // Unsure if we should default to bytes, kilobytes or megabytes. For config and API.
   if (uploadResult.fileLength > 0) {
+    fileLogger.info(`uploadId ${uploadId} - fileId ${fileId} uploaded`)
     if (uploadResult.fileLength > config.get('maxFileSize')) {
       const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024) // MB
-      childLogger.warn(
+      fileLogger.warn(
         `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSizeMb}mb`
       )
     }
@@ -171,13 +165,13 @@ async function handleFile(
       const uploadMaxFileSize = Math.floor(uploadDetails.maxFileSize / 1024) // KB
       if (uploadResult.fileLength > uploadMaxFileSize) {
         const fileSizeKb = Math.floor(uploadResult.fileLength / 1024)
-        childLogger.info(
+        fileLogger.info(
           `uploadId ${uploadId} - fileId ${fileId} is larger than Tenant's limit: ${fileSizeKb}kb > ${uploadDetails.maxFileSize}kb`
         )
       }
     }
   } else {
-    childLogger.warn(
+    fileLogger.warn(
       `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
     )
 
