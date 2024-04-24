@@ -1,6 +1,7 @@
 import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
 import fetch from 'node-fetch'
+import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
 
 async function handleScanResultsCallback(message, callbackQueueUrl, server) {
   const receiptHandle = message.ReceiptHandle
@@ -8,22 +9,19 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
   const uploadId = payload.uploadId
   const { files, uploadDetails } =
     await server.redis.findUploadAndFiles(uploadId)
+
+  const uploadLogger = createUploadLogger(server.logger, uploadDetails)
+
   if (!uploadDetails) {
     await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
-    server.logger.error(
-      uploadDetails,
-      `uploadId ${uploadId} not found. Deleting SQS message`
-    )
+    uploadLogger.error(`uploadId ${uploadId} not found. Deleting SQS message`)
     return
   }
 
   if (uploadDetails.acknowledged) {
     // Duplicate SQS message so don't attempt callback
     await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
-    server.logger.warn(
-      uploadDetails,
-      `Duplicate SQS message - callback already acknowledged`
-    )
+    uploadLogger.warn(`Duplicate SQS message - callback already acknowledged`)
     return
   }
 
@@ -34,29 +32,23 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
       files
     )
     const url = uploadDetails.scanResultCallbackUrl
-    server.logger.debug(uploadDetails, `Requesting callback to ${url}`)
-    const response = await fetchCallback(
-      url,
-      scanResultResponse,
-      uploadDetails,
-      server.logger
-    )
+    uploadLogger.debug({ uploadDetails }, `Requesting callback to ${url}`)
+    const response = await fetchCallback(url, scanResultResponse, uploadLogger)
 
     if (response?.ok) {
       await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
       uploadDetails.acknowledged = new Date()
       await server.redis.storeUploadDetails(uploadId, uploadDetails)
-      server.logger.info(uploadDetails, `Callback to ${url} successful`)
+      uploadLogger.info(`Callback to ${url} successful`)
     } else {
-      server.logger.error(
-        uploadDetails,
+      uploadLogger.error(
         `Failed to trigger callback ${url}, ${response?.status}`
       )
     }
   }
 }
 
-async function fetchCallback(url, scanResultResponse, uploadDetails, logger) {
+async function fetchCallback(url, scanResultResponse, uploadLogger) {
   let response
   try {
     response = await fetch(url, {
@@ -65,7 +57,7 @@ async function fetchCallback(url, scanResultResponse, uploadDetails, logger) {
       headers: { 'Content-Type': 'application/json' }
     })
   } catch (error) {
-    logger.error(uploadDetails, `Could not make callback. Error: ${error}`)
+    uploadLogger.error(error, `Could not make callback. Error: ${error}`)
   }
   return response
 }

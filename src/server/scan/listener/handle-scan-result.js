@@ -10,6 +10,7 @@ import {
   toFileStatus
 } from '~/src/server/common/helpers/file-status'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete'
+import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
 
 const quarantineBucket = config.get('quarantineBucket')
 
@@ -22,19 +23,22 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
   const uploadDetails = await server.redis.findUploadDetails(uploadId)
   const fileDetails = await server.redis.findFileDetails(fileId)
 
+  const fileLogger = createFileLogger(server.logger, uploadDetails, fileId)
+
   if (!uploadDetails) {
-    server.logger.error(
+    fileLogger.error(
       `No record of uploadId found in Redis for ${payload.key}, ignoring scan result. May be expired`
     )
     return
   }
+
   if (!fileDetails) {
-    server.logger.error(
-      uploadDetails,
+    fileLogger.error(
       `uploadId ${uploadId} - No record of ${payload.key} found in Redis, ignoring scan result. May be expired`
     )
     return
   }
+
   const destinationKey = [uploadDetails.destinationPath, payload.key]
     .filter(Boolean)
     .join('/')
@@ -43,15 +47,12 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
   )
   if (isInfected(fileDetails.fileStatus)) {
     await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-    server.logger.warn(uploadDetails, `Duplicate SQS message - Infected file`)
+    fileLogger.warn(`Duplicate SQS message - Infected file`)
     return
   }
   if (fileDetails.delivered) {
     await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-    server.logger.warn(
-      uploadDetails,
-      `Duplicate SQS message - Clean file (already delivered)`
-    )
+    fileLogger.warn(`Duplicate SQS message - Clean file (already delivered)`)
     return
   }
 
@@ -63,10 +64,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
 
     if (isInfected(fileDetails.fileStatus)) {
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-      server.logger.info(
-        uploadDetails,
-        `Virus found. Message: ${payload.message}`
-      )
+      fileLogger.info(`Virus found. Message: ${payload.message}`)
     } else if (isClean(fileDetails.fileStatus)) {
       // assume this will throw exception if it fails
       const delivered = await moveS3Object(
@@ -74,7 +72,8 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
         quarantineBucket,
         payload.key,
         uploadDetails.destinationBucket,
-        destinationKey
+        destinationKey,
+        fileLogger
       )
       if (delivered) {
         fileDetails.delivered = new Date()
@@ -82,24 +81,17 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
         fileDetails.s3Key = destinationKey
         await server.redis.storeFileDetails(fileId, fileDetails)
         await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-        server.logger.info(
-          uploadDetails,
-          `File ${fileId} was delivered to ${destination}`
-        )
+        fileLogger.info(`File ${fileId} was delivered to ${destination}`)
       } else {
-        server.logger.error(
-          uploadDetails,
+        fileLogger.error(
           `File ${fileId} could not be delivered to ${destination}`
         )
       }
     } else {
-      server.logger.error(
-        uploadDetails,
-        `Unexpected status ${fileDetails.fileStatus}`
-      )
+      fileLogger.error(`Unexpected status ${fileDetails.fileStatus}`)
     }
   }
-  await processScanComplete(server, uploadId)
+  await processScanComplete(server, uploadId, fileId)
 }
 
 function findUploadId(key) {

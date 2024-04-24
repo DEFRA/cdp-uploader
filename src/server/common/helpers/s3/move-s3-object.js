@@ -1,15 +1,12 @@
 import { CopyObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 
-import { createLogger } from '~/src/server/common/helpers/logging/logger'
-
-const logger = createLogger()
-
 async function moveS3Object(
   s3Client,
   sourceBucket,
   sourceKey,
   destinationBucket,
-  destinationKey
+  destinationKey,
+  fileLogger
 ) {
   const sourceObject = `${sourceBucket}/${sourceKey}`
 
@@ -17,16 +14,17 @@ async function moveS3Object(
     s3Client,
     sourceObject,
     destinationBucket,
-    destinationKey
+    destinationKey,
+    fileLogger
   )
   if (!fileCopied) {
     return false
   }
 
-  return await deleteObject(s3Client, sourceBucket, sourceKey)
+  return await deleteObject(s3Client, sourceBucket, sourceKey, fileLogger)
 }
 
-async function copyObject(s3Client, sourceObject, bucket, key) {
+async function copyObject(s3Client, sourceObject, bucket, key, fileLogger) {
   const command = new CopyObjectCommand({
     CopySource: sourceObject,
     Bucket: bucket,
@@ -36,10 +34,10 @@ async function copyObject(s3Client, sourceObject, bucket, key) {
 
   try {
     await s3Client.send(command)
-    logger.info(`File copied from ${sourceObject} to ${bucket}/${key}`)
+    fileLogger.info(`File copied from ${sourceObject} to ${bucket}/${key}`)
     return true
   } catch (err) {
-    logger.error(
+    fileLogger.error(
       { err },
       `File from ${sourceObject} could not be copied to ${bucket}/${key}`
     )
@@ -47,7 +45,7 @@ async function copyObject(s3Client, sourceObject, bucket, key) {
   }
 }
 
-async function deleteObject(s3Client, bucket, key) {
+async function deleteObject(s3Client, bucket, key, fileLogger) {
   const deleteCommand = new DeleteObjectCommand({
     Bucket: bucket,
     Key: key
@@ -55,10 +53,10 @@ async function deleteObject(s3Client, bucket, key) {
 
   try {
     await s3Client.send(deleteCommand)
-    logger.info(`File deleted from ${bucket}/${key}`)
+    fileLogger.info(`File deleted from ${bucket}/${key}`)
     return true
   } catch (err) {
-    logger.error({ err }, `File could not be deleted from ${bucket}/${key}`)
+    fileLogger.error({ err }, `File could not be deleted from ${bucket}/${key}`)
     return false
   }
 }

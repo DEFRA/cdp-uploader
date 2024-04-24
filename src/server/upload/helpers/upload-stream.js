@@ -11,7 +11,7 @@ async function uploadStream(
   key,
   fileStream,
   metadata,
-  logger
+  fileLogger
 ) {
   const fileTypeStream = fileStream.pipe(new PassThrough())
 
@@ -32,7 +32,7 @@ async function uploadStream(
   })
 
   fileStream.on('error', (error) => {
-    logger.info(error, 'Error:')
+    fileLogger.error(error, `Error: ${error}`)
 
     fileTypeStream.end()
   })
@@ -40,7 +40,12 @@ async function uploadStream(
   const uploadResult = await upload.done()
   const fileTypeResult = await FileType.fromStream(fileTypeStream)
 
-  const fileLength = await findS3ContentLength(s3Client, bucket, key, logger)
+  const fileLength = await findS3ContentLength(
+    s3Client,
+    bucket,
+    key,
+    fileLogger
+  )
 
   return {
     ...uploadResult,

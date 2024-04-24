@@ -3,6 +3,7 @@ import * as crypto from 'node:crypto'
 import { config } from '~/src/config'
 import { initiateValidation } from '~/src/server/initiate/helpers/initiate-validation'
 import { uploadStatus } from '~/src/server/common/helpers/upload-status'
+import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
 
 const appBaseUrl = config.get('appBaseUrl')
 
@@ -23,9 +24,14 @@ const initiateController = {
     uploadDetails.uploadId = uploadId
     uploadDetails.uploadStatus = uploadStatus.initiated.description
     uploadDetails.initiated = new Date()
+    uploadDetails.fields = {}
+    uploadDetails.fileIds = []
+
     await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
-    request.logger.info(uploadDetails, `request ${uploadId}`)
+    createUploadLogger(request.logger, uploadDetails).info(
+      `Request ${uploadId} initiated`
+    )
 
     return h
       .response({
