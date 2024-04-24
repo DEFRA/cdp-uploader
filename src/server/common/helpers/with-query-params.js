@@ -1,4 +1,14 @@
+import { isArray, mergeWith } from 'lodash'
 import { parse, stringify } from 'qs'
+
+function mergeHelper(pathQueryValue, queryValue) {
+  if (isArray(pathQueryValue)) {
+    return pathQueryValue.concat(queryValue)
+  }
+  if (isArray(queryValue)) {
+    return queryValue.concat(pathQueryValue)
+  }
+}
 
 /**
  * @summay Add query params to url string
@@ -7,22 +17,19 @@ import { parse, stringify } from 'qs'
  * callback url handlers from the callback url in a Frontend.
  *
  * @param path
- * @param additionalQueryParams
+ * @param queryParams
  * @returns {string}
  */
-function withQueryParams(path, additionalQueryParams = {}) {
+function withQueryParams(path, queryParams = {}) {
   const [url, queryString] = path.split('?')
-  const preExistingQueryParams = parse(queryString, { ignoreQueryPrefix: true })
+  const pathQueryParams = parse(queryString, { ignoreQueryPrefix: true })
 
   return (
     url +
-    stringify(
-      {
-        ...preExistingQueryParams,
-        ...additionalQueryParams
-      },
-      { addQueryPrefix: true, arrayFormat: 'repeat' }
-    )
+    stringify(mergeWith({}, pathQueryParams, queryParams, mergeHelper), {
+      addQueryPrefix: true,
+      arrayFormat: 'repeat'
+    })
   )
 }
 
