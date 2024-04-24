@@ -61,7 +61,7 @@
     "pino": "8.20.0",
     "pino-pretty": "11.0.0",
     "sqs-consumer": "9.1.0",
-    "undici": "6.13.0",
+    "undici": "6.14.1",
     "uuid": "9.0.1"
   },
   "devDependencies": {
