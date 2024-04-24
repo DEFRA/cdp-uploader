@@ -50,7 +50,7 @@
     "date-fns": "3.6.0",
     "file-type": "^16.5.4",
     "flat": "^5.0.2",
-    "govuk-frontend": "5.3.0",
+    "govuk-frontend": "5.3.1",
     "hapi-pino": "12.1.0",
     "https-proxy-agent": "7.0.4",
     "ioredis": "5.4.0",
