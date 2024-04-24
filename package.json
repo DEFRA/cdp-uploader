@@ -96,7 +96,7 @@
     "sass-loader": "14.2.1",
     "source-map-loader": "5.0.0",
     "style-loader": "4.0.0",
-    "stylelint": "16.3.1",
+    "stylelint": "16.4.0",
     "stylelint-config-gds": "2.0.0",
     "webpack": "5.91.0",
     "webpack-assets-manifest": "5.2.1",
