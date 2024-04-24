@@ -9,6 +9,10 @@ import {
   isInitiated,
   uploadStatus
 } from '~/src/server/common/helpers/upload-status'
+import {
+  createFileLogger,
+  createUploadLogger
+} from '~/src/server/common/helpers/logging/logger'
 
 const quarantineBucket = config.get('quarantineBucket')
 
@@ -34,26 +38,23 @@ const uploadController = {
     }
 
     const uploadDetails = await request.redis.findUploadDetails(uploadId)
-    const childLogger = request.logger.child({ uploadId })
 
-    childLogger.debug(`Upload request received`)
+    const uploadLogger = createUploadLogger(request.logger, uploadDetails)
 
     if (!uploadDetails) {
-      childLogger.info(`uploadId ${uploadId} does not exist - upload failed`)
+      uploadLogger.info(`uploadId ${uploadId} does not exist - upload failed`)
       return Boom.notFound('Failed to upload. UploadId does not exist')
     }
 
+    uploadLogger.debug({ uploadDetails }, `Upload request received`)
+
     // Upload link has already been used
     if (!isInitiated(uploadDetails.uploadStatus)) {
-      childLogger.warn(
-        { uploadDetails },
+      uploadLogger.warn(
         `uploadId ${uploadId} has already been used to upload files`
       )
       return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
     }
-
-    uploadDetails.fields = {}
-    uploadDetails.fileIds = []
 
     try {
       const multipart = request.payload
@@ -87,8 +88,8 @@ const uploadController = {
 
       // TODO: check all the files sizes match the size set in uploadDetails
       return h.redirect(uploadDetails.successRedirect)
-    } catch (e) {
-      request.logger.error({ uploadDetails }, e)
+    } catch (error) {
+      createUploadLogger(uploadLogger, uploadDetails).error(error, 'Error')
       return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
     }
   }
@@ -104,12 +105,15 @@ async function handleMultipart(
     return { responseValue: multipartValue }
   } else {
     const fileId = crypto.randomUUID()
+    const fileLogger = createFileLogger(request.logger, uploadDetails, fileId)
+
     const filePart = await handleFile(
       uploadId,
       uploadDetails,
       fileId,
       multipartValue,
-      request
+      request,
+      fileLogger
     )
 
     if (filePart === null) {
@@ -125,7 +129,8 @@ async function handleFile(
   uploadDetails,
   fileId,
   fileStream,
-  request
+  request,
+  fileLogger
 ) {
   const hapiFilename = fileStream.hapi?.filename
   const filename = { ...(hapiFilename && { filename: hapiFilename }) }
@@ -135,12 +140,7 @@ async function handleFile(
   }
   const fileKey = `${uploadId}/${fileId}`
 
-  const fileLogger = request.logger.child({ uploadId, fileId })
-
-  fileLogger.debug(
-    { uploadDetails },
-    `uploadId ${uploadId} - uploading fileId ${fileId}`
-  )
+  fileLogger.debug({ uploadDetails }, `Uploading fileId ${fileId}`)
   // TODO: check result of upload and redirect on error
   const uploadResult = await uploadStream(
     request.s3,
@@ -153,24 +153,24 @@ async function handleFile(
       ...contentType,
       ...filename
     },
-    request.logger
+    fileLogger
   )
 
   // Unsure if we should default to bytes, kilobytes or megabytes. For config and API.
   if (uploadResult.fileLength > 0) {
     fileLogger.info(`uploadId ${uploadId} - fileId ${fileId} uploaded`)
     if (uploadResult.fileLength > config.get('maxFileSize')) {
-      const fileSizeMb = Math.floor(uploadResult.contentLength / 1024 / 1024) // MB
+      const fileSizeMb = uploadResult.contentLength / 1024 / 1024 // MB
       fileLogger.warn(
-        `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSizeMb}mb`
+        `uploadId ${uploadId} - fileId ${fileId} is too large: ${fileSizeMb.toFixed(1)}mb`
       )
     }
     if (uploadDetails.maxFileSize) {
-      const uploadMaxFileSize = Math.floor(uploadDetails.maxFileSize / 1024) // KB
-      if (uploadResult.fileLength > uploadMaxFileSize) {
-        const fileSizeKb = Math.floor(uploadResult.fileLength / 1024)
+      const uploadMaxFileSizeBytes = uploadDetails.maxFileSize * 1024 // KB
+      if (uploadResult.fileLength > uploadMaxFileSizeBytes) {
+        const fileSizeKb = uploadResult.fileLength / 1024
         fileLogger.info(
-          `uploadId ${uploadId} - fileId ${fileId} is larger than Tenant's limit: ${fileSizeKb}kb > ${uploadDetails.maxFileSize}kb`
+          `uploadId ${uploadId} - fileId ${fileId} is larger than Tenant's limit: ${fileSizeKb.toFixed(1)}kb > ${uploadDetails.maxFileSize.toFixed(1)}kb`
         )
       }
     }

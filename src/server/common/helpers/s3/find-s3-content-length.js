@@ -1,6 +1,6 @@
 import { HeadObjectCommand } from '@aws-sdk/client-s3'
 
-async function findS3ContentLength(s3Client, bucket, key, logger) {
+async function findS3ContentLength(s3Client, bucket, key, fileLogger) {
   const headObjectCommand = new HeadObjectCommand({
     Bucket: bucket,
     Key: key
@@ -9,10 +9,10 @@ async function findS3ContentLength(s3Client, bucket, key, logger) {
   try {
     const headObjectResult = await s3Client.send(headObjectCommand)
     return headObjectResult.ContentLength
-  } catch (err) {
-    logger.error(
-      { err },
-      `Could not find content type for object ${bucket}/${key}`
+  } catch (error) {
+    fileLogger.error(
+      error,
+      `Could not find content type for object ${bucket}/${key}. Error: ${error}`
     )
     return null
   }

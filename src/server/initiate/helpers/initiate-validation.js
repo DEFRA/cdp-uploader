@@ -7,7 +7,7 @@ const initiateValidation = Joi.object({
   destinationBucket: Joi.string().required(),
   destinationPath: Joi.string().default(''),
   acceptedMimeTypes: Joi.array().items(Joi.string()).optional(),
-  maxFileSize: Joi.number().positive().optional(),
+  maxFileSize: Joi.number().integer().positive().optional(),
   metadata: Joi.object().unknown(true).default({})
 })
 

@@ -9,11 +9,12 @@ const redactionPaths = [
   'req.headers.cookie',
   'res.headers'
 ]
-
-redactionPaths.push(...redactedUploadContext)
+if (!isDevelopment) {
+  redactionPaths.push(...redactedUploadContext)
+}
 
 if (isDevelopment) {
-  redactionPaths.push('req')
+  redactionPaths.push(...['req', 'res', 'responseTime'])
 }
 
 const loggerOptions = {

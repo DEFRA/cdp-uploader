@@ -6,4 +6,16 @@ function createLogger() {
   return pino(loggerOptions)
 }
 
-export { createLogger }
+function createUploadLogger(logger, uploadDetails) {
+  return logger.child({
+    uploadId: uploadDetails?.uploadId,
+    uploadStatus: uploadDetails?.uploadStatus,
+    fileIds: uploadDetails?.fileIds
+  })
+}
+
+function createFileLogger(logger, uploadDetails, fileId) {
+  return createUploadLogger(logger, uploadDetails).child({ fileId })
+}
+
+export { createLogger, createUploadLogger, createFileLogger }

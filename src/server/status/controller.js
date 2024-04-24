@@ -1,5 +1,6 @@
 import Boom from '@hapi/boom'
 import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
+import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
 
 const statusController = {
   handler: async (request, h) => {
@@ -15,12 +16,11 @@ const statusController = {
       return Boom.notFound()
     }
 
-    const childLogger = request.logger.child({
-      uploadId,
-      fileIds: uploadDetails.fileIds
-    })
+    createUploadLogger(request.logger, uploadDetails).debug(
+      { uploadDetails },
+      `Status found for ${uploadId}`
+    )
 
-    childLogger.debug({ uploadDetails }, `Status found for ${uploadId}`)
     const response = toScanResultResponse(uploadId, uploadDetails, files)
     return h.response(response).code(200)
   }
