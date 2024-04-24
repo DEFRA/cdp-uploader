@@ -45,7 +45,7 @@
     "@hapi/hapi": "21.3.9",
     "@hapi/inert": "7.1.0",
     "@hapi/vision": "7.0.3",
-    "babel-plugin-module-resolver": "5.0.1",
+    "babel-plugin-module-resolver": "5.0.2",
     "convict": "6.2.4",
     "date-fns": "3.6.0",
     "file-type": "^16.5.4",
