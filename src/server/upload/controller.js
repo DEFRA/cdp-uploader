@@ -46,6 +46,7 @@ const uploadController = {
     // Upload link has already been used
     if (!isInitiated(uploadDetails.uploadStatus)) {
       childLogger.warn(
+        { uploadDetails },
         `uploadId ${uploadId} has already been used to upload files`
       )
       return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
@@ -87,7 +88,7 @@ const uploadController = {
       // TODO: check all the files sizes match the size set in uploadDetails
       return h.redirect(uploadDetails.successRedirect)
     } catch (e) {
-      request.logger.error(e)
+      request.logger.error({ uploadDetails }, e)
       return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
     }
   }
@@ -136,7 +137,10 @@ async function handleFile(
 
   const fileLogger = request.logger.child({ uploadId, fileId })
 
-  fileLogger.debug(`uploadId ${uploadId} - uploading fileId ${fileId}`)
+  fileLogger.debug(
+    { uploadDetails },
+    `uploadId ${uploadId} - uploading fileId ${fileId}`
+  )
   // TODO: check result of upload and redirect on error
   const uploadResult = await uploadStream(
     request.s3,

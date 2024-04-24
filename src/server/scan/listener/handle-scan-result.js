@@ -25,10 +25,8 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
   const childLogger = server.logger.child({
     payLoadKey: payload.key,
     uploadId,
-    //  uploadStatus: uploadDetails.uploadStatus,
     fileIds: uploadDetails.fileIds,
     fileId
-    //  fileStatus: fileDetails.fileStatus
   })
 
   if (!uploadDetails) {
@@ -40,6 +38,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
 
   if (!fileDetails) {
     childLogger.error(
+      { uploadDetails },
       `uploadId ${uploadId} - No record of ${payload.key} found in Redis, ignoring scan result. May be expired`
     )
     return
@@ -52,12 +51,15 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
   )
   if (isInfected(fileDetails.fileStatus)) {
     await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-    childLogger.warn(`Duplicate SQS message - Infected file`)
+    childLogger.warn({ uploadDetails }, `Duplicate SQS message - Infected file`)
     return
   }
   if (fileDetails.delivered) {
     await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-    childLogger.warn(`Duplicate SQS message - Clean file (already delivered)`)
+    childLogger.warn(
+      { uploadDetails },
+      `Duplicate SQS message - Clean file (already delivered)`
+    )
     return
   }
 
@@ -69,7 +71,10 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
 
     if (isInfected(fileDetails.fileStatus)) {
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-      childLogger.info(`Virus found. Message: ${payload.message}`)
+      childLogger.info(
+        { uploadDetails },
+        `Virus found. Message: ${payload.message}`
+      )
     } else if (isClean(fileDetails.fileStatus)) {
       // assume this will throw exception if it fails
       const delivered = await moveS3Object(
@@ -88,11 +93,15 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
         childLogger.info(`File ${fileId} was delivered to ${destination}`)
       } else {
         childLogger.error(
+          { uploadDetails },
           `File ${fileId} could not be delivered to ${destination}`
         )
       }
     } else {
-      childLogger.error(`Unexpected status ${fileDetails.fileStatus}`)
+      childLogger.error(
+        { uploadDetails },
+        `Unexpected status ${fileDetails.fileStatus}`
+      )
     }
   }
   await processScanComplete(server, uploadId)

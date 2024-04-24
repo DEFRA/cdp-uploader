@@ -21,7 +21,10 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
   if (uploadDetails.acknowledged) {
     // Duplicate SQS message so don't attempt callback
     await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
-    childLogger.warn(`Duplicate SQS message - callback already acknowledged`)
+    childLogger.warn(
+      { uploadDetails },
+      `Duplicate SQS message - callback already acknowledged`
+    )
     return
   }
 
@@ -32,7 +35,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
       files
     )
     const url = uploadDetails.scanResultCallbackUrl
-    childLogger.debug(`Requesting callback to ${url}`)
+    childLogger.debug({ uploadDetails }, `Requesting callback to ${url}`)
     const response = await fetchCallback(
       url,
       scanResultResponse,
@@ -47,6 +50,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
       childLogger.info(`Callback to ${url} successful`)
     } else {
       childLogger.error(
+        { uploadDetails },
         `Failed to trigger callback ${url}, ${response?.status}`
       )
     }

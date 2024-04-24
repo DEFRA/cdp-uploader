@@ -28,13 +28,16 @@ async function processScanComplete(server, uploadId) {
       uploadDetails.ready = new Date()
       uploadDetails.numberOfInfectedFiles = numberOfInfectedFiles(files)
       await server.redis.storeUploadDetails(uploadId, uploadDetails)
-      childLogger.info(`uploadId ${uploadId} has been marked as ready`)
+      childLogger.info(
+        { uploadDetails },
+        `uploadId ${uploadId} has been marked as ready`
+      )
       if (uploadDetails.scanResultCallbackUrl) {
         try {
           await sendSqsMessage(server.sqs, callbackQueueUrl, { uploadId })
         } catch (error) {
           childLogger.error(
-            { error },
+            { uploadDetails, error },
             `Failed to send SQS for scan result callback. Error: ${error}`
           )
         }
