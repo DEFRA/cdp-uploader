@@ -8,6 +8,7 @@ Core delivery platform Node.js Frontend Template.
   - [Local development](#local-development)
     - [Setup](#setup)
     - [Development](#development)
+      - [Updating dependencies](#updating-dependencies)
     - [AWS CLI](#aws-cli)
     - [AWS Local](#aws-local)
       - [AWS local alias](#aws-local-alias)
@@ -59,6 +60,16 @@ To run the application in `development` mode run:
 
 ```bash
 npm run dev
+```
+
+#### Updating dependencies
+
+To update dependencies globally install https://www.npmjs.com/package/npm-check-updates
+
+> Run the script below, run tests, test teh application and commit the altered package.json and package-lock.json files
+
+```bash
+ncu -i
 ```
 
 ### AWS CLI
@@ -187,9 +198,11 @@ awslocal s3api put-bucket-notification-configuration\
 	                                }'
 ```
 
-When running from the IDE the test harness is enabled by default. It can be enabled/disabled via the `MOCK_VIRUS_SCAN_ENABLED` environment variable.
+When running from the IDE the test harness is enabled by default. It can be enabled/disabled via
+the `MOCK_VIRUS_SCAN_ENABLED` environment variable.
 The test harness will listen for files being uploaded to the quarantine bucket.
-When a file arrives, it checks if the original filename matches the regex set in `MOCK_VIRUS_REGEX` (defaults to checking if the file has 'virus' in the name).
+When a file arrives, it checks if the original filename matches the regex set in `MOCK_VIRUS_REGEX` (defaults to
+checking if the file has 'virus' in the name).
 There is a short delay (set via `MOCK_VIRUS_RESULT_DELAY`) to simulate scan time before the response is sent.
 
 ### Local JSON API
