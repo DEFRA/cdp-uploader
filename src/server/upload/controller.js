@@ -1,20 +1,12 @@
 import Boom from '@hapi/boom'
-import * as crypto from 'node:crypto'
-import { Stream } from 'node:stream'
 
-import { config } from '~/src/config'
-import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
+import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
+import { handleMultipart } from '~/src/server/upload/helpers/handle-multipart'
 import { uploadPathValidation } from '~/src/server/upload/helpers/upload-validation'
 import {
   isInitiated,
   uploadStatus
 } from '~/src/server/common/helpers/upload-status'
-import {
-  createFileLogger,
-  createUploadLogger
-} from '~/src/server/common/helpers/logging/logger'
-
-const quarantineBucket = config.get('quarantineBucket')
 
 // Todo return a nice error message for http://localhost:7337/upload (uuid missing)
 const uploadController = {
@@ -93,99 +85,6 @@ const uploadController = {
       return h.redirect(uploadDetails.redirect) // TODO: how do we communicate this failure reason?
     }
   }
-}
-
-async function handleMultipart(
-  multipartValue,
-  uploadId,
-  uploadDetails,
-  request
-) {
-  if (!isFile(multipartValue)) {
-    return { responseValue: multipartValue }
-  } else {
-    const fileId = crypto.randomUUID()
-    const fileLogger = createFileLogger(request.logger, uploadDetails, fileId)
-
-    const filePart = await handleFile(
-      uploadId,
-      uploadDetails,
-      fileId,
-      multipartValue,
-      request,
-      fileLogger
-    )
-
-    if (filePart === null) {
-      return {}
-    }
-
-    return { responseValue: filePart, fileId }
-  }
-}
-
-async function handleFile(
-  uploadId,
-  uploadDetails,
-  fileId,
-  fileStream,
-  request,
-  fileLogger
-) {
-  const hapiFilename = fileStream.hapi?.filename
-  const filename = { ...(hapiFilename && { filename: hapiFilename }) }
-  const hapiContentType = fileStream.hapi?.headers['content-type']
-  const contentType = {
-    ...(hapiContentType && { contentType: hapiContentType })
-  }
-  const fileKey = `${uploadId}/${fileId}`
-
-  fileLogger.debug({ uploadDetails }, `Uploading fileId ${fileId}`)
-  // TODO: check result of upload and redirect on error
-  const uploadResult = await uploadStream(
-    request.s3,
-    quarantineBucket,
-    fileKey,
-    fileStream,
-    {
-      uploadId,
-      fileId,
-      ...contentType,
-      ...filename
-    },
-    fileLogger
-  )
-
-  if (uploadResult.fileLength === 0) {
-    fileLogger.warn(
-      `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
-    )
-
-    return null
-  }
-
-  const actualContentType = uploadResult.fileTypeResult?.mime
-  const files = {
-    uploadId,
-    fileId,
-    fileStatus: uploadStatus.pending.description,
-    pending: new Date(),
-    actualContentType,
-    contentLength: uploadResult.fileLength,
-    ...contentType,
-    ...filename
-  }
-  await request.redis.storeFileDetails(fileId, files)
-  return {
-    fileId,
-    actualContentType,
-    ...filename,
-    ...contentType
-  }
-}
-
-function isFile(formPart) {
-  return formPart instanceof Stream
 }
 
 export { uploadController }
