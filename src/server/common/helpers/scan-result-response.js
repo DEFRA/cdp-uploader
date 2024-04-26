@@ -2,8 +2,7 @@ function toScanResultResponse(uploadId, uploadDetails, files) {
   return {
     uploadStatus: uploadDetails.uploadStatus,
     numberOfInfectedFiles: uploadDetails.numberOfInfectedFiles,
-    successRedirect: uploadDetails.successRedirect,
-    failureRedirect: uploadDetails.failureRedirect,
+    redirect: uploadDetails.redirect,
     scanResultCallbackUrl: uploadDetails.scanResultCallbackUrl,
     destinationBucket: uploadDetails.destinationBucket,
     destinationPath: uploadDetails.destinationPath,

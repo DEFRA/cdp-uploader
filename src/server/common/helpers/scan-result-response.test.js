@@ -9,8 +9,7 @@ describe('#toScanResultResponse', () => {
     const uploadDetails = {
       uploadStatus: 'ready',
       numberOfInfectedFiles: 0,
-      successRedirect: 'https://success.com',
-      failureRedirect: 'https://failure.com',
+      redirect: 'https://redirect.com',
       scanResultCallbackUrl: 'https://callback.com',
       destinationBucket: 'destinationBucket',
       destinationPath: 'destinationPath',
@@ -41,8 +40,7 @@ describe('#toScanResultResponse', () => {
     const expectedResponse = {
       uploadStatus: 'ready',
       numberOfInfectedFiles: 0,
-      successRedirect: 'https://success.com',
-      failureRedirect: 'https://failure.com',
+      redirect: 'https://redirect.com',
       scanResultCallbackUrl: 'https://callback.com',
       destinationBucket: 'destinationBucket',
       destinationPath: 'destinationPath',
@@ -90,8 +88,7 @@ describe('#toScanResultResponse', () => {
     const uploadDetails = {
       uploadStatus: 'ready',
       numberOfInfectedFiles: 0,
-      successRedirect: 'https://success.com',
-      failureRedirect: 'https://failure.com',
+      redirect: 'https://redirect.com',
       scanResultCallbackUrl: 'https://callback.com',
       destinationBucket: 'destinationBucket',
       destinationPath: 'destinationPath',
@@ -102,8 +99,7 @@ describe('#toScanResultResponse', () => {
     const expectedResponse = {
       uploadStatus: 'ready',
       numberOfInfectedFiles: 0,
-      successRedirect: 'https://success.com',
-      failureRedirect: 'https://failure.com',
+      redirect: 'https://redirect.com',
       scanResultCallbackUrl: 'https://callback.com',
       destinationBucket: 'destinationBucket',
       destinationPath: 'destinationPath',

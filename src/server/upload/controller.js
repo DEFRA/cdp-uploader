@@ -87,10 +87,10 @@ const uploadController = {
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
       // TODO: check all the files sizes match the size set in uploadDetails
-      return h.redirect(uploadDetails.successRedirect)
+      return h.redirect(uploadDetails.redirect)
     } catch (error) {
       createUploadLogger(uploadLogger, uploadDetails).error(error, 'Error')
-      return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
+      return h.redirect(uploadDetails.redirect) // TODO: how do we communicate this failure reason?
     }
   }
 }

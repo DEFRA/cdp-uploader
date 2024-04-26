@@ -28,18 +28,9 @@ const initiateController = {
     uploadDetails.initiated = new Date()
     uploadDetails.fields = {}
     uploadDetails.fileIds = []
-    uploadDetails.successRedirect = withQueryParams(
-      uploadDetails.successRedirect,
-      {
-        uploadId
-      }
-    )
-    uploadDetails.failureRedirect = withQueryParams(
-      uploadDetails.failureRedirect,
-      {
-        uploadId
-      }
-    )
+    uploadDetails.redirect = withQueryParams(uploadDetails.redirect, {
+      uploadId
+    })
 
     await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
