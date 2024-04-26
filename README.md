@@ -64,9 +64,9 @@ npm run dev
 
 #### Updating dependencies
 
-To update dependencies globally install https://www.npmjs.com/package/npm-check-updates
-
-> Run the script below, run tests, test teh application and commit the altered package.json and package-lock.json files
+To update dependencies, globally install https://www.npmjs.com/package/npm-check-updates. Then run the below script,
+run tests, test the application and commit the altered `package.json` and `package-lock.json` files. For more
+options around updates check the package docs.
 
 ```bash
 ncu -i
