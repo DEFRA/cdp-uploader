@@ -40,7 +40,9 @@ function updateFieldsResponse(fields, files) {
       const details = {
         s3Key: file.s3Key,
         s3Bucket: file.s3Bucket,
-        fileStatus: file.fileStatus
+        fileStatus: file.fileStatus,
+        contentType: file.contentType,
+        contentLength: file.contentLength
       }
 
       if (Array.isArray(field)) {

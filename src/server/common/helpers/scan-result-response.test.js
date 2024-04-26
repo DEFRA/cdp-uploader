@@ -22,6 +22,7 @@ describe('#toScanResultResponse', () => {
         fileId: 'fileId1',
         fileStatus: 'pending',
         contentType: 'image/jpeg',
+        contentLength: 10503,
         filename: 'file1.jpg',
         s3Bucket: 'bucket1',
         s3Key: 'key1'
@@ -30,6 +31,7 @@ describe('#toScanResultResponse', () => {
         fileId: 'fileId2',
         fileStatus: 'completed',
         contentType: 'image/png',
+        contentLength: 4564564,
         filename: 'file2.png',
         s3Bucket: 'bucket2',
         s3Key: 'key2'
@@ -50,6 +52,7 @@ describe('#toScanResultResponse', () => {
           fileId: 'fileId1',
           fileStatus: 'pending',
           contentType: 'image/jpeg',
+          contentLength: 10503,
           filename: 'file1.jpg',
           s3Bucket: 'bucket1',
           s3Key: 'key1'
@@ -59,6 +62,7 @@ describe('#toScanResultResponse', () => {
           fileId: 'fileId2',
           fileStatus: 'completed',
           contentType: 'image/png',
+          contentLength: 4564564,
           filename: 'file2.png',
           s3Bucket: 'bucket2',
           s3Key: 'key2'
@@ -66,7 +70,13 @@ describe('#toScanResultResponse', () => {
       ],
       fields: {
         field1: 'value1',
-        field2: { fileStatus: 'pending', s3Bucket: 'bucket1', s3Key: 'key1' }
+        field2: {
+          contentLength: 10503,
+          contentType: 'image/jpeg',
+          fileStatus: 'pending',
+          s3Bucket: 'bucket1',
+          s3Key: 'key1'
+        }
       },
       metadata: { meta1: 'data1', meta2: 'data2' }
     }
