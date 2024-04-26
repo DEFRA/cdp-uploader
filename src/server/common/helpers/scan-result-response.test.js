@@ -14,8 +14,6 @@ describe('#toScanResultResponse', () => {
       scanResultCallbackUrl: 'https://callback.com',
       destinationBucket: 'destinationBucket',
       destinationPath: 'destinationPath',
-      acceptedMimeTypes: ['image/jpeg', 'image/png'],
-      maxFileSize: 1024,
       fields: { field1: 'value1', field2: { fileId: 'fileId1' } },
       metadata: { meta1: 'data1', meta2: 'data2' }
     }
@@ -46,8 +44,6 @@ describe('#toScanResultResponse', () => {
       scanResultCallbackUrl: 'https://callback.com',
       destinationBucket: 'destinationBucket',
       destinationPath: 'destinationPath',
-      acceptedMimeTypes: ['image/jpeg', 'image/png'],
-      maxFileSize: 1024,
       files: [
         {
           uploadId: '123',
@@ -89,8 +85,6 @@ describe('#toScanResultResponse', () => {
       scanResultCallbackUrl: 'https://callback.com',
       destinationBucket: 'destinationBucket',
       destinationPath: 'destinationPath',
-      acceptedMimeTypes: ['image/jpeg', 'image/png'],
-      maxFileSize: 1024,
       fields: { field1: 'value1' },
       metadata: { meta1: 'data1', meta2: 'data2' }
     }
@@ -103,8 +97,6 @@ describe('#toScanResultResponse', () => {
       scanResultCallbackUrl: 'https://callback.com',
       destinationBucket: 'destinationBucket',
       destinationPath: 'destinationPath',
-      acceptedMimeTypes: ['image/jpeg', 'image/png'],
-      maxFileSize: 1024,
       files: [],
       fields: { field1: 'value1' },
       metadata: { meta1: 'data1', meta2: 'data2' }

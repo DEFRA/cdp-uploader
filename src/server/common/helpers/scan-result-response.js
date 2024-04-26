@@ -7,8 +7,6 @@ function toScanResultResponse(uploadId, uploadDetails, files) {
     scanResultCallbackUrl: uploadDetails.scanResultCallbackUrl,
     destinationBucket: uploadDetails.destinationBucket,
     destinationPath: uploadDetails.destinationPath,
-    acceptedMimeTypes: uploadDetails.acceptedMimeTypes,
-    maxFileSize: uploadDetails.maxFileSize,
     files: toFilesResponse(uploadId, files),
     fields: updateFieldsResponse(uploadDetails.fields, files),
     metadata: uploadDetails.metadata
