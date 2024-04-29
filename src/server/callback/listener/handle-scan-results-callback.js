@@ -7,8 +7,9 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
   const receiptHandle = message.ReceiptHandle
   const payload = JSON.parse(message.Body)
   const uploadId = payload.uploadId
-  const { files, uploadDetails } =
-    await server.redis.findUploadAndFiles(uploadId)
+  const uploadAndFiles = await server.redis.findUploadAndFiles(uploadId)
+  const files = uploadAndFiles?.files
+  const uploadDetails = uploadAndFiles?.uploadDetails
 
   const uploadLogger = createUploadLogger(server.logger, uploadDetails)
 

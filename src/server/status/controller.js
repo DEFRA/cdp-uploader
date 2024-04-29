@@ -9,8 +9,9 @@ const statusController = {
       return Boom.notFound()
     }
 
-    const { files, uploadDetails } =
-      await request.redis.findUploadAndFiles(uploadId)
+    const uploadAndFiles = await request.redis.findUploadAndFiles(uploadId)
+    const files = uploadAndFiles?.files
+    const uploadDetails = uploadAndFiles?.uploadDetails
 
     if (!uploadDetails) {
       return Boom.notFound()
