@@ -15,7 +15,12 @@ function createUploadLogger(logger, uploadDetails) {
 }
 
 function createFileLogger(logger, uploadDetails, fileId) {
-  return createUploadLogger(logger, uploadDetails).child({ fileId })
+  return logger.child({
+    uploadId: uploadDetails?.uploadId,
+    uploadStatus: uploadDetails?.uploadStatus,
+    fileIds: uploadDetails?.fileIds,
+    fileId
+  })
 }
 
 export { createLogger, createUploadLogger, createFileLogger }
