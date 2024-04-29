@@ -52,11 +52,12 @@ async function handleFile(
     uploadId,
     fileId,
     fileStatus: uploadStatus.pending.description,
-    pending: new Date(),
+    pending: new Date().toISOString(),
     actualContentType,
     contentLength: uploadResult.fileLength,
     ...contentType,
-    ...filename
+    ...filename,
+    ...errorDetail
   }
   await request.redis.storeFileDetails(fileId, files)
 

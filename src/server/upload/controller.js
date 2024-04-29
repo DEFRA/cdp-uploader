@@ -75,7 +75,7 @@ const uploadController = {
         }
       }
       uploadDetails.uploadStatus = uploadStatus.pending.description
-      uploadDetails.pending = new Date()
+      uploadDetails.pending = new Date().toISOString()
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
       // TODO: check all the files sizes match the size set in uploadDetails

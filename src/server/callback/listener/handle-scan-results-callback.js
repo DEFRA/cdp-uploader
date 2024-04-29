@@ -38,7 +38,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
 
     if (response?.ok) {
       await deleteSqsMessage(server.sqs, callbackQueueUrl, receiptHandle)
-      uploadDetails.acknowledged = new Date()
+      uploadDetails.acknowledged = new Date().toISOString()
       await server.redis.storeUploadDetails(uploadId, uploadDetails)
       uploadLogger.info(`Callback to ${url} successful`)
     } else {

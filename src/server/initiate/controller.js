@@ -25,7 +25,7 @@ const initiateController = {
 
     uploadDetails.uploadId = uploadId
     uploadDetails.uploadStatus = uploadStatus.initiated.description
-    uploadDetails.initiated = new Date()
+    uploadDetails.initiated = new Date().toISOString()
     uploadDetails.fields = {}
     uploadDetails.fileIds = []
     uploadDetails.redirect = withQueryParams(uploadDetails.redirect, {
