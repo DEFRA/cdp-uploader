@@ -41,7 +41,7 @@ const initiateController = {
     return h
       .response({
         statusUrl: `${appBaseUrl}/status/${uploadId}`,
-        uploadUrl: `${appBaseUrl}/upload/${uploadId}`,
+        uploadAndScanUrl: `${appBaseUrl}/upload-and-scan/${uploadId}`,
         uploadId
       })
       .code(200)

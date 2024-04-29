@@ -1,5 +1,5 @@
 import { config } from '~/src/config'
-import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
+import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream'
 import { uploadStatus } from '~/src/server/common/helpers/upload-status'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
 

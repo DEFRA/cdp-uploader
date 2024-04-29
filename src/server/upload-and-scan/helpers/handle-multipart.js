@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import { Stream } from 'node:stream'
 
-import { handleFile } from '~/src/server/upload/helpers/handle-file'
+import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
 
 function isFile(formPart) {

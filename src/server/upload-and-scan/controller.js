@@ -1,14 +1,14 @@
 import Boom from '@hapi/boom'
 
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
-import { handleMultipart } from '~/src/server/upload/helpers/handle-multipart'
-import { uploadPathValidation } from '~/src/server/upload/helpers/upload-validation'
+import { handleMultipart } from '~/src/server/upload-and-scan/helpers/handle-multipart'
+import { uploadPathValidation } from '~/src/server/upload-and-scan/helpers/upload-validation'
 import {
   isInitiated,
   uploadStatus
 } from '~/src/server/common/helpers/upload-status'
 
-// Todo return a nice error message for http://localhost:7337/upload (uuid missing)
+// Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
   options: {
     validate: {

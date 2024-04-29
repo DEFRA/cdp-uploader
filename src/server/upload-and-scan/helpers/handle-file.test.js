@@ -1,7 +1,7 @@
-import { handleFile } from '~/src/server/upload/helpers/handle-file'
-import { uploadStream } from '~/src/server/upload/helpers/upload-stream'
+import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file'
+import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream'
 
-jest.mock('~/src/server/upload/helpers/upload-stream')
+jest.mock('~/src/server/upload-and-scan/helpers/upload-stream')
 
 describe('#handleFile', () => {
   const mockUploadDetails = (uploadId) => ({
