@@ -71,15 +71,15 @@ describe('#handleScanResult', () => {
       })
     })
 
-    test('Should return "undefined"', () => {
-      expect(result).toBeUndefined()
-    })
-
     test('Should log expected error', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1)
       expect(mockLogger.error).toHaveBeenCalledWith(
         'No record of uploadId found in Redis for mock-id-895745/mock-key-2342353, ignoring scan result. May be expired'
       )
+    })
+
+    test('Should return "undefined"', () => {
+      expect(result).toBeUndefined()
     })
 
     test('Should not have called process scan complete', () => {
@@ -111,15 +111,15 @@ describe('#handleScanResult', () => {
       })
     })
 
-    test('Should return "undefined"', () => {
-      expect(result).toBeUndefined()
-    })
-
     test('Should log expected error', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1)
       expect(mockLogger.error).toHaveBeenCalledWith(
         'uploadId mock-id-895745 - No record of mock-id-895745/mock-key-2342353 found in Redis, ignoring scan result. May be expired'
       )
+    })
+
+    test('Should return "undefined"', () => {
+      expect(result).toBeUndefined()
     })
 
     test('Should not have called process scan complete', () => {
@@ -151,10 +151,6 @@ describe('#handleScanResult', () => {
       })
     })
 
-    test('Should return "undefined"', () => {
-      expect(result).toBeUndefined()
-    })
-
     test('Should delete Sqs message', () => {
       expect(deleteSqsMessage).toHaveBeenCalledTimes(1)
       expect(deleteSqsMessage).toHaveBeenCalledWith(
@@ -169,6 +165,10 @@ describe('#handleScanResult', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'Duplicate SQS message - has error: The selected file is empty'
       )
+    })
+
+    test('Should return "undefined"', () => {
+      expect(result).toBeUndefined()
     })
 
     test('Should not have called process scan complete', () => {
