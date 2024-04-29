@@ -228,7 +228,7 @@ describe('#handleScanResult', () => {
     test('Should log expected info', () => {
       expect(mockLogger.info).toHaveBeenCalledTimes(1)
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'Virus found. Message: no errors'
+        'Virus found. Message: contains super ugly horrible virus!'
       )
     })
 
