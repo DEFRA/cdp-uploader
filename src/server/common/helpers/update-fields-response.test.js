@@ -53,16 +53,20 @@ describe('#updateFieldsResponse', () => {
       file: {
         contentLength: 56783,
         contentType: 'image/jpeg',
+        fileId: '111-111',
         fileStatus: fileStatus.pending,
         filename: 'shoot.jpg',
+        hasError: false,
         s3Bucket: 'cdp-example-node-frontend',
         s3Key: '456-4567/309-10'
       },
       filelist: [
         {
+          fileId: '222-222',
           filename: 'yak.jpg'
         },
         {
+          fileId: '333-333',
           filename: 'succulent.jpg'
         }
       ]
@@ -74,7 +78,7 @@ describe('#updateFieldsResponse', () => {
       updateFieldsResponse(formData, [
         {
           fileId: '333-333',
-          fileStatus: fileStatus.complete,
+          fileStatus: fileStatus.scanComplete,
           s3Key: '678-345/296-347',
           s3Bucket: 'cdp-example-node-frontend',
           contentType: 'image/png',
@@ -86,17 +90,20 @@ describe('#updateFieldsResponse', () => {
     ).toEqual({
       name: 'jeff',
       file: {
+        fileId: '111-111',
         filename: 'shoot.jpg'
       },
       filelist: [
         {
+          fileId: '222-222',
           filename: 'yak.jpg'
         },
         {
           contentLength: 67567,
           contentType: 'image/png',
           errorMessage: 'The selected file contains a virus',
-          fileStatus: fileStatus.complete,
+          fileId: '333-333',
+          fileStatus: fileStatus.scanComplete,
           filename: 'succulent.jpg',
           hasError: true,
           s3Bucket: 'cdp-example-node-frontend',
@@ -111,7 +118,7 @@ describe('#updateFieldsResponse', () => {
       updateFieldsResponse(formData, [
         {
           fileId: 'non-matching-id-12345',
-          fileStatus: fileStatus.complete,
+          fileStatus: fileStatus.scanComplete,
           s3Key: '634-34/239-598',
           s3Bucket: 'cdp-example-node-frontend',
           contentType: 'image/png',
@@ -123,13 +130,16 @@ describe('#updateFieldsResponse', () => {
     ).toEqual({
       name: 'jeff',
       file: {
+        fileId: '111-111',
         filename: 'shoot.jpg'
       },
       filelist: [
         {
+          fileId: '222-222',
           filename: 'yak.jpg'
         },
         {
+          fileId: '333-333',
           filename: 'succulent.jpg'
         }
       ]

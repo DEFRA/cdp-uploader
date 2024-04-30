@@ -1,11 +1,8 @@
-import { pickBy } from 'lodash'
-
 /**
  * @summary Updates matching file fields in the formData with additional cdp-uploader data
  * @description
  * - Add data to formData fields data matched by fileId
  * - Pass items without fileId through, as is
- * - Remove fileId from items with fileId
  * @param formData
  * @param fieldUpdates
  * @returns {{}|*}
@@ -20,8 +17,7 @@ function updateFieldsResponse(formData, fieldUpdates) {
     hasError: fieldUpdate.hasError,
     ...(fieldUpdate?.errorMessage && {
       errorMessage: fieldUpdate.errorMessage
-    }),
-    fileId: null
+    })
   })
 
   return Object.entries(formData).reduce(
@@ -36,15 +32,13 @@ function updateFieldsResponse(formData, fieldUpdates) {
           )
 
           if (matchedFieldUpdate) {
-            return pickBy({
+            return {
               ...fieldValue,
               ...updateFields(matchedFieldUpdate)
-            })
+            }
           }
 
-          return fieldValue?.fileId
-            ? pickBy({ ...fieldValue, fileId: null })
-            : fieldValue
+          return fieldValue
         })
         .filter(Boolean)
 
