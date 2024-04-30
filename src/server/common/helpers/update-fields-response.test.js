@@ -1,113 +1,138 @@
+import { fileStatus } from '~/src/server/common/constants/file-status'
+import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
 import { updateFieldsResponse } from '~/src/server/common/helpers/update-fields-response'
 
-// TODO these tests need better descriptions
 describe('#updateFieldsResponse', () => {
-  test('updateField non-nested field', () => {
-    const fields = {
-      foo: 'bar',
+  let formData
+
+  beforeEach(() => {
+    formData = {
+      name: 'jeff',
       file: {
-        fileId: '1111',
-        fileName: 'a'
+        fileId: '111-111',
+        filename: 'shoot.jpg'
       },
       filelist: [
-        { fileId: '2222', fileName: 'b' },
-        { fileId: '3333', fileName: 'c' }
+        { fileId: '222-222', filename: 'yak.jpg' },
+        { fileId: '333-333', filename: 'succulent.jpg' }
       ]
     }
+  })
 
-    updateFieldsResponse(fields, [
-      {
-        fileId: '1111',
-        s3Key: '1234-567',
-        s3Bucket: 'foo',
-        fileStatus: 'pending'
-      }
-    ])
+  test('Should return empty object', () => {
+    expect(
+      updateFieldsResponse({}, [
+        {
+          fileId: '111-111',
+          fileStatus: fileStatus.pending,
+          s3Key: '123-4567/89-10',
+          s3Bucket: 'cdp-example-node-frontend',
+          contentType: 'image/jpeg',
+          contentLength: 25624,
+          hasError: false
+        }
+      ])
+    ).toEqual({})
+  })
 
-    expect(fields.file).toEqual({
-      fileName: 'a',
-      fileStatus: 'pending',
-      s3Key: '1234-567',
-      s3Bucket: 'foo'
+  test('Should update root field', () => {
+    expect(
+      updateFieldsResponse(formData, [
+        {
+          fileId: '111-111',
+          fileStatus: fileStatus.pending,
+          s3Key: '456-4567/309-10',
+          s3Bucket: 'cdp-example-node-frontend',
+          contentType: 'image/jpeg',
+          contentLength: 56783,
+          hasError: false
+        }
+      ])
+    ).toEqual({
+      name: 'jeff',
+      file: {
+        contentLength: 56783,
+        contentType: 'image/jpeg',
+        fileStatus: fileStatus.pending,
+        filename: 'shoot.jpg',
+        s3Bucket: 'cdp-example-node-frontend',
+        s3Key: '456-4567/309-10'
+      },
+      filelist: [
+        {
+          filename: 'yak.jpg'
+        },
+        {
+          filename: 'succulent.jpg'
+        }
+      ]
     })
   })
 
-  test('updateFieldsResponse nested field', () => {
-    const fields = {
-      foo: 'bar',
+  test('Should update nested field', () => {
+    expect(
+      updateFieldsResponse(formData, [
+        {
+          fileId: '333-333',
+          fileStatus: fileStatus.complete,
+          s3Key: '678-345/296-347',
+          s3Bucket: 'cdp-example-node-frontend',
+          contentType: 'image/png',
+          contentLength: 67567,
+          hasError: true,
+          errorMessage: fileErrorMessages.virus
+        }
+      ])
+    ).toEqual({
+      name: 'jeff',
       file: {
-        fileId: '1111',
-        fileName: 'a'
+        filename: 'shoot.jpg'
       },
       filelist: [
-        { fileId: '2222', fileName: 'b' },
-        { fileId: '3333', fileName: 'c' }
+        {
+          filename: 'yak.jpg'
+        },
+        {
+          contentLength: 67567,
+          contentType: 'image/png',
+          errorMessage: 'The selected file contains a virus',
+          fileStatus: fileStatus.complete,
+          filename: 'succulent.jpg',
+          hasError: true,
+          s3Bucket: 'cdp-example-node-frontend',
+          s3Key: '678-345/296-347'
+        }
       ]
-    }
-
-    updateFieldsResponse(fields, [
-      {
-        fileId: '3333',
-        s3Key: '9999-9999',
-        s3Bucket: 'bar'
-      }
-    ])
-
-    expect(fields.filelist[0]).toEqual({ fileName: 'b' })
-    expect(fields.filelist[1]).toEqual({
-      fileName: 'c',
-      s3Key: '9999-9999',
-      s3Bucket: 'bar'
     })
   })
 
-  test('dont update missing field', () => {
-    const fields = {
-      foo: 'bar',
+  test('With non matching fileId, Should not add updates to any field', () => {
+    expect(
+      updateFieldsResponse(formData, [
+        {
+          fileId: 'non-matching-id-12345',
+          fileStatus: fileStatus.complete,
+          s3Key: '634-34/239-598',
+          s3Bucket: 'cdp-example-node-frontend',
+          contentType: 'image/png',
+          contentLength: 91245,
+          hasError: true,
+          errorMessage: fileErrorMessages.empty
+        }
+      ])
+    ).toEqual({
+      name: 'jeff',
       file: {
-        fileId: '1111',
-        fileName: 'a'
+        filename: 'shoot.jpg'
       },
       filelist: [
-        { fileId: '2222', fileName: 'b' },
-        { fileId: '3333', fileName: 'c' }
+        {
+          filename: 'yak.jpg'
+        },
+        {
+          filename: 'succulent.jpg'
+        }
       ]
-    }
-
-    updateFieldsResponse(fields, [
-      {
-        fileId: 'abcd',
-        s3Key: '9999-9999',
-        s3Bucket: 'bar'
-      }
-    ])
-    expect(fields.file).toEqual({ fileName: 'a' })
-    expect(fields.filelist[0]).toEqual({ fileName: 'b' })
-    expect(fields.filelist[1]).toEqual({ fileName: 'c' })
-  })
-
-  test('doesnt update anything with a null fileID', () => {
-    const fields = {
-      foo: 'bar',
-      file: {
-        fileId: '1111',
-        fileName: 'a'
-      },
-      filelist: [
-        { fileId: '2222', fileName: 'b' },
-        { fileId: '3333', fileName: 'c' }
-      ]
-    }
-
-    updateFieldsResponse(fields, [
-      {
-        fileId: null,
-        s3Key: '9999-9999',
-        s3Bucket: 'bar'
-      }
-    ])
-    expect(fields.file).toEqual({ fileName: 'a' })
-    expect(fields.filelist[0]).toEqual({ fileName: 'b' })
-    expect(fields.filelist[1]).toEqual({ fileName: 'c' })
+    })
   })
 })
