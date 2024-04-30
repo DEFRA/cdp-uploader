@@ -1,7 +1,7 @@
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream'
-import { uploadStatus } from '~/src/server/common/helpers/upload-status'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
+import { fileStatus } from '~/src/server/common/constants/file-status'
 
 async function handleFile(
   uploadId,
@@ -43,15 +43,15 @@ async function handleFile(
       `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
     )
 
-    errorDetail.errorMessage = fileErrorMessages.empty
     errorDetail.hasError = true
+    errorDetail.errorMessage = fileErrorMessages.empty
   }
 
   const actualContentType = uploadResult.fileTypeResult?.mime
   const files = {
     uploadId,
     fileId,
-    fileStatus: uploadStatus.pending.description,
+    fileStatus: errorDetail.hasError ? fileStatus.rejected : fileStatus.pending,
     pending: new Date().toISOString(),
     actualContentType,
     contentLength: uploadResult.fileLength,
