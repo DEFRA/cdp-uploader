@@ -216,7 +216,7 @@ describe('#handleScanResult', () => {
         contentType: 'image/jpeg',
         errorMessage: 'The selected file contains a virus',
         fileId: 'd3e1ccfa-3f58-435d-af9a-dad7b20ab11b',
-        fileStatus: 'scanComplete',
+        fileStatus: 'rejected',
         filename: 'shoot.jpg',
         hasError: true,
         pending: '2024-04-29T13:41:47.466Z',

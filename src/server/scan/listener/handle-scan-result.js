@@ -2,6 +2,7 @@ import path from 'node:path'
 
 import { config } from '~/src/config'
 import { fileStatus } from '~/src/server/common/constants/file-status'
+import { scanStatus } from '~/src/server/common/constants/scan-status'
 import { moveS3Object } from '~/src/server/common/helpers/s3/move-s3-object'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
@@ -59,12 +60,12 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
   if (fileDetails.fileStatus === fileStatus.pending) {
     const virusStatus = payload.status?.toLowerCase()
 
-    fileDetails.fileStatus = fileStatus.scanComplete
     fileDetails.scanned = new Date().toISOString()
 
-    if (virusStatus === fileStatus.infected) {
+    if (virusStatus === scanStatus.infected) {
       fileDetails.hasError = true
       fileDetails.errorMessage = fileErrorMessages.virus
+      fileDetails.fileStatus = fileStatus.rejected
 
       await server.redis.storeFileDetails(fileId, fileDetails)
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
@@ -72,7 +73,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
       fileLogger.info(`Virus found. Message: ${payload.message}`)
     }
 
-    if (virusStatus === fileStatus.clean) {
+    if (virusStatus === scanStatus.clean) {
       // assume this will throw exception if it fails
       const delivered = await moveS3Object(
         server.s3,
