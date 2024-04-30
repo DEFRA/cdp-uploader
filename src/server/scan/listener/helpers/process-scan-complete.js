@@ -60,4 +60,4 @@ function numberOfRejectedFiles(files) {
   return files.filter((file) => file.hasError ?? false).length
 }
 
-export { processScanComplete }
+export { processScanComplete, numberOfRejectedFiles }

@@ -124,7 +124,7 @@ describe('#updateFieldsResponse', () => {
           contentType: 'image/png',
           contentLength: 91245,
           hasError: true,
-          errorMessage: fileErrorMessages.empty
+          errorMessage: fileErrorMessages.virus
         }
       ])
     ).toEqual({

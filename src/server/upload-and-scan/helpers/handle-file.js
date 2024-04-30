@@ -1,6 +1,5 @@
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream'
-import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
 import { fileStatus } from '~/src/server/common/constants/file-status'
 
 async function handleFile(
@@ -19,7 +18,6 @@ async function handleFile(
     ...(hapiContentType && { contentType: hapiContentType })
   }
   const fileKey = `${uploadId}/${fileId}`
-  const errorDetail = { hasError: false }
 
   fileLogger.debug({ uploadDetails }, `Uploading fileId ${fileId}`)
 
@@ -43,21 +41,19 @@ async function handleFile(
       `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
     )
 
-    errorDetail.hasError = true
-    errorDetail.errorMessage = fileErrorMessages.empty
+    return null
   }
 
   const actualContentType = uploadResult.fileTypeResult?.mime
   const files = {
     uploadId,
     fileId,
-    fileStatus: errorDetail.hasError ? fileStatus.rejected : fileStatus.pending,
+    fileStatus: fileStatus.pending,
     pending: new Date().toISOString(),
     actualContentType,
     contentLength: uploadResult.fileLength,
     ...contentType,
-    ...filename,
-    ...errorDetail
+    ...filename
   }
   await request.redis.storeFileDetails(fileId, files)
 
@@ -65,8 +61,7 @@ async function handleFile(
     fileId,
     actualContentType,
     ...filename,
-    ...contentType,
-    ...errorDetail
+    ...contentType
   }
 }
 

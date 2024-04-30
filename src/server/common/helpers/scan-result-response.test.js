@@ -1,8 +1,6 @@
 import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
 import { uploadDetailsSuccessFixture } from '~/src/__fixtures__/upload-success'
 import { uploadDetailsRejectedVirusFixture } from '~/src/__fixtures__/upload-details-rejected-virus'
-import { uploadDetailsRejectedEmptyFixture } from '~/src/__fixtures__/upload-details-rejected-empty'
-import { fileDetailsRejectedEmptyFixture } from '~/src/__fixtures__/file-details-rejected-empty'
 import { fileDetailsRejectedVirusFixture } from '~/src/__fixtures__/file-details-rejected-virus'
 import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete'
 
@@ -93,44 +91,6 @@ describe('#toScanResultResponse', () => {
       redirect:
         'http://redirect.com/plants/add/status-poller?uploadId=619cdb5b-31b2-4747-9d7b-2bd447a1f7d7',
       uploadStatus: 'ready'
-    })
-  })
-
-  test('Should provide expected response for rejected with empty file upload', () => {
-    expect(
-      toScanResultResponse(
-        uploadDetailsRejectedEmptyFixture.uploadId,
-        uploadDetailsRejectedEmptyFixture,
-        [fileDetailsRejectedEmptyFixture]
-      )
-    ).toEqual({
-      destinationBucket: 'cdp-example-node-frontend',
-      destinationPath: '/plants',
-      fields: {
-        button: 'upload',
-        file: {
-          contentLength: 0,
-          contentType: 'application/octet-stream',
-          errorMessage: 'The selected file is empty',
-          fileStatus: 'pending',
-          hasError: true
-        }
-      },
-      files: [
-        {
-          contentLength: 0,
-          contentType: 'application/octet-stream',
-          fileId: 'ecaa903f-373c-4591-8055-9814206df3a8',
-          fileStatus: 'pending',
-          uploadId: '58f10d6e-4b5e-4edc-8c80-5fda853bb6ac'
-        }
-      ],
-      metadata: {
-        plantId: '94f8a562-630c-4569-b3a3-2503408c4129'
-      },
-      redirect:
-        'http://redirect.com/plants/add/status-poller?uploadId=58f10d6e-4b5e-4edc-8c80-5fda853bb6ac',
-      uploadStatus: 'pending'
     })
   })
 })

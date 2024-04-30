@@ -8,7 +8,6 @@ import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-mes
 import { uploadDetailsPendingFixture } from '~/src/__fixtures__/upload-details-pending'
 import { virusCheckMessageCleanFixture } from '~/src/__fixtures__/virus-check-message-clean'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete'
-import { fileDetailsRejectedEmptyFixture } from '~/src/__fixtures__/file-details-rejected-empty'
 import { virusCheckMessageInfectedFixture } from '~/src/__fixtures__/virus-check-message-infected'
 
 jest.mock('~/src/server/common/helpers/sqs/delete-sqs-message')
@@ -115,55 +114,6 @@ describe('#handleScanResult', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1)
       expect(mockLogger.error).toHaveBeenCalledWith(
         'uploadId mock-id-895745 - No record of mock-id-895745/mock-key-2342353 found in Redis, ignoring scan result. May be expired'
-      )
-    })
-
-    test('Should return "undefined"', () => {
-      expect(result).toBeUndefined()
-    })
-
-    test('Should not have called process scan complete', () => {
-      expect(processScanComplete).not.toHaveBeenCalled()
-    })
-  })
-
-  describe('When file details has an error', () => {
-    let result
-
-    beforeEach(async () => {
-      mockFindUploadDetails.mockResolvedValue(uploadDetailsReadyFixture)
-      mockFindFileDetails.mockResolvedValue(fileDetailsRejectedEmptyFixture)
-
-      result = await handleScanResult(
-        virusCheckMessageCleanFixture,
-        'mock-virus-scan-queue-url',
-        mockServer
-      )
-    })
-
-    test('Should set up child logger as expected', () => {
-      expect(loggerChildSpy).toHaveBeenCalledTimes(1)
-      expect(loggerChildSpy).toHaveBeenCalledWith({
-        fileId: 'mock-key-2342353',
-        fileIds: ['7507f65a-acb5-41f2-815f-719fbbd47ee5'],
-        uploadId: 'f5aa7920-6c3d-4090-a0c5-a0002df2c285',
-        uploadStatus: 'ready'
-      })
-    })
-
-    test('Should delete Sqs message', () => {
-      expect(deleteSqsMessage).toHaveBeenCalledTimes(1)
-      expect(deleteSqsMessage).toHaveBeenCalledWith(
-        { name: 'mock Sqs' },
-        'mock-virus-scan-queue-url',
-        '78910-123456'
-      )
-    })
-
-    test('Should log expected error', () => {
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1)
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'Duplicate SQS message - has error: The selected file is empty'
       )
     })
 

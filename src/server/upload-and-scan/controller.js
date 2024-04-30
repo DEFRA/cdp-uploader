@@ -7,7 +7,6 @@ import {
   isInitiated,
   uploadStatus
 } from '~/src/server/common/helpers/upload-status'
-import { hasErrors } from '~/src/server/common/helpers/has-errors'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -76,9 +75,7 @@ const uploadController = {
         }
       }
 
-      uploadDetails.uploadStatus = hasErrors(uploadDetails.fields)
-        ? uploadStatus.ready.description
-        : uploadStatus.pending.description
+      uploadDetails.uploadStatus = uploadStatus.pending.description
       uploadDetails.pending = new Date().toISOString()
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
