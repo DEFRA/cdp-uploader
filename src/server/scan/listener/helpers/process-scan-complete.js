@@ -48,7 +48,7 @@ async function processScanComplete(server, uploadId) {
 
 function isScanningComplete(files) {
   return files.every(
-    (file) => file.fileStatus === fileStatus.complete || file.delivered
+    (file) => file.fileStatus === fileStatus.scanComplete || file.delivered
   )
 }
 

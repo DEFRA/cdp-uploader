@@ -4,7 +4,7 @@ import { uploadDetailsRejectedVirusFixture } from '~/src/__fixtures__/upload-det
 import { uploadDetailsRejectedEmptyFixture } from '~/src/__fixtures__/upload-details-rejected-empty'
 import { fileDetailsRejectedEmptyFixture } from '~/src/__fixtures__/file-details-rejected-empty'
 import { fileDetailsRejectedVirusFixture } from '~/src/__fixtures__/file-details-rejected-virus'
-import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-complete-details'
+import { fileDetailsScanCompleteFixture } from '~/src/__fixtures__/file-scan-complete-details'
 
 describe('#toScanResultResponse', () => {
   test('Should provide expected response for non rejected upload', () => {
@@ -12,7 +12,7 @@ describe('#toScanResultResponse', () => {
       toScanResultResponse(
         uploadDetailsSuccessFixture.uploadId,
         uploadDetailsSuccessFixture,
-        [fileDetailsCompleteFixture]
+        [fileDetailsScanCompleteFixture]
       )
     ).toEqual({
       destinationBucket: 'cdp-example-node-frontend',
@@ -23,7 +23,7 @@ describe('#toScanResultResponse', () => {
           actualContentType: 'image/webp',
           contentLength: 25624,
           contentType: 'image/jpeg',
-          fileStatus: 'complete',
+          fileStatus: 'scanComplete',
           filename: 'shoot.jpg',
           hasError: false,
           s3Bucket: 'cdp-example-node-frontend',
@@ -36,7 +36,7 @@ describe('#toScanResultResponse', () => {
           contentLength: 25624,
           contentType: 'image/jpeg',
           fileId: '7507f65a-acb5-41f2-815f-719fbbd47ee5',
-          fileStatus: 'complete',
+          fileStatus: 'scanComplete',
           filename: 'shoot.jpg',
           s3Bucket: 'cdp-example-node-frontend',
           s3Key:
@@ -71,7 +71,7 @@ describe('#toScanResultResponse', () => {
           contentLength: 10503,
           contentType: 'image/jpeg',
           errorMessage: 'The selected file contains a virus',
-          fileStatus: 'complete',
+          fileStatus: 'scanComplete',
           filename: 'succulant.jpeg',
           hasError: true
         }
@@ -81,7 +81,7 @@ describe('#toScanResultResponse', () => {
           contentLength: 10503,
           contentType: 'image/jpeg',
           fileId: 'f45d0dd4-dd3f-4235-9c45-da2edd5c89fd',
-          fileStatus: 'complete',
+          fileStatus: 'scanComplete',
           filename: 'succulant.jpeg',
           uploadId: '619cdb5b-31b2-4747-9d7b-2bd447a1f7d7'
         }

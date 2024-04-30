@@ -19,7 +19,7 @@ const uploadDetailsSuccessFixture = {
       s3Key:
         '683a2187-9977-4a3f-b62f-dfa621bcedb2/faf5ed64-cf0a-4708-a786-7c37e7d29aff',
       s3Bucket: 'cdp-example-node-frontend',
-      fileStatus: 'complete',
+      fileStatus: 'scanComplete',
       contentLength: 25624
     }
   },

@@ -59,7 +59,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
   if (fileDetails.fileStatus === fileStatus.pending) {
     const virusStatus = payload.status?.toLowerCase()
 
-    fileDetails.fileStatus = fileStatus.complete
+    fileDetails.fileStatus = fileStatus.scanComplete
     fileDetails.scanned = new Date().toISOString()
 
     if (virusStatus === fileStatus.infected) {

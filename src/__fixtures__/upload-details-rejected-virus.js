@@ -16,7 +16,7 @@ const uploadDetailsRejectedVirusFixture = {
       filename: 'succulant.jpeg',
       contentType: 'image/jpeg',
       hasError: true,
-      fileStatus: 'complete',
+      fileStatus: 'scanComplete',
       contentLength: 10503,
       errorMessage: 'The selected file contains a virus'
     }

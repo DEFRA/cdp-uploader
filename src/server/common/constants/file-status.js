@@ -2,7 +2,7 @@ const fileStatus = {
   pending: 'pending',
   infected: 'infected',
   clean: 'clean',
-  complete: 'complete'
+  scanComplete: 'scanComplete'
 }
 
 export { fileStatus }
