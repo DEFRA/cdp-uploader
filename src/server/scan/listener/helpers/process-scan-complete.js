@@ -23,14 +23,16 @@ async function processScanComplete(server, uploadId) {
     uploadDetails.numberOfRejectedFiles = numberOfRejectedFiles(files)
 
     await server.redis.storeUploadDetails(uploadId, uploadDetails)
-    server.logger.info({ uploadDetails }, 'Upload marked as ready')
+
+    const readyUploadLogger = createUploadLogger(server.logger, uploadDetails)
+    readyUploadLogger.info('Upload marked as ready')
 
     if (uploadDetails.scanResultCallbackUrl) {
       try {
         await sendSqsMessage(server.sqs, callbackQueueUrl, { uploadId })
       } catch (error) {
-        server.logger.error(
-          { uploadDetails, error },
+        readyUploadLogger.error(
+          error,
           `Failed to send SQS for scan result callback. Error ${error}`
         )
       }
