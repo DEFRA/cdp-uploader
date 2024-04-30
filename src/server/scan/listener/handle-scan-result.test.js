@@ -245,7 +245,8 @@ describe('#handleScanResult', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
         mockServer,
-        'mock-id-34543'
+        'mock-id-34543',
+        'mock-key-87678'
       )
     })
 
@@ -326,7 +327,8 @@ describe('#handleScanResult', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
         mockServer,
-        'mock-id-895745'
+        'mock-id-895745',
+        'mock-key-2342353'
       )
     })
 
@@ -387,7 +389,8 @@ describe('#handleScanResult', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
         mockServer,
-        'mock-id-895745'
+        'mock-id-895745',
+        'mock-key-2342353'
       )
     })
 
