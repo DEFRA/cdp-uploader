@@ -1,7 +1,7 @@
-const fileDetailsScanCompleteFixture = {
+const fileDetailsCompleteFixture = {
   uploadId: 'f5aa7920-6c3d-4090-a0c5-a0002df2c285',
   fileId: '7507f65a-acb5-41f2-815f-719fbbd47ee5',
-  fileStatus: 'scanComplete',
+  fileStatus: 'complete',
   pending: '2024-04-29T11:13:27.589Z',
   actualContentType: 'image/webp',
   contentLength: 25624,
@@ -15,4 +15,4 @@ const fileDetailsScanCompleteFixture = {
     '/plants/f5aa7920-6c3d-4090-a0c5-a0002df2c285/7507f65a-acb5-41f2-815f-719fbbd47ee5'
 }
 
-export { fileDetailsScanCompleteFixture }
+export { fileDetailsCompleteFixture }

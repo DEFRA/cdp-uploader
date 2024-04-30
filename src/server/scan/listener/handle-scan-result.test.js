@@ -3,7 +3,7 @@ import { moveS3Object } from '~/src/server/common/helpers/s3/move-s3-object'
 import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result'
 import { fileDetailsPendingFixture } from '~/src/__fixtures__/file-details-pending'
 import { uploadDetailsReadyFixture } from '~/src/__fixtures__/upload-details-ready'
-import { fileDetailsScanCompleteFixture } from '~/src/__fixtures__/file-scan-complete-details'
+import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
 import { uploadDetailsPendingFixture } from '~/src/__fixtures__/upload-details-pending'
 import { virusCheckMessageCleanFixture } from '~/src/__fixtures__/virus-check-message-clean'
@@ -52,7 +52,7 @@ describe('#handleScanResult', () => {
 
     beforeEach(async () => {
       mockFindUploadDetails.mockResolvedValue(null)
-      mockFindFileDetails.mockResolvedValue(fileDetailsScanCompleteFixture)
+      mockFindFileDetails.mockResolvedValue(fileDetailsCompleteFixture)
 
       result = await handleScanResult(
         virusCheckMessageCleanFixture,
@@ -295,7 +295,7 @@ describe('#handleScanResult', () => {
         contentType: 'image/jpeg',
         delivered: '2024-04-29T14:10:00.000Z',
         fileId: 'd3e1ccfa-3f58-435d-af9a-dad7b20ab11b',
-        fileStatus: 'scanComplete',
+        fileStatus: 'complete',
         filename: 'shoot.jpg',
         hasError: false,
         pending: '2024-04-29T13:41:47.466Z',

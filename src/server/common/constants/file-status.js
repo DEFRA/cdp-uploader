@@ -1,8 +1,7 @@
 const fileStatus = {
   pending: 'pending',
-  infected: 'infected',
-  clean: 'clean',
-  scanComplete: 'scanComplete'
+  complete: 'complete',
+  rejected: 'rejected'
 }
 
 export { fileStatus }

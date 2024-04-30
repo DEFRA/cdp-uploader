@@ -78,7 +78,7 @@ describe('#updateFieldsResponse', () => {
       updateFieldsResponse(formData, [
         {
           fileId: '333-333',
-          fileStatus: fileStatus.scanComplete,
+          fileStatus: fileStatus.complete,
           s3Key: '678-345/296-347',
           s3Bucket: 'cdp-example-node-frontend',
           contentType: 'image/png',
@@ -103,7 +103,7 @@ describe('#updateFieldsResponse', () => {
           contentType: 'image/png',
           errorMessage: 'The selected file contains a virus',
           fileId: '333-333',
-          fileStatus: fileStatus.scanComplete,
+          fileStatus: fileStatus.complete,
           filename: 'succulent.jpg',
           hasError: true,
           s3Bucket: 'cdp-example-node-frontend',
@@ -118,7 +118,7 @@ describe('#updateFieldsResponse', () => {
       updateFieldsResponse(formData, [
         {
           fileId: 'non-matching-id-12345',
-          fileStatus: fileStatus.scanComplete,
+          fileStatus: fileStatus.complete,
           s3Key: '634-34/239-598',
           s3Bucket: 'cdp-example-node-frontend',
           contentType: 'image/png',

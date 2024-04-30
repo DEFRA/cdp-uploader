@@ -85,6 +85,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
 
       if (delivered) {
         fileDetails.delivered = new Date().toISOString()
+        fileDetails.fileStatus = fileStatus.complete
         fileDetails.s3Bucket = uploadDetails.destinationBucket
         fileDetails.s3Key = destinationKey
         await server.redis.storeFileDetails(fileId, fileDetails)

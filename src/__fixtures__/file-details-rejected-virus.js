@@ -1,7 +1,7 @@
 const fileDetailsRejectedVirusFixture = {
   uploadId: '619cdb5b-31b2-4747-9d7b-2bd447a1f7d7',
   fileId: 'f45d0dd4-dd3f-4235-9c45-da2edd5c89fd',
-  fileStatus: 'scanComplete',
+  fileStatus: 'complete',
   pending: '2024-04-29T09:42:30.708Z',
   actualContentType: 'image/jpeg',
   contentLength: 10503,
