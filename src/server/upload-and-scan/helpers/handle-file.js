@@ -40,8 +40,6 @@ async function handleFile(
     fileLogger.warn(
       `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
     )
-
-    return null
   }
 
   const actualContentType = uploadResult.fileTypeResult?.mime
