@@ -23,7 +23,11 @@ function toFilesResponse(uploadId, files) {
     contentLength: file.contentLength,
     filename: file.filename,
     s3Bucket: file.s3Bucket,
-    s3Key: file.s3Key
+    s3Key: file.s3Key,
+    hasError: file.hasError,
+    ...(file?.errorMessage && {
+      errorMessage: file.errorMessage
+    })
   }))
 }
 

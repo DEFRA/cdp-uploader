@@ -36,6 +36,7 @@ describe('#toScanResultResponse', () => {
           fileId: '7507f65a-acb5-41f2-815f-719fbbd47ee5',
           fileStatus: 'complete',
           filename: 'shoot.jpg',
+          hasError: false,
           s3Bucket: 'cdp-example-node-frontend',
           s3Key:
             '/plants/f5aa7920-6c3d-4090-a0c5-a0002df2c285/7507f65a-acb5-41f2-815f-719fbbd47ee5',
@@ -78,9 +79,11 @@ describe('#toScanResultResponse', () => {
         {
           contentLength: 10503,
           contentType: 'image/jpeg',
+          errorMessage: 'The selected file contains a virus',
           fileId: 'f45d0dd4-dd3f-4235-9c45-da2edd5c89fd',
           fileStatus: 'complete',
           filename: 'succulant.jpeg',
+          hasError: true,
           uploadId: '619cdb5b-31b2-4747-9d7b-2bd447a1f7d7'
         }
       ],

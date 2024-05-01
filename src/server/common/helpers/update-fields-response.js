@@ -4,10 +4,10 @@
  * - Add data to formData fields data matched by fileId
  * - Pass items without fileId through, as is
  * @param formData
- * @param fieldUpdates
+ * @param files
  * @returns {{}|*}
  */
-function updateFieldsResponse(formData, fieldUpdates) {
+function updateFieldsResponse(formData, files) {
   const updateFields = (fieldUpdate) => ({
     s3Key: fieldUpdate.s3Key,
     s3Bucket: fieldUpdate.s3Bucket,
@@ -27,14 +27,14 @@ function updateFieldsResponse(formData, fieldUpdates) {
 
       const updatedFieldValues = fieldValues
         .map((fieldValue) => {
-          const matchedFieldUpdate = fieldUpdates.find(
-            (fieldUpdate) => fieldUpdate.fileId === fieldValue.fileId
+          const matchedFileUpdate = files.find(
+            (fileUpdate) => fileUpdate.fileId === fieldValue.fileId
           )
 
-          if (matchedFieldUpdate) {
+          if (matchedFileUpdate) {
             return {
               ...fieldValue,
-              ...updateFields(matchedFieldUpdate)
+              ...updateFields(matchedFileUpdate)
             }
           }
 
