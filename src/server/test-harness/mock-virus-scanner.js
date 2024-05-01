@@ -8,25 +8,29 @@ async function handleMockVirusScanner(message, queue, server) {
     server.logger.info('mocking response to', message)
     const msg = JSON.parse(message.Body)
 
-    for (const record of msg.Records) {
-      const key = record.s3?.object?.key
+    if (msg.Records?.length) {
+      for (const record of msg.Records) {
+        const key = record.s3?.object?.key
 
-      if (key) {
-        const virusRx = new RegExp(config.get('mockVirusRegex'))
-        const metadata = await getObjectMetadata(server, key)
-        if (virusRx.test(metadata?.filename)) {
-          server.logger.info(
-            `mocking INFECTED scan response for uploader ${key}`
-          )
-          await mockScanNotification(
-            server,
-            key,
-            'INFECTED',
-            '(mock) file has a virus'
-          )
-        } else {
-          server.logger.info(`mocking CLEAN scan response for uploader ${key}`)
-          await mockScanNotification(server, key, 'CLEAN', '')
+        if (key) {
+          const virusRx = new RegExp(config.get('mockVirusRegex'))
+          const metadata = await getObjectMetadata(server, key)
+          if (virusRx.test(metadata?.filename)) {
+            server.logger.info(
+              `mocking INFECTED scan response for uploader ${key}`
+            )
+            await mockScanNotification(
+              server,
+              key,
+              'INFECTED',
+              '(mock) file has a virus'
+            )
+          } else {
+            server.logger.info(
+              `mocking CLEAN scan response for uploader ${key}`
+            )
+            await mockScanNotification(server, key, 'CLEAN', '')
+          }
         }
       }
     }
