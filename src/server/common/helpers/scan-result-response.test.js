@@ -1,227 +1,99 @@
-import {
-  toScanResultResponse,
-  updateFieldsResponse
-} from '~/src/server/common/helpers/scan-result-response'
+import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
+import { uploadDetailsSuccessFixture } from '~/src/__fixtures__/upload-success'
+import { uploadDetailsRejectedVirusFixture } from '~/src/__fixtures__/upload-details-rejected-virus'
+import { fileDetailsRejectedVirusFixture } from '~/src/__fixtures__/file-details-rejected-virus'
+import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete'
 
 describe('#toScanResultResponse', () => {
-  test('formats the redis data into a scan result callback', () => {
-    const uploadId = '123'
-    const uploadDetails = {
-      uploadStatus: 'ready',
-      numberOfInfectedFiles: 0,
-      successRedirect: 'https://success.com',
-      failureRedirect: 'https://failure.com',
-      scanResultCallbackUrl: 'https://callback.com',
-      destinationBucket: 'destinationBucket',
-      destinationPath: 'destinationPath',
-      acceptedMimeTypes: ['image/jpeg', 'image/png'],
-      maxFileSize: 1024,
-      fields: { field1: 'value1', field2: { fileId: 'fileId1' } },
-      metadata: { meta1: 'data1', meta2: 'data2' }
-    }
-    const files = [
-      {
-        fileId: 'fileId1',
-        fileStatus: 'pending',
-        contentType: 'image/jpeg',
-        filename: 'file1.jpg',
-        s3Bucket: 'bucket1',
-        s3Key: 'key1'
+  test('Should provide expected response for non rejected upload', () => {
+    expect(
+      toScanResultResponse(
+        uploadDetailsSuccessFixture.uploadId,
+        uploadDetailsSuccessFixture,
+        [fileDetailsCompleteFixture]
+      )
+    ).toEqual({
+      destinationBucket: 'cdp-example-node-frontend',
+      destinationPath: '/plants',
+      fields: {
+        button: 'upload',
+        file: {
+          actualContentType: 'image/webp',
+          contentLength: 25624,
+          contentType: 'image/jpeg',
+          fileStatus: 'complete',
+          filename: 'shoot.jpg',
+          hasError: false,
+          s3Bucket: 'cdp-example-node-frontend',
+          s3Key:
+            '683a2187-9977-4a3f-b62f-dfa621bcedb2/faf5ed64-cf0a-4708-a786-7c37e7d29aff'
+        }
       },
-      {
-        fileId: 'fileId2',
-        fileStatus: 'completed',
-        contentType: 'image/png',
-        filename: 'file2.png',
-        s3Bucket: 'bucket2',
-        s3Key: 'key2'
-      }
-    ]
-
-    const expectedResponse = {
-      uploadStatus: 'ready',
-      numberOfInfectedFiles: 0,
-      successRedirect: 'https://success.com',
-      failureRedirect: 'https://failure.com',
-      scanResultCallbackUrl: 'https://callback.com',
-      destinationBucket: 'destinationBucket',
-      destinationPath: 'destinationPath',
-      acceptedMimeTypes: ['image/jpeg', 'image/png'],
-      maxFileSize: 1024,
       files: [
         {
-          uploadId: '123',
-          fileId: 'fileId1',
-          fileStatus: 'pending',
+          contentLength: 25624,
           contentType: 'image/jpeg',
-          filename: 'file1.jpg',
-          s3Bucket: 'bucket1',
-          s3Key: 'key1'
-        },
-        {
-          uploadId: '123',
-          fileId: 'fileId2',
-          fileStatus: 'completed',
-          contentType: 'image/png',
-          filename: 'file2.png',
-          s3Bucket: 'bucket2',
-          s3Key: 'key2'
+          fileId: '7507f65a-acb5-41f2-815f-719fbbd47ee5',
+          fileStatus: 'complete',
+          filename: 'shoot.jpg',
+          hasError: false,
+          s3Bucket: 'cdp-example-node-frontend',
+          s3Key:
+            '/plants/f5aa7920-6c3d-4090-a0c5-a0002df2c285/7507f65a-acb5-41f2-815f-719fbbd47ee5',
+          uploadId: '683a2187-9977-4a3f-b62f-dfa621bcedb2'
         }
       ],
+      metadata: {
+        plantId: '08e7045b-3f7a-4481-ba41-f301a99308b6'
+      },
+      numberOfRejectedFiles: 0,
+      redirect:
+        'http://redirect.com/plants/add/status-poller?uploadId=683a2187-9977-4a3f-b62f-dfa621bcedb2',
+      uploadStatus: 'ready'
+    })
+  })
+
+  test('Should provide expected response for rejected with virus upload', () => {
+    expect(
+      toScanResultResponse(
+        uploadDetailsRejectedVirusFixture.uploadId,
+        uploadDetailsRejectedVirusFixture,
+        [fileDetailsRejectedVirusFixture]
+      )
+    ).toEqual({
+      destinationBucket: 'cdp-example-node-frontend',
+      destinationPath: '/plants',
       fields: {
-        field1: 'value1',
-        field2: { fileStatus: 'pending', s3Bucket: 'bucket1', s3Key: 'key1' }
+        button: 'upload',
+        file: {
+          actualContentType: 'image/jpeg',
+          contentLength: 10503,
+          contentType: 'image/jpeg',
+          errorMessage: 'The selected file contains a virus',
+          fileStatus: 'complete',
+          filename: 'succulant.jpeg',
+          hasError: true
+        }
       },
-      metadata: { meta1: 'data1', meta2: 'data2' }
-    }
-
-    const result = toScanResultResponse(uploadId, uploadDetails, files)
-    expect(result).toEqual(expectedResponse)
-  })
-
-  test('returns a valid value if there are no files', () => {
-    const uploadId = '123'
-    const uploadDetails = {
-      uploadStatus: 'ready',
-      numberOfInfectedFiles: 0,
-      successRedirect: 'https://success.com',
-      failureRedirect: 'https://failure.com',
-      scanResultCallbackUrl: 'https://callback.com',
-      destinationBucket: 'destinationBucket',
-      destinationPath: 'destinationPath',
-      acceptedMimeTypes: ['image/jpeg', 'image/png'],
-      maxFileSize: 1024,
-      fields: { field1: 'value1' },
-      metadata: { meta1: 'data1', meta2: 'data2' }
-    }
-
-    const expectedResponse = {
-      uploadStatus: 'ready',
-      numberOfInfectedFiles: 0,
-      successRedirect: 'https://success.com',
-      failureRedirect: 'https://failure.com',
-      scanResultCallbackUrl: 'https://callback.com',
-      destinationBucket: 'destinationBucket',
-      destinationPath: 'destinationPath',
-      acceptedMimeTypes: ['image/jpeg', 'image/png'],
-      maxFileSize: 1024,
-      files: [],
-      fields: { field1: 'value1' },
-      metadata: { meta1: 'data1', meta2: 'data2' }
-    }
-
-    const result = toScanResultResponse(uploadId, uploadDetails, [])
-    expect(result).toEqual(expectedResponse)
-  })
-})
-
-describe('#updateFieldsResponse', () => {
-  test('updateField non-nested field', () => {
-    const fields = {
-      foo: 'bar',
-      file: {
-        fileId: '1111',
-        fileName: 'a'
+      files: [
+        {
+          contentLength: 10503,
+          contentType: 'image/jpeg',
+          errorMessage: 'The selected file contains a virus',
+          fileId: 'f45d0dd4-dd3f-4235-9c45-da2edd5c89fd',
+          fileStatus: 'complete',
+          filename: 'succulant.jpeg',
+          hasError: true,
+          uploadId: '619cdb5b-31b2-4747-9d7b-2bd447a1f7d7'
+        }
+      ],
+      metadata: {
+        plantId: '94f8a562-630c-4569-b3a3-2503408c4129'
       },
-      filelist: [
-        { fileId: '2222', fileName: 'b' },
-        { fileId: '3333', fileName: 'c' }
-      ]
-    }
-
-    updateFieldsResponse(fields, [
-      {
-        fileId: '1111',
-        s3Key: '1234-567',
-        s3Bucket: 'foo',
-        fileStatus: 'pending'
-      }
-    ])
-
-    expect(fields.file).toEqual({
-      fileName: 'a',
-      fileStatus: 'pending',
-      s3Key: '1234-567',
-      s3Bucket: 'foo'
+      numberOfRejectedFiles: 1,
+      redirect:
+        'http://redirect.com/plants/add/status-poller?uploadId=619cdb5b-31b2-4747-9d7b-2bd447a1f7d7',
+      uploadStatus: 'ready'
     })
-  })
-
-  test('updateFieldsResponse nested field', () => {
-    const fields = {
-      foo: 'bar',
-      file: {
-        fileId: '1111',
-        fileName: 'a'
-      },
-      filelist: [
-        { fileId: '2222', fileName: 'b' },
-        { fileId: '3333', fileName: 'c' }
-      ]
-    }
-
-    updateFieldsResponse(fields, [
-      {
-        fileId: '3333',
-        s3Key: '9999-9999',
-        s3Bucket: 'bar'
-      }
-    ])
-
-    expect(fields.filelist[0]).toEqual({ fileName: 'b' })
-    expect(fields.filelist[1]).toEqual({
-      fileName: 'c',
-      s3Key: '9999-9999',
-      s3Bucket: 'bar'
-    })
-  })
-
-  test('dont update missing field', () => {
-    const fields = {
-      foo: 'bar',
-      file: {
-        fileId: '1111',
-        fileName: 'a'
-      },
-      filelist: [
-        { fileId: '2222', fileName: 'b' },
-        { fileId: '3333', fileName: 'c' }
-      ]
-    }
-
-    updateFieldsResponse(fields, [
-      {
-        fileId: 'abcd',
-        s3Key: '9999-9999',
-        s3Bucket: 'bar'
-      }
-    ])
-    expect(fields.file).toEqual({ fileName: 'a' })
-    expect(fields.filelist[0]).toEqual({ fileName: 'b' })
-    expect(fields.filelist[1]).toEqual({ fileName: 'c' })
-  })
-
-  test('doesnt update anything with a null fileID', () => {
-    const fields = {
-      foo: 'bar',
-      file: {
-        fileId: '1111',
-        fileName: 'a'
-      },
-      filelist: [
-        { fileId: '2222', fileName: 'b' },
-        { fileId: '3333', fileName: 'c' }
-      ]
-    }
-
-    updateFieldsResponse(fields, [
-      {
-        fileId: null,
-        s3Key: '9999-9999',
-        s3Bucket: 'bar'
-      }
-    ])
-    expect(fields.file).toEqual({ fileName: 'a' })
-    expect(fields.filelist[0]).toEqual({ fileName: 'b' })
-    expect(fields.filelist[1]).toEqual({ fileName: 'c' })
   })
 })

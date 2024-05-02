@@ -160,12 +160,6 @@ const config = convict({
     default: 400,
     env: 'SQS_SCAN_RESULTS_CALLBACK_VISIBILITY_TIMEOUT'
   },
-  maxFileSize: {
-    doc: 'Maximum file size in bytes',
-    format: Number,
-    default: 200 * 1024 * 1024,
-    env: 'MAX_FILE_SIZE'
-  },
   mockVirusRegex: {
     doc: 'Filename pattern used by test harness to simulate viruses',
     format: String,

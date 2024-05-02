@@ -25,21 +25,12 @@ const initiateController = {
 
     uploadDetails.uploadId = uploadId
     uploadDetails.uploadStatus = uploadStatus.initiated.description
-    uploadDetails.initiated = new Date()
+    uploadDetails.initiated = new Date().toISOString()
     uploadDetails.fields = {}
     uploadDetails.fileIds = []
-    uploadDetails.successRedirect = withQueryParams(
-      uploadDetails.successRedirect,
-      {
-        uploadId
-      }
-    )
-    uploadDetails.failureRedirect = withQueryParams(
-      uploadDetails.failureRedirect,
-      {
-        uploadId
-      }
-    )
+    uploadDetails.redirect = withQueryParams(uploadDetails.redirect, {
+      uploadId
+    })
 
     await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
@@ -50,7 +41,7 @@ const initiateController = {
     return h
       .response({
         statusUrl: `${appBaseUrl}/status/${uploadId}`,
-        uploadUrl: `${appBaseUrl}/upload/${uploadId}`,
+        uploadAndScanUrl: `${appBaseUrl}/upload-and-scan/${uploadId}`,
         uploadId
       })
       .code(200)

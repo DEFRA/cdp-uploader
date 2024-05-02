@@ -24,7 +24,7 @@
     "lint:scss": "stylelint \"src/**/*.scss\" --cache --cache-location .cache/stylelint --cache-strategy content --color --ignore-path .gitignore",
     "mockApi": "nodemon ./mock-api",
     "postversion": "git add package.json package-lock.json && git commit -m $npm_package_version",
-    "test": "jest --coverage --verbose",
+    "test": "TZ=UTC jest --coverage --verbose",
     "test:watch": "jest --watch",
     "server:watch": "nodemon --exec babel-node ./src",
     "server:debug": "nodemon --exec babel-node --inspect ./src",
