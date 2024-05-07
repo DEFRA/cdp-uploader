@@ -27,7 +27,7 @@
     "test": "TZ=UTC jest --coverage --verbose",
     "test:watch": "jest --watch",
     "server:watch": "nodemon --exec babel-node ./src",
-    "server:debug": "nodemon --exec babel-node --inspect ./src",
+    "server:debug": "nodemon --exec babel-node --inspect=9239 ./src",
     "prestart": "npm run build",
     "start": "NODE_ENV=production node --use-strict ./.server",
     "setup:husky": "node -e \"try { (await import('husky')).default() } catch (e) { if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e }\" --input-type module"

@@ -7,6 +7,7 @@ import {
   isInitiated,
   uploadStatus
 } from '~/src/server/common/helpers/upload-status'
+import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -18,6 +19,7 @@ const uploadController = {
       allow: 'multipart/form-data',
       multipart: true,
       output: 'stream',
+      parse: true,
       maxBytes: 200 * 1024 * 1024, // 200MB
       uploads: 'uploads'
     }
@@ -49,7 +51,7 @@ const uploadController = {
     }
 
     try {
-      const multipart = request.payload
+      const multipart = stringArrayToObject(request.payload)
 
       for (const [partKey, mValue] of Object.entries(multipart)) {
         const partValues = Array.isArray(mValue) ? mValue : [mValue]
