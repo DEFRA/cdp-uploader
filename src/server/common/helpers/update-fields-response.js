@@ -28,7 +28,7 @@ function updateFieldsResponse(formData, files) {
       const updatedFieldValues = fieldValues
         .map((fieldValue) => {
           const matchedFileUpdate = files.find(
-            (fileUpdate) => fileUpdate.fileId === fieldValue.fileId
+            (fileUpdate) => fileUpdate?.fileId === fieldValue?.fileId
           )
 
           if (matchedFileUpdate) {
