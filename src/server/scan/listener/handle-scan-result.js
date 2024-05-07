@@ -8,6 +8,7 @@ import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete'
+import { counter } from '~/src/server/common/helpers/metrics'
 
 const quarantineBucket = config.get('quarantineBucket')
 
@@ -70,6 +71,8 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
       await server.redis.storeFileDetails(fileId, fileDetails)
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
 
+      await counter('upload-infected')
+
       fileLogger.info(`Virus found. Message: ${payload.message}`)
     }
 
@@ -83,6 +86,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
         destinationKey,
         fileLogger
       )
+      await counter('upload-clean')
 
       if (delivered) {
         fileDetails.delivered = new Date().toISOString()
