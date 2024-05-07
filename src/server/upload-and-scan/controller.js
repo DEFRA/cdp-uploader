@@ -47,7 +47,7 @@ const uploadController = {
       uploadLogger.warn(
         `uploadId ${uploadId} has already been used to upload files`
       )
-      return h.redirect(uploadDetails.failureRedirect) // TODO: how do we communicate this failure reason?
+      return h.redirect(uploadDetails.redirect) // TODO: how do we communicate this failure reason?
     }
 
     try {
