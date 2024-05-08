@@ -1,6 +1,7 @@
 import FileType from 'file-type'
 import { PassThrough } from 'node:stream'
 import { Upload } from '@aws-sdk/lib-storage'
+import { ChecksumAlgorithm } from '@aws-sdk/client-s3'
 
 import { findS3ContentLength } from '~/src/server/common/helpers/s3/find-s3-content-length'
 
@@ -23,7 +24,8 @@ async function uploadStream(
         ...metadata
       },
       Body: fileStream,
-      ContentType: metadata.contentType
+      ContentType: metadata.contentType,
+      ChecksumAlgorithm: ChecksumAlgorithm.SHA256
     },
     queueSize: 4,
     partSize: 1024 * 1024 * 5,
@@ -38,6 +40,7 @@ async function uploadStream(
 
   const uploadResult = await upload.done()
   const fileTypeResult = await FileType.fromStream(fileTypeStream)
+  const checksumSha256 = await uploadResult.ChecksumSHA256
 
   const fileLength = await findS3ContentLength(
     s3Client,
@@ -49,7 +52,8 @@ async function uploadStream(
   return {
     ...uploadResult,
     fileTypeResult,
-    fileLength
+    fileLength,
+    checksumSha256
   }
 }
 

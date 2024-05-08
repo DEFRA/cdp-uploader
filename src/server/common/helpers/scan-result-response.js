@@ -21,6 +21,7 @@ function toFilesResponse(uploadId, files) {
     fileStatus: file.fileStatus,
     contentType: file.contentType,
     contentLength: file.contentLength,
+    checksumSha256: file.checksumSha256,
     filename: file.filename,
     s3Bucket: file.s3Bucket,
     s3Key: file.s3Key,

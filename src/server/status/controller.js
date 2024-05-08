@@ -18,7 +18,7 @@ const statusController = {
     }
 
     createUploadLogger(request.logger, uploadDetails).debug(
-      { uploadDetails },
+      { uploadDetails, files },
       `Status found for ${uploadId}`
     )
 
