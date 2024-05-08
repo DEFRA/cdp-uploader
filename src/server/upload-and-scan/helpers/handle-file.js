@@ -42,7 +42,10 @@ async function handleFile(
     )
   }
 
+  fileLogger.debug({ uploadResult }, `Upload complete for fileId ${fileId}`)
+
   const actualContentType = uploadResult.fileTypeResult?.mime
+
   const files = {
     uploadId,
     fileId,
@@ -50,6 +53,7 @@ async function handleFile(
     pending: new Date().toISOString(),
     actualContentType,
     contentLength: uploadResult.fileLength,
+    checksumSha256: uploadResult.checksumSha256,
     ...contentType,
     ...filename
   }
