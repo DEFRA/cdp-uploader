@@ -1,8 +1,9 @@
 import { flatten, unflatten } from 'flat'
 
 class RedisHelper {
-  constructor(redis) {
+  constructor(redis, ttlMillis) {
     this.client = redis
+    this.ttlMillis = ttlMillis
   }
 
   async findUploadDetails(uploadId) {
@@ -14,7 +15,12 @@ class RedisHelper {
   }
 
   async storeUploadDetails(uploadId, uploadDetails) {
-    return await this.client.set(uploadId, JSON.stringify(uploadDetails))
+    return await this.client.set(
+      uploadId,
+      JSON.stringify(uploadDetails),
+      'PX',
+      this.ttlMillis
+    )
   }
 
   async findFileDetails(fileId) {
@@ -26,7 +32,12 @@ class RedisHelper {
   }
 
   async storeFileDetails(fileId, fileDetails) {
-    return await this.client.set(fileId, JSON.stringify(fileDetails))
+    return await this.client.set(
+      fileId,
+      JSON.stringify(fileDetails),
+      'PX',
+      this.ttlMillis
+    )
   }
 
   async findUploadAndFiles(uploadId) {
@@ -50,13 +61,14 @@ class RedisHelper {
 }
 
 class RedisHashHelpers {
-  constructor(redis) {
+  constructor(redis, ttlMillis) {
     this.client = redis
+    this.ttlMillis = ttlMillis
   }
 
   async insert(key, data) {
     const hash = flatten(data)
-    return await this.client.hset(key, hash)
+    return await this.client.hset(key, hash, 'PX', this.ttlMillis)
   }
 
   async find(key) {
@@ -69,7 +81,7 @@ class RedisHashHelpers {
 
   async update(key, fields) {
     const fieldsToUpdate = flatten(fields)
-    return await this.client.hset(key, fieldsToUpdate)
+    return await this.client.hset(key, fieldsToUpdate, 'PX', this.ttlMillis)
   }
 
   async push(key, field, value) {

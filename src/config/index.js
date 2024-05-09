@@ -1,8 +1,7 @@
 import convict from 'convict'
 import path from 'node:path'
 
-const oneDay = 1000 * 60 * 60 * 24
-const oneWeek = 7 * 24 * 60 * 60 * 1000
+const oneWeekMillis = 7 * 24 * 60 * 60 * 1000
 
 const config = convict({
   env: {
@@ -26,7 +25,7 @@ const config = convict({
   staticCacheTimeout: {
     doc: 'Static cache timeout in milliseconds',
     format: Number,
-    default: oneWeek,
+    default: oneWeekMillis,
     env: 'STATIC_CACHE_TIMEOUT'
   },
   serviceName: {
@@ -121,7 +120,7 @@ const config = convict({
   redisTtl: {
     doc: 'Redis cache global ttl',
     format: Number,
-    default: oneDay,
+    default: oneWeekMillis,
     env: 'REDIS_TTL'
   },
   useSingleInstanceCache: {
