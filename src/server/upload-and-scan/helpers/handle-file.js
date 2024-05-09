@@ -61,14 +61,14 @@ async function handleFile(
     ...filename
   }
 
-  // reject zero length files
+  // Reject zero length files
   if (uploadResult.fileLength === 0) {
     files.fileStatus = fileStatus.rejected
     files.hasError = true
     files.errorMessage = fileErrorMessages.empty
   }
 
-  // reject file if its too big
+  // Reject file if its too big
   if (uploadResult.fileLength > uploadDetails.maxFileSize) {
     files.fileStatus = fileStatus.rejected
     files.hasError = true
@@ -77,7 +77,8 @@ async function handleFile(
       fileErrorMessages.tooBig + uploadDetails.maxFileSize + ' bytes'
   }
 
-  // reject file if the mime types dont match
+  // Reject file if the mime types dont match
+  // TODO: what do we do with the detected mime type
   if (
     uploadDetails.acceptedMimeTypes &&
     !uploadDetails.acceptedMimeTypes.some((m) => m === contentType.contentType)
@@ -85,9 +86,7 @@ async function handleFile(
     files.fileStatus = fileStatus.rejected
     files.hasError = true
     files.errorMessage =
-      fileErrorMessages.wrongType +
-      ' ' +
-      uploadDetails.acceptedMimeTypes.join(', ')
+      fileErrorMessages.wrongType + uploadDetails.acceptedMimeTypes.join(', ')
   }
 
   await request.redis.storeFileDetails(fileId, files)
