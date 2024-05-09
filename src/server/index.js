@@ -51,7 +51,10 @@ async function createServer() {
 
   await server.register(requestLogger)
 
-  const redisHelper = new RedisHelper(buildRedisClient())
+  const redisHelper = new RedisHelper(
+    buildRedisClient(),
+    config.get('redisTtl')
+  )
   server.decorate('request', 'redis', redisHelper)
   server.decorate('server', 'redis', redisHelper)
 
