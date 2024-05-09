@@ -8,6 +8,7 @@ import { withQueryParams } from '~/src/server/common/helpers/with-query-params'
 import { counter } from '~/src/server/common/helpers/metrics'
 
 const appBaseUrl = config.get('appBaseUrl')
+const isDevelopment = config.get('isDevelopment')
 
 const initiateController = {
   options: {
@@ -41,11 +42,16 @@ const initiateController = {
 
     await counter('uploads-initiated')
 
+    const relativeUploadUrl = `/upload-and-scan/${uploadId}`
+    const uploadUrl = isDevelopment
+      ? `${appBaseUrl}/${relativeUploadUrl}`
+      : relativeUploadUrl
+
     return h
       .response({
-        statusUrl: `${appBaseUrl}/status/${uploadId}`,
-        uploadAndScanUrl: `${appBaseUrl}/upload-and-scan/${uploadId}`,
-        uploadId
+        uploadId,
+        uploadAndScanUrl: uploadUrl,
+        statusUrl: `${appBaseUrl}/status/${uploadId}`
       })
       .code(200)
   }
