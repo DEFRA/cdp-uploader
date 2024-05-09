@@ -9,6 +9,7 @@ import {
 } from '~/src/server/common/helpers/upload-status'
 import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject'
 import { counter } from '~/src/server/common/helpers/metrics'
+import { config } from '~/src/config'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -21,7 +22,7 @@ const uploadController = {
       multipart: true,
       output: 'stream',
       parse: true,
-      maxBytes: 200 * 1024 * 1024, // 200MB
+      maxBytes: config.get('maxFileSize'),
       uploads: 'uploads'
     }
   },

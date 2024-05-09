@@ -3,6 +3,7 @@ import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream
 import { fileStatus } from '~/src/server/common/constants/file-status'
 import { counter } from '~/src/server/common/helpers/metrics'
 import { averageFileSize } from '~/src/server/common/helpers/metrics/counter'
+import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
 
 async function handleFile(
   uploadId,
@@ -59,6 +60,36 @@ async function handleFile(
     ...contentType,
     ...filename
   }
+
+  // reject zero length files
+  if (uploadResult.fileLength === 0) {
+    files.fileStatus = fileStatus.rejected
+    files.hasError = true
+    files.errorMessage = fileErrorMessages.empty
+  }
+
+  // reject file if its too big
+  if (uploadResult.fileLength > uploadDetails.maxFileSize) {
+    files.fileStatus = fileStatus.rejected
+    files.hasError = true
+    // TODO: is there a lib to round to the nearest unit
+    files.errorMessage =
+      fileErrorMessages.tooBig + uploadDetails.maxFileSize + ' bytes'
+  }
+
+  // reject file if the mime types dont match
+  if (
+    uploadDetails.acceptedMimeTypes &&
+    !uploadDetails.acceptedMimeTypes.some((m) => m === contentType.contentType)
+  ) {
+    files.fileStatus = fileStatus.rejected
+    files.hasError = true
+    files.errorMessage =
+      fileErrorMessages.wrongType +
+      ' ' +
+      uploadDetails.acceptedMimeTypes.join(', ')
+  }
+
   await request.redis.storeFileDetails(fileId, files)
   await counter('file-received')
   await averageFileSize('file-size', uploadResult.fileLength)
