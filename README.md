@@ -88,7 +88,7 @@ Example `/initiate` request:
 ```json
 {
   "uploadId": "b18ceadb-afb1-4955-a70b-256bf94444d5",
-  "uploadAndScanUrl": "https://cdp-uploader/upload-and-scan/b18ceadb-afb1-4955-a70b-256bf94444d5",
+  "uploadAndScanUrl": "/upload-and-scan/b18ceadb-afb1-4955-a70b-256bf94444d5",
   "statusUrl": "https://cdp-uploader/status/b18ceadb-afb1-4955-a70b-256bf94444d5"
 }
 ```
@@ -99,7 +99,13 @@ Example `/initiate` request:
 | uploadAndScanUrl | Url which must be used for the upload            | yes      |
 | statusUrl        | Endpoint that can be polled for status of upload | yes      |
 
-## POST /upload-and-scan/${uploadId}
+## POST /upload-and-scan/{uploadId}
+
+#### Path Parameters
+
+| Parameter Name | Description                                                              |
+| -------------- | ------------------------------------------------------------------------ |
+| uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
 
 This will be a `multipart/form-data` request to the `uploadAndScanUrl` url provided in the initiate response. This request should happen directly from the users browser to the cdp-uploader.
 
@@ -121,16 +127,16 @@ Example `/upload-and-scan/${uploadId}` request:
 
 Once the upload has been successful, the user will be redirected to the `redirect` url provided in the initate request.
 
-## GET /status/{upload-id}
+## GET /status/{uploadId}
 
 The status API provides information about uploaded files, virus scan status and S3 location.
 The API is intended to be polled by the frontend services, it is not public and cannot be called direct from the browser.
 
-#### Request Parameters
+#### Path Parameters
 
-| Parameter Name | Description                                                          |
-| -------------- | -------------------------------------------------------------------- |
-| upload-id      | Unique id for that upload. ID is provided via the `/initialize` call |
+| Parameter Name | Description                                                              |
+| -------------- | ------------------------------------------------------------------------ |
+| uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
 
 #### Response Payload
 
@@ -156,7 +162,7 @@ The API is intended to be polled by the frontend services, it is not public and 
   ],
   "fields": {
     "a-form-field": "some value",
-    "file-upload": {
+    "a-file-upload-field": {
       "fileId": "07aca302-fe02-4650-adf3-f1cdd8bc3988",
       "actualContentType": "image/jpeg",
       "filename": "unicorn.jpg",
