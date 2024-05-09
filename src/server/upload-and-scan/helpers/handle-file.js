@@ -1,6 +1,8 @@
 import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream'
 import { fileStatus } from '~/src/server/common/constants/file-status'
+import { counter } from '~/src/server/common/helpers/metrics'
+import { averageFileSize } from '~/src/server/common/helpers/metrics/counter'
 
 async function handleFile(
   uploadId,
@@ -58,7 +60,8 @@ async function handleFile(
     ...filename
   }
   await request.redis.storeFileDetails(fileId, files)
-
+  await counter('file-received')
+  await averageFileSize('file-size', uploadResult.fileLength)
   return {
     fileId,
     actualContentType,

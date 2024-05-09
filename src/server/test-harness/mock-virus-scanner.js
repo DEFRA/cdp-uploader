@@ -69,7 +69,7 @@ async function mockScanNotification(server, key, status, message) {
       QueueUrl: config.get('sqsScanResults'),
       MessageAttributes: {},
       MessageBody: JSON.stringify(payload),
-      DelaySeconds: 5
+      DelaySeconds: config.get('mockVirusResultDelay')
     })
   )
 }

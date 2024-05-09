@@ -8,6 +8,7 @@ import {
   uploadStatus
 } from '~/src/server/common/helpers/upload-status'
 import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject'
+import { counter } from '~/src/server/common/helpers/metrics'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -80,6 +81,8 @@ const uploadController = {
       uploadDetails.uploadStatus = uploadStatus.pending.description
       uploadDetails.pending = new Date().toISOString()
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
+
+      await counter('upload-received')
 
       // TODO: check all the files sizes match the size set in uploadDetails
       return h.redirect(uploadDetails.redirect)

@@ -5,6 +5,7 @@ import { initiateValidation } from '~/src/server/initiate/helpers/initiate-valid
 import { uploadStatus } from '~/src/server/common/helpers/upload-status'
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
 import { withQueryParams } from '~/src/server/common/helpers/with-query-params'
+import { counter } from '~/src/server/common/helpers/metrics'
 
 const appBaseUrl = config.get('appBaseUrl')
 
@@ -37,6 +38,8 @@ const initiateController = {
     createUploadLogger(request.logger, uploadDetails).info(
       `Request ${uploadId} initiated`
     )
+
+    await counter('uploads-initiated')
 
     return h
       .response({
