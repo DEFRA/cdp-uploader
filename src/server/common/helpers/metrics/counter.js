@@ -20,4 +20,16 @@ const counter = async (metricName, value = 1) => {
   }
 }
 
-export { counter }
+const averageFileSize = async (metricName, value) => {
+  if (!config.get('isProduction')) return
+
+  try {
+    const metrics = createMetricsLogger()
+    metrics.putMetric(metricName, value, Unit.Bytes, StorageResolution.Standard)
+    await metrics.flush()
+  } catch (e) {
+    logger.warn(e)
+  }
+}
+
+export { counter, averageFileSize }

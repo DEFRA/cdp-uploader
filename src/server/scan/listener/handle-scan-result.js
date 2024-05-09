@@ -71,7 +71,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
       await server.redis.storeFileDetails(fileId, fileDetails)
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
 
-      await counter('upload-infected')
+      await counter('file-infected')
 
       fileLogger.info(`Virus found. Message: ${payload.message}`)
     }
@@ -86,7 +86,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
         destinationKey,
         fileLogger
       )
-      await counter('upload-clean')
+      await counter('file-clean')
 
       if (delivered) {
         fileDetails.delivered = new Date().toISOString()
