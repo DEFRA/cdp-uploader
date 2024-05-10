@@ -176,6 +176,12 @@ const config = convict({
     format: Boolean,
     default: process.env.NODE_ENV !== 'production',
     env: 'MOCK_VIRUS_SCAN_ENABLED'
+  },
+  maxFileSize: {
+    doc: 'Max file size uploader will accept in bytes. Must be equal to or less than the nginx max',
+    format: Number,
+    default: 200 * 1024 * 1024,
+    env: 'MAX_FILE_SIZE'
   }
 })
 
