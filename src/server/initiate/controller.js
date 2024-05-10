@@ -43,8 +43,9 @@ const initiateController = {
     await counter('uploads-initiated')
 
     const relativeUploadUrl = `/upload-and-scan/${uploadId}`
+
     const uploadUrl = isDevelopment
-      ? `${appBaseUrl}/${relativeUploadUrl}`
+      ? `${appBaseUrl}${relativeUploadUrl}`
       : relativeUploadUrl
 
     return h

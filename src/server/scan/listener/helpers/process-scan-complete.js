@@ -52,10 +52,7 @@ async function processScanComplete(server, uploadId, fileId) {
 
 function isScanningComplete(files) {
   return files.every(
-    (file) =>
-      file.fileStatus === fileStatus.rejected ||
-      file.fileStatus === fileStatus.complete ||
-      file.delivered
+    (file) => file.fileStatus === fileStatus.rejected || file.delivered
   )
 }
 
