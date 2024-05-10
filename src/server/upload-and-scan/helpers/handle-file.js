@@ -92,12 +92,8 @@ async function handleFile(
   await request.redis.storeFileDetails(fileId, files)
   await counter('file-received')
   await averageFileSize('file-size', uploadResult.fileLength)
-  return {
-    fileId,
-    actualContentType,
-    ...filename,
-    ...contentType
-  }
+
+  return files
 }
 
 export { handleFile }

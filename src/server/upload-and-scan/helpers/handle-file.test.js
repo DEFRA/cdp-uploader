@@ -48,7 +48,7 @@ describe('#handleFile', () => {
         mockRequest,
         mockLogger
       )
-    ).toEqual({
+    ).toMatchObject({
       actualContentType: 'image/jpeg',
       fileId: 'file-id-678910'
     })
@@ -75,7 +75,7 @@ describe('#handleFile', () => {
         mockRequest,
         mockLogger
       )
-    ).toEqual({
+    ).toMatchObject({
       actualContentType: 'image/jpeg',
       fileId: 'file-id-678910'
     })
@@ -111,7 +111,7 @@ describe('#handleFile', () => {
         mockRequest,
         mockLogger
       )
-    ).toEqual({
+    ).toMatchObject({
       actualContentType: 'image/jpeg',
       fileId: 'file-id-678910'
     })
@@ -147,7 +147,7 @@ describe('#handleFile', () => {
         mockRequest,
         mockLogger
       )
-    ).toEqual({
+    ).toMatchObject({
       actualContentType: 'image/jpeg',
       fileId: 'file-id-678910'
     })

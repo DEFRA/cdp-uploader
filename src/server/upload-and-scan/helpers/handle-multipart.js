@@ -20,16 +20,24 @@ async function handleMultipart(
     const fileId = crypto.randomUUID()
     const fileLogger = createFileLogger(request.logger, uploadDetails, fileId)
 
-    const filePart = await handleFile(
-      uploadId,
-      uploadDetails,
-      fileId,
-      multipartValue,
-      request,
-      fileLogger
-    )
+    const { actualContentType, filename, contentType, fileStatus } =
+      await handleFile(
+        uploadId,
+        uploadDetails,
+        fileId,
+        multipartValue,
+        request,
+        fileLogger
+      )
 
-    return { responseValue: filePart, fileId }
+    const responseValue = {
+      fileId,
+      actualContentType,
+      filename,
+      contentType
+    }
+
+    return { responseValue, fileId, status: fileStatus }
   }
 }
 

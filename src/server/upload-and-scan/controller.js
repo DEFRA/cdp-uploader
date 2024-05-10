@@ -10,6 +10,8 @@ import {
 import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject'
 import { counter } from '~/src/server/common/helpers/metrics'
 import { config } from '~/src/config'
+import { fileStatus } from '~/src/server/common/constants/file-status'
+import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -55,11 +57,12 @@ const uploadController = {
     try {
       const multipart = stringArrayToObject(request.payload)
 
+      const fileStatuses = []
       for (const [partKey, mValue] of Object.entries(multipart)) {
         const partValues = Array.isArray(mValue) ? mValue : [mValue]
         const elemFields = []
         for (const partValue of partValues) {
-          const { responseValue, fileId } = await handleMultipart(
+          const { responseValue, fileId, status } = await handleMultipart(
             partValue,
             uploadId,
             uploadDetails,
@@ -67,6 +70,7 @@ const uploadController = {
           )
           if (responseValue && fileId) {
             uploadDetails.fileIds.push(fileId)
+            fileStatuses.push({ fileId, status })
           }
           if (responseValue) {
             elemFields.push(responseValue)
@@ -82,6 +86,14 @@ const uploadController = {
       uploadDetails.uploadStatus = uploadStatus.pending.description
       uploadDetails.pending = new Date().toISOString()
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
+
+      // If a file was rejected during the upload trigger processScanComplete
+      // This will ensure the overall status gets updated.
+      for (const s of fileStatuses) {
+        if (s.status === fileStatus.rejected) {
+          await processScanComplete(request.server, uploadId, s.fileId)
+        }
+      }
 
       await counter('upload-received')
 
