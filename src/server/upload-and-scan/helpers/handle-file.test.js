@@ -99,13 +99,13 @@ describe('#handleFile', () => {
         ext: 'jpg',
         mime: 'image/jpeg'
       },
-      fileLength: 1001
+      fileLength: 1024 * 1024 * 2
     })
 
     expect(
       await handleFile(
         uploadId,
-        { ...mockUploadDetails(uploadId), maxFileSize: 999 },
+        { ...mockUploadDetails(uploadId), maxFileSize: 1024 * 1024 },
         'file-id-678910',
         {},
         mockRequest,
@@ -120,7 +120,43 @@ describe('#handleFile', () => {
       'file-id-678910',
       expect.objectContaining({
         hasError: true,
-        errorMessage: 'The selected file must be smaller than 999 bytes',
+        errorMessage: 'The selected file must be smaller than 1 MB',
+        fileStatus: 'rejected'
+      })
+    )
+  })
+
+  test('Should reject files that exceed the max size and show the error in KB if its low enough', async () => {
+    const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
+
+    uploadStream.mockResolvedValue({
+      Bucket: 'cdp-uploader-quarantine',
+      fileTypeResult: {
+        ext: 'jpg',
+        mime: 'image/jpeg'
+      },
+      fileLength: 1000 * 1000 * 2
+    })
+
+    expect(
+      await handleFile(
+        uploadId,
+        { ...mockUploadDetails(uploadId), maxFileSize: 1000 * 256 },
+        'file-id-678910',
+        {},
+        mockRequest,
+        mockLogger
+      )
+    ).toMatchObject({
+      actualContentType: 'image/jpeg',
+      fileId: 'file-id-678910'
+    })
+
+    expect(mockRequest.redis.storeFileDetails).toHaveBeenLastCalledWith(
+      'file-id-678910',
+      expect.objectContaining({
+        hasError: true,
+        errorMessage: 'The selected file must be smaller than 250 KB',
         fileStatus: 'rejected'
       })
     )

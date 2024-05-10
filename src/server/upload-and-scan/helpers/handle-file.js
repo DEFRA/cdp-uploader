@@ -4,6 +4,7 @@ import { fileStatus } from '~/src/server/common/constants/file-status'
 import { counter } from '~/src/server/common/helpers/metrics'
 import { averageFileSize } from '~/src/server/common/helpers/metrics/counter'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
+import { filesize } from 'filesize'
 
 async function handleFile(
   uploadId,
@@ -72,9 +73,10 @@ async function handleFile(
   if (uploadResult.fileLength > uploadDetails.maxFileSize) {
     files.fileStatus = fileStatus.rejected
     files.hasError = true
-    // TODO: is there a lib to round to the nearest unit
-    files.errorMessage =
-      fileErrorMessages.tooBig + uploadDetails.maxFileSize + ' bytes'
+    files.errorMessage = fileErrorMessages.tooBig.replace(
+      '$MAXSIZE',
+      filesize(uploadDetails.maxFileSize, { standard: 'jedec' })
+    )
   }
 
   // Reject file if the mime types dont match
@@ -85,8 +87,10 @@ async function handleFile(
   ) {
     files.fileStatus = fileStatus.rejected
     files.hasError = true
-    files.errorMessage =
-      fileErrorMessages.wrongType + uploadDetails.acceptedMimeTypes.join(', ')
+    files.errorMessage = fileErrorMessages.wrongType.replace(
+      '$MIMETYPES',
+      uploadDetails.acceptedMimeTypes.join(', ')
+    )
   }
 
   await request.redis.storeFileDetails(fileId, files)
