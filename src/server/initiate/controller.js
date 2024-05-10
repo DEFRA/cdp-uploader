@@ -44,7 +44,7 @@ const initiateController = {
 
     const relativeUploadUrl = `/upload-and-scan/${uploadId}`
     const uploadUrl = isDevelopment
-      ? `${appBaseUrl}/${relativeUploadUrl}`
+      ? `${appBaseUrl}${relativeUploadUrl}`
       : relativeUploadUrl
 
     return h
