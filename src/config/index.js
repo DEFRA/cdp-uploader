@@ -168,7 +168,7 @@ const config = convict({
   mockVirusResultDelay: {
     doc: 'how many seconds to wait before mocking the scan result',
     format: Number,
-    default: 5,
+    default: 1,
     env: 'MOCK_VIRUS_RESULT_DELAY'
   },
   mockVirusScanEnabled: {

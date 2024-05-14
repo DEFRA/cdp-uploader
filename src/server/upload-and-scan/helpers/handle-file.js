@@ -40,12 +40,6 @@ async function handleFile(
     fileLogger
   )
 
-  if (uploadResult.fileLength === 0) {
-    fileLogger.warn(
-      `uploadId ${uploadId} - fileId ${fileId} uploaded with unknown size`
-    )
-  }
-
   fileLogger.debug({ uploadResult }, `Upload complete for fileId ${fileId}`)
 
   const actualContentType = uploadResult.fileTypeResult?.mime
@@ -62,8 +56,13 @@ async function handleFile(
     ...filename
   }
 
+  if (files.contentLength === 0 && (!files.filename || files.filename === '')) {
+    files.missing = true
+    return files
+  }
+
   // Reject zero length files
-  if (uploadResult.fileLength === 0) {
+  if (files.contentLength === 0) {
     files.fileStatus = fileStatus.rejected
     files.hasError = true
     files.errorMessage = fileErrorMessages.empty
