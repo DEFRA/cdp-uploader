@@ -68,12 +68,13 @@ const uploadController = {
             uploadDetails,
             request
           )
-          if (responseValue && fileId) {
-            uploadDetails.fileIds.push(fileId)
-            fileStatuses.push({ fileId, status })
-          }
+
           if (responseValue) {
             elemFields.push(responseValue)
+          }
+          if (fileId && status) {
+            uploadDetails.fileIds.push(fileId)
+            fileStatuses.push({ fileId, status })
           }
         }
         if (elemFields.length > 1) {
@@ -83,8 +84,14 @@ const uploadController = {
         }
       }
 
-      uploadDetails.uploadStatus = uploadStatus.pending.description
       uploadDetails.pending = new Date().toISOString()
+      uploadDetails.uploadStatus = uploadStatus.pending.description
+
+      // If no files are submitted jump straight to 'ready'.
+      if (fileStatuses.length === 0) {
+        uploadDetails.uploadStatus = uploadStatus.ready.description
+      }
+
       await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
       // If a file was rejected during the upload trigger processScanComplete
@@ -97,7 +104,6 @@ const uploadController = {
 
       await counter('upload-received')
 
-      // TODO: check all the files sizes match the size set in uploadDetails
       return h.redirect(uploadDetails.redirect)
     } catch (error) {
       createUploadLogger(uploadLogger, uploadDetails).error(error, 'Error')

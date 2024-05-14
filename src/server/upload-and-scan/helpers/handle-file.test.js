@@ -76,18 +76,11 @@ describe('#handleFile', () => {
         mockLogger
       )
     ).toMatchObject({
-      actualContentType: 'image/jpeg',
-      fileId: 'file-id-678910'
+      fileId: 'file-id-678910',
+      missing: true
     })
 
-    expect(mockRequest.redis.storeFileDetails).toHaveBeenLastCalledWith(
-      'file-id-678910',
-      expect.objectContaining({
-        hasError: true,
-        errorMessage: 'The selected file is empty',
-        fileStatus: 'rejected'
-      })
-    )
+    expect(mockRequest.redis.storeFileDetails).not.toHaveBeenCalled()
   })
 
   test('Should reject files that exceed the max size', async () => {
