@@ -1,5 +1,5 @@
 const healthController = {
-  handler: (request, h) => {
+  handler: async (request, h) => {
     return h.response({ message: 'success' }).code(200)
   }
 }

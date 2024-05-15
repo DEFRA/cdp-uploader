@@ -39,6 +39,10 @@ const sqsListener = {
         )
       })
 
+      server.app.shutdownHooks.push(() => {
+        listener.stop()
+      })
+
       listener.start()
     }
   }

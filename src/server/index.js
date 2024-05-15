@@ -49,6 +49,8 @@ async function createServer() {
     }
   })
 
+  server.app.shutdownHooks = []
+
   await server.register(requestLogger)
 
   const redisHelper = new RedisHelper(
@@ -57,6 +59,10 @@ async function createServer() {
   )
   server.decorate('request', 'redis', redisHelper)
   server.decorate('server', 'redis', redisHelper)
+
+  server.app.shutdownHooks.push(() => {
+    redisHelper.disconnect()
+  })
 
   const s3Client = buildS3client()
   server.decorate('request', 's3', s3Client)
@@ -104,6 +110,12 @@ async function createServer() {
   }
 
   server.ext('onPreResponse', catchAll)
+
+  server.events.on('stop', () => {
+    for (const hook of server.app.shutdownHooks) {
+      hook()
+    }
+  })
 
   return server
 }

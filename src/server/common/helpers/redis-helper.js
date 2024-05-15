@@ -56,6 +56,11 @@ class RedisHelper {
       files
     }
   }
+
+  async disconnect() {
+    this.client.autoreconnect = false
+    return this.client.disconnect()
+  }
 }
 
 export { RedisHelper }
