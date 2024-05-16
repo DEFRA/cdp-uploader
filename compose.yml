@@ -45,6 +45,8 @@ services:
       - cdpuploader
 
   cdp-uploader:
+    profiles:
+      - uploader
     image: defradigital/cdp-uploader:${CDP_UPLOADER_VERSION:-latest}
     ports:
       - '7337:7337'
