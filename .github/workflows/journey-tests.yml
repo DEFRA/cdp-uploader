@@ -21,7 +21,6 @@ jobs:
         with:
           node-version: 20
           cache: npm
-      - run: ./compose/start-localstack.sh
       - run: npm install
       - name: Pull supporting services
         run: docker compose up --wait-timeout 300 -d --quiet-pull
