@@ -20,23 +20,22 @@ async function handleMultipart(
     const fileId = crypto.randomUUID()
     const fileLogger = createFileLogger(request.logger, uploadDetails, fileId)
 
-    const { actualContentType, filename, contentType, fileStatus, missing } =
-      await handleFile(
-        uploadId,
-        uploadDetails,
-        fileId,
-        multipartValue,
-        request,
-        fileLogger
-      )
+    const { filename, contentType, fileStatus, missing } = await handleFile(
+      uploadId,
+      uploadDetails,
+      fileId,
+      multipartValue,
+      request,
+      fileLogger
+    )
 
     if (missing) {
       return {}
     }
 
+    // This will update the uploadDetails - add file information to file stored in redis (not here)
     const responseValue = {
       fileId,
-      actualContentType,
       filename,
       contentType
     }

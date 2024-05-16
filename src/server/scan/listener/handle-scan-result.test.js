@@ -161,7 +161,7 @@ describe('#handleScanResult', () => {
     test('Should store file details', () => {
       expect(mockStoreFileDetails).toHaveBeenCalledTimes(1)
       expect(mockStoreFileDetails).toHaveBeenCalledWith('mock-key-87678', {
-        actualContentType: 'image/webp',
+        detectedContentType: 'image/webp',
         contentLength: 25624,
         contentType: 'image/jpeg',
         errorMessage: 'The selected file contains a virus',
@@ -171,7 +171,8 @@ describe('#handleScanResult', () => {
         hasError: true,
         pending: '2024-04-29T13:41:47.466Z',
         scanned: '2024-04-29T14:10:00.000Z',
-        uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68'
+        uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
+        checksumSha256: 'bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c='
       })
     })
 
@@ -241,19 +242,19 @@ describe('#handleScanResult', () => {
     test('Should store file details', () => {
       expect(mockStoreFileDetails).toHaveBeenCalledTimes(1)
       expect(mockStoreFileDetails).toHaveBeenCalledWith('mock-key-2342353', {
-        actualContentType: 'image/webp',
-        contentLength: 25624,
-        contentType: 'image/jpeg',
-        delivered: '2024-04-29T14:10:00.000Z',
+        uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
         fileId: 'd3e1ccfa-3f58-435d-af9a-dad7b20ab11b',
         fileStatus: 'complete',
-        filename: 'shoot.jpg',
-        hasError: false,
         pending: '2024-04-29T13:41:47.466Z',
-        s3Bucket: 'cdp-example-node-frontend',
-        s3Key: '/plants/mock-id-895745/mock-key-2342353',
+        detectedContentType: 'image/webp',
+        contentLength: 25624,
+        checksumSha256: 'bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=',
+        contentType: 'image/jpeg',
+        filename: 'shoot.jpg',
         scanned: '2024-04-29T14:10:00.000Z',
-        uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68'
+        delivered: '2024-04-29T14:10:00.000Z',
+        s3Bucket: 'cdp-example-node-frontend',
+        s3Key: '/plants/mock-id-895745/mock-key-2342353'
       })
     })
 

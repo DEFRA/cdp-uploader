@@ -31,7 +31,7 @@ async function processScanComplete(server, uploadId, fileId) {
     )
     readyFileLogger.info('Upload marked as ready')
 
-    if (uploadDetails.scanResultCallbackUrl) {
+    if (uploadDetails.request.callback) {
       try {
         await sendSqsMessage(server.sqs, callbackQueueUrl, { uploadId })
       } catch (error) {
