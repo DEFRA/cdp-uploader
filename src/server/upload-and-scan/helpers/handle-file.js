@@ -6,6 +6,9 @@ import { averageFileSize } from '~/src/server/common/helpers/metrics/counter'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
 import { filesize } from 'filesize'
 
+const quarantineBucket = config.get('quarantineBucket')
+const uploaderMaxSize = config.get('maxFileSize')
+
 async function handleFile(
   uploadId,
   uploadDetails,
@@ -14,7 +17,6 @@ async function handleFile(
   request,
   fileLogger
 ) {
-  const quarantineBucket = config.get('quarantineBucket')
   const hapiFilename = fileStream.hapi?.filename
   const filename = { ...(hapiFilename && { filename: hapiFilename }) }
   const hapiContentType = fileStream.hapi?.headers['content-type']
@@ -42,14 +44,14 @@ async function handleFile(
 
   fileLogger.debug({ uploadResult }, `Upload complete for fileId ${fileId}`)
 
-  const actualContentType = uploadResult.fileTypeResult?.mime
+  const detectedContentType = uploadResult.fileTypeResult?.mime
 
   const files = {
     uploadId,
     fileId,
     fileStatus: fileStatus.pending,
     pending: new Date().toISOString(),
-    actualContentType,
+    detectedContentType,
     contentLength: uploadResult.fileLength,
     checksumSha256: uploadResult.checksumSha256,
     ...contentType,
@@ -68,27 +70,29 @@ async function handleFile(
     files.errorMessage = fileErrorMessages.empty
   }
 
+  const maxFileSize = uploadDetails.request.maxFileSize || uploaderMaxSize
+
   // Reject file if its too big
-  if (uploadResult.fileLength > uploadDetails.maxFileSize) {
+  if (uploadResult.fileLength > maxFileSize) {
     files.fileStatus = fileStatus.rejected
     files.hasError = true
     files.errorMessage = fileErrorMessages.tooBig.replace(
       '$MAXSIZE',
-      filesize(uploadDetails.maxFileSize, { standard: 'jedec' })
+      filesize(maxFileSize, { standard: 'jedec' })
     )
   }
 
   // Reject file if the mime types dont match
   // TODO: what do we do with the detected mime type
   if (
-    uploadDetails.acceptedMimeTypes &&
-    !uploadDetails.acceptedMimeTypes.some((m) => m === contentType.contentType)
+    uploadDetails.request.mimeTypes &&
+    !uploadDetails.request.mimeTypes.some((m) => m === contentType.contentType)
   ) {
     files.fileStatus = fileStatus.rejected
     files.hasError = true
     files.errorMessage = fileErrorMessages.wrongType.replace(
       '$MIMETYPES',
-      uploadDetails.acceptedMimeTypes.join(', ')
+      uploadDetails.request.mimeTypes.join(', ')
     )
   }
 

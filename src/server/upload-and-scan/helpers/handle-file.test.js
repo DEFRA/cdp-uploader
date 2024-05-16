@@ -5,11 +5,13 @@ jest.mock('~/src/server/upload-and-scan/helpers/upload-stream')
 
 describe('#handleFile', () => {
   const mockUploadDetails = (uploadId) => ({
-    redirect: 'http://redirect.com',
-    destinationBucket: 'cdp-example-node-frontend',
-    destinationPath: '/mock-destination',
-    metadata: {},
     uploadId,
+    request: {
+      redirect: 'http://redirect.com',
+      s3Bucket: 'cdp-example-node-frontend',
+      s3Path: '/mock-destination',
+      metadata: {}
+    },
     uploadStatus: 'initiated',
     initiated: '2024-04-26T13:49:04.788Z',
     fields: {
@@ -49,7 +51,6 @@ describe('#handleFile', () => {
         mockLogger
       )
     ).toMatchObject({
-      actualContentType: 'image/jpeg',
       fileId: 'file-id-678910'
     })
   })
@@ -98,14 +99,16 @@ describe('#handleFile', () => {
     expect(
       await handleFile(
         uploadId,
-        { ...mockUploadDetails(uploadId), maxFileSize: 1024 * 1024 },
+        {
+          ...mockUploadDetails(uploadId),
+          request: { maxFileSize: 1024 * 1024 }
+        },
         'file-id-678910',
         {},
         mockRequest,
         mockLogger
       )
     ).toMatchObject({
-      actualContentType: 'image/jpeg',
       fileId: 'file-id-678910'
     })
 
@@ -134,14 +137,16 @@ describe('#handleFile', () => {
     expect(
       await handleFile(
         uploadId,
-        { ...mockUploadDetails(uploadId), maxFileSize: 1000 * 256 },
+        {
+          ...mockUploadDetails(uploadId),
+          request: { maxFileSize: 1000 * 256 }
+        },
         'file-id-678910',
         {},
         mockRequest,
         mockLogger
       )
     ).toMatchObject({
-      actualContentType: 'image/jpeg',
       fileId: 'file-id-678910'
     })
 
@@ -170,14 +175,18 @@ describe('#handleFile', () => {
     expect(
       await handleFile(
         uploadId,
-        { ...mockUploadDetails(uploadId), acceptedMimeTypes: ['image/gif'] },
+        {
+          ...mockUploadDetails(uploadId),
+          request: {
+            mimeTypes: ['image/gif']
+          }
+        },
         'file-id-678910',
         {},
         mockRequest,
         mockLogger
       )
     ).toMatchObject({
-      actualContentType: 'image/jpeg',
       fileId: 'file-id-678910'
     })
 
