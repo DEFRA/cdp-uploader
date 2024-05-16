@@ -23,16 +23,20 @@ const initiateController = {
   },
   handler: async (request, h) => {
     const uploadId = crypto.randomUUID()
-    const uploadDetails = request.payload
+    const initateRequest = request.payload
 
-    uploadDetails.uploadId = uploadId
-    uploadDetails.uploadStatus = uploadStatus.initiated.description
-    uploadDetails.initiated = new Date().toISOString()
-    uploadDetails.fields = {}
-    uploadDetails.fileIds = []
-    uploadDetails.redirect = withQueryParams(uploadDetails.redirect, {
+    initateRequest.redirect = withQueryParams(initateRequest.redirect, {
       uploadId
     })
+
+    const uploadDetails = {
+      uploadId,
+      uploadStatus: uploadStatus.initiated.description,
+      initiated: new Date().toISOString(),
+      form: {},
+      fileIds: [],
+      request: initateRequest
+    }
 
     await request.redis.storeUploadDetails(uploadId, uploadDetails)
 
@@ -51,10 +55,10 @@ const initiateController = {
     return h
       .response({
         uploadId,
-        uploadAndScanUrl: uploadUrl,
+        uploadUrl,
         statusUrl: `${appBaseUrl}/status/${uploadId}`
       })
-      .code(200)
+      .code(201)
   }
 }
 

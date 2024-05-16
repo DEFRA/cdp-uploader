@@ -1,9 +1,9 @@
 const redactedUploadContext = [
   'uploadDetails',
   'redirect',
-  'scanResultCallbackUrl',
-  'destinationBucket',
-  'destinationPath',
+  'callback',
+  's3Bucket',
+  's3Path',
   'metadata',
   'files',
   'fields',

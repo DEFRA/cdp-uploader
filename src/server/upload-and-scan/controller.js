@@ -51,7 +51,7 @@ const uploadController = {
       uploadLogger.warn(
         `uploadId ${uploadId} has already been used to upload files`
       )
-      return h.redirect(uploadDetails.redirect) // TODO: how do we communicate this failure reason?
+      return h.redirect(uploadDetails.request.redirect) // TODO: how do we communicate this failure reason?
     }
 
     try {
@@ -78,9 +78,9 @@ const uploadController = {
           }
         }
         if (elemFields.length > 1) {
-          uploadDetails.fields[partKey] = elemFields
+          uploadDetails.form[partKey] = elemFields
         } else if (elemFields.length === 1) {
-          uploadDetails.fields[partKey] = elemFields[0]
+          uploadDetails.form[partKey] = elemFields[0]
         }
       }
 
@@ -104,10 +104,10 @@ const uploadController = {
 
       await counter('upload-received')
 
-      return h.redirect(uploadDetails.redirect)
+      return h.redirect(uploadDetails.request.redirect)
     } catch (error) {
       createUploadLogger(uploadLogger, uploadDetails).error(error, 'Error')
-      return h.redirect(uploadDetails.redirect) // TODO: how do we communicate this failure reason?
+      return h.redirect(uploadDetails.request.redirect) // TODO: how do we communicate this failure reason?
     }
   }
 }

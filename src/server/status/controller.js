@@ -9,6 +9,8 @@ const statusController = {
       return Boom.notFound()
     }
 
+    const debug = request.query.debug?.toLowerCase() === 'true'
+
     const uploadAndFiles = await request.redis.findUploadAndFiles(uploadId)
     const files = uploadAndFiles?.files
     const uploadDetails = uploadAndFiles?.uploadDetails
@@ -22,7 +24,7 @@ const statusController = {
       `Status found for ${uploadId}`
     )
 
-    const response = toScanResultResponse(uploadId, uploadDetails, files)
+    const response = toScanResultResponse(uploadId, uploadDetails, files, debug)
     return h.response(response).code(200)
   }
 }

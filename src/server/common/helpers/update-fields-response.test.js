@@ -1,6 +1,6 @@
 import { fileStatus } from '~/src/server/common/constants/file-status'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
-import { updateFieldsResponse } from '~/src/server/common/helpers/update-fields-response'
+import { updateFormsResponse } from '~/src/server/common/helpers/update-forms-response'
 
 describe('#updateFieldsResponse', () => {
   let formData
@@ -10,7 +10,8 @@ describe('#updateFieldsResponse', () => {
       name: 'jeff',
       file: {
         fileId: '111-111',
-        filename: 'shoot.jpg'
+        filename: 'shoot.jpg',
+        contentType: 'image/jpeg'
       },
       filelist: [
         { fileId: '222-222', filename: 'yak.jpg' },
@@ -21,7 +22,7 @@ describe('#updateFieldsResponse', () => {
 
   test('Should return empty object', () => {
     expect(
-      updateFieldsResponse({}, [
+      updateFormsResponse({}, [
         {
           fileId: '111-111',
           fileStatus: fileStatus.pending,
@@ -37,7 +38,7 @@ describe('#updateFieldsResponse', () => {
 
   test('Should update root field', () => {
     expect(
-      updateFieldsResponse(formData, [
+      updateFormsResponse(formData, [
         {
           fileId: '111-111',
           fileStatus: fileStatus.pending,
@@ -75,7 +76,7 @@ describe('#updateFieldsResponse', () => {
 
   test('Should update nested field', () => {
     expect(
-      updateFieldsResponse(formData, [
+      updateFormsResponse(formData, [
         {
           fileId: '333-333',
           fileStatus: fileStatus.complete,
@@ -91,7 +92,8 @@ describe('#updateFieldsResponse', () => {
       name: 'jeff',
       file: {
         fileId: '111-111',
-        filename: 'shoot.jpg'
+        filename: 'shoot.jpg',
+        contentType: 'image/jpeg'
       },
       filelist: [
         {
@@ -100,7 +102,6 @@ describe('#updateFieldsResponse', () => {
         },
         {
           contentLength: 67567,
-          contentType: 'image/png',
           errorMessage: 'The selected file contains a virus',
           fileId: '333-333',
           fileStatus: fileStatus.complete,
@@ -115,7 +116,7 @@ describe('#updateFieldsResponse', () => {
 
   test('With non matching fileId, Should not add updates to any field', () => {
     expect(
-      updateFieldsResponse(formData, [
+      updateFormsResponse(formData, [
         {
           fileId: 'non-matching-id-12345',
           fileStatus: fileStatus.complete,
@@ -131,7 +132,8 @@ describe('#updateFieldsResponse', () => {
       name: 'jeff',
       file: {
         fileId: '111-111',
-        filename: 'shoot.jpg'
+        filename: 'shoot.jpg',
+        contentType: 'image/jpeg'
       },
       filelist: [
         {

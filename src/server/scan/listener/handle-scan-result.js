@@ -37,12 +37,10 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     return
   }
 
-  const destinationKey = [uploadDetails.destinationPath, payload.key]
+  const destinationKey = [uploadDetails.request.s3Path || '', payload.key]
     .filter(Boolean)
     .join('/')
-  const destination = [uploadDetails.destinationBucket, destinationKey].join(
-    '/'
-  )
+  const destination = [uploadDetails.request.s3Bucket, destinationKey].join('/')
 
   if (fileDetails.hasError) {
     await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
@@ -82,7 +80,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
         server.s3,
         quarantineBucket,
         payload.key,
-        uploadDetails.destinationBucket,
+        uploadDetails.request.s3Bucket,
         destinationKey,
         fileLogger
       )
@@ -91,7 +89,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
       if (delivered) {
         fileDetails.delivered = new Date().toISOString()
         fileDetails.fileStatus = fileStatus.complete
-        fileDetails.s3Bucket = uploadDetails.destinationBucket
+        fileDetails.s3Bucket = uploadDetails.request.s3Bucket
         fileDetails.s3Key = destinationKey
         await server.redis.storeFileDetails(fileId, fileDetails)
         await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)

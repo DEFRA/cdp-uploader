@@ -7,16 +7,18 @@
  * @param files
  * @returns {{}|*}
  */
-function updateFieldsResponse(formData, files) {
-  const updateFields = (fieldUpdate) => ({
-    s3Key: fieldUpdate.s3Key,
-    s3Bucket: fieldUpdate.s3Bucket,
-    fileStatus: fieldUpdate.fileStatus,
-    contentType: fieldUpdate.contentType,
-    contentLength: fieldUpdate.contentLength,
-    hasError: fieldUpdate.hasError,
-    ...(fieldUpdate?.errorMessage && {
-      errorMessage: fieldUpdate.errorMessage
+function updateFormsResponse(formData, files) {
+  // ordered with keys that appear in ready at bottom (so status ordering remains same)
+  const updateFields = (file) => ({
+    fileStatus: file.fileStatus,
+    contentLength: file.contentLength,
+    checksumSha256: file.checksumSha256,
+    detectedContentType: file.detectedContentType,
+    s3Key: file.s3Key,
+    s3Bucket: file.s3Bucket,
+    hasError: file.hasError,
+    ...(file?.errorMessage && {
+      errorMessage: file.errorMessage
     })
   })
 
@@ -52,4 +54,4 @@ function updateFieldsResponse(formData, files) {
   )
 }
 
-export { updateFieldsResponse }
+export { updateFormsResponse }
