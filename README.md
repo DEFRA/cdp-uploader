@@ -217,7 +217,7 @@ Any files uploaded by a user will never be sent directly to the frontend service
 
 ## Developing services that use the CDP-Uploader
 
-If your service is going to use the CDP-Uploader to receive files you may want to start by running the uploader locally.  The easiest way to do this is using `docker compose`.
+If your service is going to use the CDP-Uploader to receive files you may want to start by running the uploader locally. The easiest way to do this is using `docker compose`.
 
 #### Docker Compose
 
@@ -226,6 +226,7 @@ The CDP-Uploader project provide as base [compose.yml](compose.yml) file to get 
 Copy [compose.yml](compose.yml) as well as the [./compose](./compose) folder into your own project and running `docker compose pull` and then `docker compose up`.
 
 This will start:
+
 - redis
 - localstack (a local AWS emulator)
 - cdp-uploader
@@ -251,9 +252,8 @@ Any other supporting services can be added to the compose file as required.
 By default, the CDP-Uploader will be running with its mock scanner enabled. This does not actually virus scan files, rather it simulates a reponse based on filename. If you submit a file with the word `virus` in the name it will be flagged as infected.
 
 #### EICAR files and local development
+
 The test harness does not support `EICAR` virus test files yet, so if you are submitting one and getting a `CLEAN` response back from the uploader's test harness, this is expected. In the real environments EICAR files will work.
-
-
 
 ## Setup for developing CDP-Uploader
 
