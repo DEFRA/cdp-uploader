@@ -3,6 +3,20 @@ import path from 'node:path'
 
 const oneWeekMillis = 7 * 24 * 60 * 60 * 1000
 
+convict.addFormat({
+  name: 'bucket-array',
+  validate: function (values) {
+    const isProduction = process.env.NODE_ENV === 'production'
+
+    if (isProduction && values.length === 0) {
+      throw new Error('Array must have items')
+    }
+  },
+  coerce: function (value) {
+    return value.split(',')
+  }
+})
+
 const config = convict({
   env: {
     doc: 'The application environment.',
@@ -182,6 +196,14 @@ const config = convict({
     format: Number,
     default: 200 * 1024 * 1024,
     env: 'MAX_FILE_SIZE'
+  },
+  // export BUCKET_ARRAY="bucket_one,bucket_two,bucket_three"
+  // export BUCKET_ARRAY=8
+  bucketArray: {
+    doc: 'Example, taken from a comma seperated string',
+    format: 'bucket-array',
+    default: [],
+    env: 'BUCKET_ARRAY'
   }
 })
 
