@@ -33,7 +33,7 @@ async function handleScanResultsCallback(message, callbackQueueUrl, server) {
       files,
       false
     )
-    const url = uploadDetails.callback
+    const url = uploadDetails.request.callback
     uploadLogger.debug({ uploadDetails }, `Requesting callback to ${url}`)
     const response = await fetchCallback(url, scanResultResponse, uploadLogger)
 
