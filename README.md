@@ -7,7 +7,9 @@ Core delivery platform Node.js Frontend Template.
     - [Node.js](#nodejs)
   - [API](#api)
   - [Local development](#local-development)
-    - [Setup](#setup)
+    - [Developing services that use CDP-Uploader](#developing-services-that-use-the-cdp-uploader)
+    - [Setup](#setup-for-developing-cdp-uploader)
+      - [Docker Compose](#docker-compose)
     - [Development](#development)
       - [Updating dependencies](#updating-dependencies)
     - [AWS CLI](#aws-cli)
@@ -214,7 +216,55 @@ Any files uploaded by a user will never be sent directly to the frontend service
 
 # Local development
 
-## Setup
+## Developing services that use the CDP-Uploader
+
+If your service is going to use the CDP-Uploader to receive files you may want to start by running the uploader locally. The easiest way to do this is using `docker compose`.
+
+#### Docker Compose
+
+The CDP-Uploader project provide as base [compose.yml](compose.yml) file to get you started.
+
+Copy [compose.yml](compose.yml) as well as the [./compose](./compose) folder into your own project and running `docker compose pull` and then `docker compose up`.
+
+This will start:
+
+- redis
+- localstack (a local AWS emulator)
+- cdp-uploader
+
+It will also inject a [start-up script](./compose/start-localstack.sh) into the localstack container that automatically creates the queues and buckets needed by the uploader as well as a test bucket named 'my-bucket'.
+If your service requires its own bucket you can add a line to [start-localstack.sh](./compose/start-localstack.sh) script to create one.
+
+```yaml
+aws --endpoint-url=http://localhost:4566 s3 mb s3://cdp-uploader-quarantine
+aws --endpoint-url=http://localhost:4566 s3 mb s3://my-bucket
+
+## Insert your bucket here, e.g.
+aws --endpoint-url=http://localhost:4566 s3 mb s3://your-service-bucket
+```
+
+> [!NOTE]  
+> The script sets the mock AWS region to be `eu-west-2`. See [aws.env](./compose/aws.env) for the other localstack environment variables.
+> If your service is also talking to S3 then it will need to use the same region and credentials when talking to localstack.
+> The can be done by simply setting environment variables before running your sevices locally:
+>
+> ```bash
+> export AWS_REGION=eu-west-2
+> export AWS_ACCESS_KEY_ID=test
+> export AWS_SECRET_ACCESS_KEY=test
+> ```
+
+If everything has worked as expected the CDP-Uploader will be available on `localhost` port `7337`.
+
+Any other supporting services can be added to the compose file as required.
+
+By default, the CDP-Uploader will be running with its mock scanner enabled. This does not actually virus scan files, rather it simulates a reponse based on filename. If you submit a file with the word `virus` in the name it will be flagged as infected.
+
+#### EICAR files and local development
+
+The test harness does not support [EICAR](https://www.eicar.org/download-anti-malware-testfile/) virus test files yet, so if you are submitting one and getting a `CLEAN` response back from the uploader's test harness, this is expected. In the real environments EICAR files will work.
+
+## Setup for developing CDP-Uploader
 
 Install application dependencies:
 
