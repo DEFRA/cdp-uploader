@@ -23,9 +23,9 @@ const initiateController = {
   },
   handler: async (request, h) => {
     const uploadId = crypto.randomUUID()
-    const initateRequest = request.payload
+    const initiateRequest = request.payload
 
-    initateRequest.redirect = withQueryParams(initateRequest.redirect, {
+    initiateRequest.redirect = withQueryParams(initiateRequest.redirect, {
       uploadId
     })
 
@@ -35,7 +35,7 @@ const initiateController = {
       initiated: new Date().toISOString(),
       form: {},
       fileIds: [],
-      request: initateRequest
+      request: initiateRequest
     }
 
     await request.redis.storeUploadDetails(uploadId, uploadDetails)
