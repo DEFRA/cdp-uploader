@@ -6,6 +6,10 @@ Core delivery platform Node.js Frontend Template.
   - [Requirements](#requirements)
     - [Node.js](#nodejs)
   - [API](#api)
+    - [Initiate](#post-initiate)
+    - [Upload](#post-upload-and-scanuploadid)
+    - [Status](#get-statusuploadid)
+    - [Callback]()
   - [Local development](#local-development)
     - [Developing services that use CDP-Uploader](#developing-services-that-use-the-cdp-uploader)
     - [Setup](#setup-for-developing-cdp-uploader)
@@ -56,9 +60,9 @@ Example `/initiate` request:
 ```json
 {
   "redirect": "https://myservice.com/nextPage",
-  "scanResultCallbackUrl": "https://myservice.com/callback",
-  "destinationBucket": "myservice",
-  "destinationPath": "scanned",
+  "callback": "https://myservice.com/callback",
+  "s3Bucket": "myservice",
+  "s3Path": "scanned",
   "metadata": {
     "customerId": "1234",
     "accountId": "1234"
@@ -74,13 +78,13 @@ Example `/initiate` request:
 
 #### Body parameters:
 
-| Parameter name        | Description                                                        | Required |
-| --------------------- | ------------------------------------------------------------------ | -------- |
-| redirect              | Url to redirect to after file has been successfully uploaded.      | yes      |
-| destinationBucket     | S3 bucket that file will be moved to once the scanning is complete | yes      |
-| destinationPath       | 'Folder' in bucket where scanned files will be placed              | no       |
-| scanResultCallbackUrl | Url that will be called once all files in upload have been scanned | no       |
-| metadata              | Map of additional information related to upload                    | no       |
+| Parameter name | Description                                                        | Required |
+| -------------- | ------------------------------------------------------------------ | -------- |
+| redirect       | Url to redirect to after file has been successfully uploaded.      | yes      |
+| s3Bucket       | S3 bucket that file will be moved to once the scanning is complete | yes      |
+| s3Path         | 'Folder' in bucket where scanned files will be placed              | no       |
+| callback       | Url that will be called once all files in upload have been scanned | no       |
+| metadata       | Map of additional information related to upload                    | no       |
 
 > [!NOTE]
 > We will generate an uploadId for the upload and fileIds for files in the upload request. Files (objects) will be moved to destination bucket under the path uploadId/fileId which will be prefixed with the bucket path if it has been provided.
@@ -90,16 +94,16 @@ Example `/initiate` request:
 ```json
 {
   "uploadId": "b18ceadb-afb1-4955-a70b-256bf94444d5",
-  "uploadAndScanUrl": "/upload-and-scan/b18ceadb-afb1-4955-a70b-256bf94444d5",
+  "uploadUrl": "/upload-and-scan/b18ceadb-afb1-4955-a70b-256bf94444d5",
   "statusUrl": "https://cdp-uploader/status/b18ceadb-afb1-4955-a70b-256bf94444d5"
 }
 ```
 
-| Parameter name   | Description                                      | Required |
-| ---------------- | ------------------------------------------------ | -------- |
-| uploadId         | Identifier used for the upload                   | yes      |
-| uploadAndScanUrl | Url which must be used for the upload            | yes      |
-| statusUrl        | Endpoint that can be polled for status of upload | yes      |
+| Parameter name | Description                                      | Required |
+| -------------- | ------------------------------------------------ | -------- |
+| uploadId       | Identifier used for the upload                   | yes      |
+| uploadUrl      | Url which must be used for the upload            | yes      |
+| statusUrl      | Endpoint that can be polled for status of upload | yes      |
 
 ## POST /upload-and-scan/{uploadId}
 
@@ -127,7 +131,7 @@ Example `/upload-and-scan/${uploadId}` request:
 
 #### Response
 
-Once the upload has been successful, the user will be redirected to the `redirect` url provided in the initate request.
+Once the upload has been successful, the user will be redirected to the `redirect` url provided in the initiate request.
 
 ## GET /status/{uploadId}
 
@@ -140,70 +144,105 @@ The API is intended to be polled by the frontend services, it is not public and 
 | -------------- | ------------------------------------------------------------------------ |
 | uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
 
-#### Response Payload
+#### Query Parameters
+
+| Parameter Name | Description                                                                     |
+| -------------- | ------------------------------------------------------------------------------- |
+| debug          | set to 'true' to debug information. Currently contains initiate request payload |
+
+> [!NOTE]
+> Debug should not be used in production
+
+#### Response Payload with Debug
+
+```json
+{
+  "debug": {
+    "request": {
+      "redirect": "http://localhost:3000/creatures/e90fee47-ead0-45c7-8319-4388cca9ebbc/upload-status-poller?uploadId=ba477d67-0005-4c26-a673-fa5139a2adf5",
+      "s3Bucket": "cdp-example-bucket",
+      "metadata": {
+        "example-id": "id"
+      }
+    }
+  },
+  "uploadStatus": "ready",
+  "metadata": {
+    "example-id": "id"
+  },
+  "form": {
+    "a-form-field": "some value",
+    "a-file-upload-field": {
+      "fileId": "9fcaabe5-77ec-44db-8356-3a6e8dc51b13",
+      "filename": "dragon-b.jpeg",
+      "contentType": "image/jpeg",
+      "fileStatus": "complete",
+      "contentLength": 11264,
+      "checksumSha256": "bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=",
+      "detectedContentType": "image/jpeg",
+      "s3Key": "3b0b2a02-a669-44ba-9b78-bd5cb8460253/9fcaabe5-77ec-44db-8356-3a6e8dc51b13",
+      "s3Bucket": "cdp-example-node-frontend"
+    },
+    "another-form-field": "foobazbar"
+  },
+  "numberOfRejectedFiles": 0
+}
+```
+
+#### Response Payload without Debug
 
 ```json
 {
   "uploadStatus": "ready",
-  "numberOfRejectedFiles": 0,
-  "redirect": "http://localhost:3000/creatures/e90fee47-ead0-45c7-8319-4388cca9ebbc/upload-status-poller?uploadId=ba477d67-0005-4c26-a673-fa5139a2adf5",
-  "destinationBucket": "cdp-example-bucket",
-  "destinationPath": "",
-  "files": [
-    {
-      "uploadId": "ba477d67-0005-4c26-a673-fa5139a2adf5",
-      "fileId": "07aca302-fe02-4650-adf3-f1cdd8bc3988",
-      "fileStatus": "complete",
-      "contentType": "image/jpeg",
-      "contentLength": 82330,
-      "checksumSha256": "S/W84Awhf0KWN2aBkk+up52srTpiOCUHs/r1nHdJlB0=",
-      "filename": "unicorn.jpg",
-      "s3Bucket": "cdp-example-node-frontend",
-      "s3Key": "ba477d67-0005-4c26-a673-fa5139a2adf5/07aca302-fe02-4650-adf3-f1cdd8bc3988"
-    }
-  ],
-  "fields": {
+  "metadata": {
+    "example-id": "id"
+  },
+  "form": {
     "a-form-field": "some value",
     "a-file-upload-field": {
-      "fileId": "07aca302-fe02-4650-adf3-f1cdd8bc3988",
-      "actualContentType": "image/jpeg",
-      "filename": "unicorn.jpg",
+      "fileId": "9fcaabe5-77ec-44db-8356-3a6e8dc51b13",
+      "filename": "dragon-b.jpeg",
       "contentType": "image/jpeg",
-      "s3Key": "ba477d67-0005-4c26-a673-fa5139a2adf5/07aca302-fe02-4650-adf3-f1cdd8bc3988",
-      "s3Bucket": "cdp-example-node-frontend",
       "fileStatus": "complete",
-      "contentLength": 82330
+      "contentLength": 11264,
+      "checksumSha256": "bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=",
+      "detectedContentType": "image/jpeg",
+      "s3Key": "3b0b2a02-a669-44ba-9b78-bd5cb8460253/9fcaabe5-77ec-44db-8356-3a6e8dc51b13",
+      "s3Bucket": "cdp-example-node-frontend"
     },
     "another-form-field": "foobazbar"
   },
-  "metadata": {}
+  "numberOfRejectedFiles": 0
 }
 ```
 
 | Parameter Name        | Description                                                                                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | uploaderStatus        | Have all scans completed, can be `pending` or `ready`                                                                                                        |
-| numberOfRejectedFiles | Total number of files that have been rejected by the uploader                                                                                                |
-| redirect              | The URL the user who uploade the file was redirected to                                                                                                      |
-| destinationBucket     | Which bucket the safe files will be put in, set via the /initialize call                                                                                     |
-| destinationPath       | As above but for S3 path                                                                                                                                     |
-| files                 | An array of files that were uploaded                                                                                                                         |
-| fields                | An object representing each field in the multipart request. Text fields are preserved exactly as they were sent, file fields contain details about the file. |
 | metadata              | Extra data and identified set by the requesting service in the /initialize call. Returned exactly as they were presented                                     |
+| form                  | An object representing each field in the multipart request. Text fields are preserved exactly as they were sent, file fields contain details about the file. |
+| numberOfRejectedFiles | Total number of files that have been rejected by the uploader                                                                                                |
+| debug.request         | When set to true, the initiate request payload received by cdp-uploader                                                                                      |
 
-#### File field
+#### File field in form
 
-| Parameter Name    | Description                                                                                  |
-| ----------------- | -------------------------------------------------------------------------------------------- |
-| fileId            | uuid of the file.                                                                            |
-| actualContentType | The mime type as detected by the CDP-Uploader                                                |
-| contentType       | The mime type as declared in the multipart upload                                            |
-| s3Bucket          | S3 bucket name where the file can be accessed. Only set if file is Clean                     |
-| s3Key             | S3 Path where the file can be accessed. Includes path prefix if set                          |
-| fileStatus        | `complete` or `rejected` if the virus scan has completed, `pending` if its still in progress |
-| hasError          | Set to true if the file had an error (e.g. infected, unable to be saved etc)                 |
-| errorMessage      | Reason why the file was rejected. Not set if file is clean.                                  |
-|                   |                                                                                              |
+| Parameter Name      | Description                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| fileId              | uuid of the file.                                                                                            |
+| filename            | filename of file uploaded, if present                                                                        |
+| contentType         | The mime type as declared in the multipart upload                                                            |
+| fileStatus          | `complete` or `rejected` if the virus scan has completed, `pending` if its still in progress                 |
+| contentLength       | Size of file in bytes                                                                                        |
+| checksumSha256      | SHA256 check sum of file recieved by cdp-uploader before uploading to S3 bucket                              |
+| detectedContentType | The mime type as detected by the CDP-Uploader                                                                |
+| s3Bucket            | S3 bucket where scanned file is moved. Only set if file status is `complete`                                 |
+| s3Key               | S3 Path where scanned file is moved. Includes path prefix if set. Only set when fileStatus is `complete`     |
+| hasError            | Only set to true if the file had an error - fileStatus is `rejected` (e.g. infected, unable to be saved etc) |
+| errorMessage        | Reason why the file was rejected. Only set when fileStatus is `rejected`                                     |
+
+## Callback
+
+If a callback url has been provided in the initiate request, we will POST a callback to your service once scanning is complete and files have been moved to your services bucket. The payload is exactly the same as the response from the [Status](#get-statusuploadid) endpoint (without debug enabled).
 
 #### Intended use
 
