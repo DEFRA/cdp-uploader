@@ -1,7 +1,7 @@
 import Joi from 'joi'
 import { config } from '~/src/config'
 
-const isProduction = !config.get('isProduction')
+const isProduction = config.get('isProduction')
 const bucketsAllowlist = config.get('bucketsAllowlist')
 
 const initiateValidation = Joi.object({
