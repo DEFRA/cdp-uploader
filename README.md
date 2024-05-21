@@ -255,7 +255,7 @@ Any files uploaded by a user will never be sent directly to the frontend service
 
 # Local development
 
-## Developing services that use the CDP-Uploader
+### Developing services that use the CDP-Uploader
 
 If your service is going to use the CDP-Uploader to receive files you may want to start by running the uploader locally. The easiest way to do this is using `docker compose`.
 
@@ -282,7 +282,7 @@ aws --endpoint-url=http://localhost:4566 s3 mb s3://my-bucket
 aws --endpoint-url=http://localhost:4566 s3 mb s3://your-service-bucket
 ```
 
-> [!NOTE]  
+> [!NOTE]
 > The script sets the mock AWS region to be `eu-west-2`. See [aws.env](./compose/aws.env) for the other localstack environment variables.
 > If your service is also talking to S3 then it will need to use the same region and credentials when talking to localstack.
 > The can be done by simply setting environment variables before running your sevices locally:
@@ -297,7 +297,17 @@ If everything has worked as expected the CDP-Uploader will be available on `loca
 
 Any other supporting services can be added to the compose file as required.
 
-By default, the CDP-Uploader will be running with its mock scanner enabled. This does not actually virus scan files, rather it simulates a reponse based on filename. If you submit a file with the word `virus` in the name it will be flagged as infected.
+#### Relative vs Absolute URLs
+
+In a real environment relative urls work fine since all the services are behind the same host, however locally they're going to be running on different ports so relative redirect URLs won't work!
+
+When run in `development` mode the cdp-uploader will convert relative redirect urls into absolute urls using the 'referer' header. This should make uploader behave more or less the same locally as it would in a real environment.
+
+#### Test Harness (mock scanning)
+
+When running locally the CDP-Uploader will be running with its mock virus scanner enabled.
+
+This _does not_ actually virus scan files, rather it simulates a response based on filename. If you submit a file with the word `virus` in the name it will be flagged as infected.
 
 #### EICAR files and local development
 
