@@ -1,0 +1,54 @@
+name: Journey Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+
+jobs:
+  pr-validator:
+    name: Run Journey Tests
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7.2.3-alpine3.18
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "redis-cli -e PING"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+      localstack:
+        image: localstack/localstack:3.0.2
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: s3,sqs,sns
+          LOCALSTACK_HOST: 127.0.0.1
+          AWS_REGION: eu-west-2
+          AWS_DEFAULT_REGION: eu-west-2
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+        options: >-
+          --health-cmd "curl http://localhost:4566/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: ./compose/start-localstack.sh
+      - run: npm install
+      - run: AWS_REGION=eu-west-2 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test npm run test:e2e
