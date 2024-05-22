@@ -4,11 +4,38 @@ import { config } from '~/src/config'
 const isProduction = config.get('isProduction')
 const bucketsAllowlist = config.get('bucketsAllowlist')
 
-const initiateValidation = Joi.object({
-  redirect: Joi.string()
-    .uri({ allowRelative: true, ...(isProduction && { relativeOnly: true }) })
-    .required(),
-  callback: Joi.string().uri().optional(),
+const custom = Joi.extend((joi) => {
+  return {
+    type: 'url',
+    base: joi.string().uri(),
+    messages: {
+      'url.cdpDomain': '{{#label}} must be on the cdp-int.defra.cloud domain'
+    },
+    rules: {
+      cdpDomain: {
+        validate(value, helpers, args, options) {
+          const url = new URL(value)
+          if (url.hostname.endsWith('cdp-int.defra.cloud')) {
+            return value
+          }
+          return helpers.error('url.cdpDomain')
+        }
+      }
+    }
+  }
+})
+
+const redirectValidation = Joi.string()
+  .uri({ allowRelative: true, ...(isProduction && { relativeOnly: true }) })
+  .required()
+
+const callbackValidation = isProduction
+  ? custom.url().cdpDomain()
+  : Joi.string().uri().optional()
+
+const initiateValidation = custom.object({
+  redirect: redirectValidation,
+  callback: callbackValidation,
   s3Bucket: Joi.string()
     .required()
     .valid(...bucketsAllowlist)
