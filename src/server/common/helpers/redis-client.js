@@ -46,13 +46,17 @@ function buildRedisClient() {
     )
   }
 
+  redisClient.autoreconnect = true
+
   redisClient.on('connect', () => {
     logger.info('Connected to Redis server')
   })
 
   redisClient.on('close', () => {
     logger.info('Redis connection closed attempting reconnect')
-    redisClient.connect()
+    if (redisClient.autoreconnect === true) {
+      redisClient.connect()
+    }
   })
 
   redisClient.on('error', (error) => {

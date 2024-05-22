@@ -1,6 +1,6 @@
 module.exports = {
   rootDir: '.',
-  testEnvironment: 'jsdom',
+  testEnvironment: 'node',
   verbose: true,
   resetModules: true,
   clearMocks: true,
