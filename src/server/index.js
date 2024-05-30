@@ -79,32 +79,34 @@ async function createServer() {
   await server.register({
     plugin: sqsListener,
     options: {
-      queueUrl: config.get('sqsScanResults'),
+      config: config.get('sqsScanResults'),
       messageHandler: async (message, queueUrl, server) =>
-        await handleScanResult(message, queueUrl, server),
-      visibilityTimeout: config.get('sqsScanResultsVisibilityTimeout')
+        await handleScanResult(message, queueUrl, server)
     }
   })
 
   await server.register({
     plugin: sqsListener,
     options: {
-      queueUrl: config.get('sqsScanResultsCallback'),
+      config: config.get('sqsScanResultsCallback'),
       messageHandler: async (message, queueUrl, server) =>
-        await handleScanResultsCallback(message, queueUrl, server),
-      visibilityTimeout: config.get('sqsScanResultsCallbackVisibilityTimeout')
+        await handleScanResultsCallback(message, queueUrl, server)
     }
   })
 
   // Local development & testing only
-  if (config.get('mockVirusScanEnabled')) {
+  if (!isProduction && config.get('mockVirusScanEnabled')) {
     await server.register({
       plugin: sqsListener,
       options: {
-        queueUrl: 'mock-clamav',
+        config: {
+          queueUrl: 'mock-clamav',
+          visibilityTimeout: 5,
+          waitTimeSeconds: 20,
+          pollingWaitTimeMs: 10
+        },
         messageHandler: async (message, queueUrl, server) =>
-          await handleMockVirusScanner(message, queueUrl, server),
-        visibilityTimeout: config.get('sqsScanResultsCallbackVisibilityTimeout')
+          await handleMockVirusScanner(message, queueUrl, server)
       }
     })
   }

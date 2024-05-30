@@ -150,28 +150,56 @@ const config = convict({
     env: 'S3_CDP_QUARANTINE_BUCKET'
   },
   sqsScanResults: {
-    doc: 'Queue for virus scan results',
-    format: String,
-    default: 'cdp-clamav-results',
-    env: 'SQS_SCAN_RESULTS'
-  },
-  sqsScanResultsVisibilityTimeout: {
-    doc: 'Queue visibility timeout for virus scan results',
-    format: Number,
-    default: 400,
-    env: 'SQS_SCAN_RESULTS_VISIBILITY_TIMEOUT'
+    queueUrl: {
+      doc: 'Queue for virus scan results',
+      format: String,
+      default: 'cdp-clamav-results',
+      env: 'SQS_SCAN_RESULTS'
+    },
+    visibilityTimeout: {
+      doc: 'The timeout (in seconds) that the received messages are hidden from subsequent retrieve requests',
+      format: Number,
+      default: 5,
+      env: 'SQS_SCAN_RESULTS_VISIBILITY_TIMEOUT'
+    },
+    waitTimeSeconds: {
+      doc: 'The duration for which the call will wait for a message to arrive in the queue before returning',
+      format: Number,
+      default: 20,
+      env: 'SQS_SCAN_RESULTS_WAIT_TIME_SECONDS'
+    },
+    pollingWaitTimeMs: {
+      doc: 'The duration to wait before repolling the queue',
+      format: Number,
+      default: 0,
+      env: 'SQS_SCAN_RESULTS_POLLING_WAIT_TIME_MS'
+    }
   },
   sqsScanResultsCallback: {
-    doc: 'Queue for upload ready results',
-    format: String,
-    default: 'cdp-uploader-scan-results-callback.fifo',
-    env: 'SQS_SCAN_RESULTS_CALLBACK'
-  },
-  sqsScanResultsCallbackVisibilityTimeout: {
-    doc: 'Queue visibility timeout for virus scan results callback',
-    format: Number,
-    default: 400,
-    env: 'SQS_SCAN_RESULTS_CALLBACK_VISIBILITY_TIMEOUT'
+    queueUrl: {
+      doc: 'Queue for upload ready results',
+      format: String,
+      default: 'cdp-uploader-scan-results-callback.fifo',
+      env: 'SQS_SCAN_RESULTS_CALLBACK'
+    },
+    visibilityTimeout: {
+      doc: 'The timeout (in seconds) that the received messages are hidden from subsequent retrieve requests',
+      format: Number,
+      default: 60,
+      env: 'SQS_SCAN_RESULTS_CALLBACK_VISIBILITY_TIMEOUT'
+    },
+    waitTimeSeconds: {
+      doc: 'The duration for which the call will wait for a message to arrive in the queue before returning',
+      format: Number,
+      default: 20,
+      env: 'SQS_SCAN_RESULTS_CALLBACK_WAIT_TIME_SECONDS'
+    },
+    pollingWaitTimeMs: {
+      doc: 'The duration to wait before repolling the queue',
+      format: Number,
+      default: 0,
+      env: 'SQS_SCAN_RESULTS_CALLBACK_POLLING_WAIT_TIME_MS'
+    }
   },
   mockVirusRegex: {
     doc: 'Filename pattern used by test harness to simulate viruses',

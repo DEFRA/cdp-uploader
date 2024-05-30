@@ -66,7 +66,7 @@ async function mockScanNotification(server, key, status, message) {
   }
   return await server.sqs.send(
     new SendMessageCommand({
-      QueueUrl: config.get('sqsScanResults'),
+      QueueUrl: config.get('sqsScanResults.queueUrl'),
       MessageAttributes: {},
       MessageBody: JSON.stringify(payload),
       DelaySeconds: config.get('mockVirusResultDelay')
