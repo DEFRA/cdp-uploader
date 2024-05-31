@@ -7,6 +7,7 @@ import {
 import { fileStatus } from '~/src/server/common/constants/file-status'
 import { sendSqsMessage } from '~/src/server/common/helpers/sqs/send-sqs-message'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
+import { millis } from '~/src/server/common/helpers/metrics/counter'
 
 const callbackQueueUrl = config.get('sqsScanResultsCallback.queueUrl')
 
@@ -19,7 +20,14 @@ async function processScanComplete(server, uploadId, fileId) {
 
   if (isPending && isScanningComplete(files)) {
     uploadDetails.uploadStatus = uploadStatus.ready.description
-    uploadDetails.ready = new Date().toISOString()
+
+    const readyDate = new Date()
+    const pendingTimeMillis = new Date(uploadDetails.pending).getTime()
+    const processingTime = readyDate.getTime() - pendingTimeMillis
+
+    await millis('upload-processing-time', processingTime)
+
+    uploadDetails.ready = readyDate.toISOString()
     uploadDetails.numberOfRejectedFiles = numberOfRejectedFiles(files)
 
     await server.redis.storeUploadDetails(uploadId, uploadDetails)

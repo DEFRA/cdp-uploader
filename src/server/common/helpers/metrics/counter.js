@@ -7,8 +7,8 @@ import { config } from '~/src/config'
 import { createLogger } from '~/src/server/common/helpers/logging/logger'
 
 const counter = async (metricName, value = 1) => {
-  const logger = createLogger()
   if (!config.get('isProduction')) return
+  const logger = createLogger()
 
   try {
     const metrics = createMetricsLogger()
@@ -19,9 +19,9 @@ const counter = async (metricName, value = 1) => {
   }
 }
 
-const averageFileSize = async (metricName, value) => {
-  const logger = createLogger()
+const fileSize = async (metricName, value) => {
   if (!config.get('isProduction')) return
+  const logger = createLogger()
 
   try {
     const metrics = createMetricsLogger()
@@ -32,4 +32,22 @@ const averageFileSize = async (metricName, value) => {
   }
 }
 
-export { counter, averageFileSize }
+const millis = async (metricName, value) => {
+  if (!config.get('isProduction')) return
+  const logger = createLogger()
+
+  try {
+    const metrics = createMetricsLogger()
+    metrics.putMetric(
+      metricName,
+      value,
+      Unit.Milliseconds,
+      StorageResolution.Standard
+    )
+    await metrics.flush()
+  } catch (e) {
+    logger.warn(e)
+  }
+}
+
+export { counter, fileSize, millis }
