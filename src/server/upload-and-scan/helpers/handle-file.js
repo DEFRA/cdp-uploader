@@ -2,7 +2,7 @@ import { config } from '~/src/config'
 import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream'
 import { fileStatus } from '~/src/server/common/constants/file-status'
 import { counter } from '~/src/server/common/helpers/metrics'
-import { averageFileSize } from '~/src/server/common/helpers/metrics/counter'
+import { fileSize } from '~/src/server/common/helpers/metrics/counter'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
 import { filesize } from 'filesize'
 
@@ -98,7 +98,7 @@ async function handleFile(
 
   await request.redis.storeFileDetails(fileId, files)
   await counter('file-received')
-  await averageFileSize('file-size', uploadResult.fileLength)
+  await fileSize('file-size', uploadResult.fileLength)
 
   return files
 }
