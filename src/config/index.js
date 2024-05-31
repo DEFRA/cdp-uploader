@@ -173,6 +173,12 @@ const config = convict({
       format: Number,
       default: 0,
       env: 'SQS_SCAN_RESULTS_POLLING_WAIT_TIME_MS'
+    },
+    batchSize: {
+      doc: 'The number of messages to request from SQS when polling (max 10)',
+      format: Number,
+      default: 10,
+      env: 'SQS_SCAN_RESULTS_BATCH_SIZE'
     }
   },
   sqsScanResultsCallback: {
@@ -199,6 +205,12 @@ const config = convict({
       format: Number,
       default: 0,
       env: 'SQS_SCAN_RESULTS_CALLBACK_POLLING_WAIT_TIME_MS'
+    },
+    batchSize: {
+      doc: 'The number of messages to request from SQS when polling (max 10)',
+      format: Number,
+      default: 10,
+      env: 'SQS_SCAN_RESULTS_CALLBACK_BATCH_SIZE'
     }
   },
   mockVirusRegex: {

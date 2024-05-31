@@ -8,7 +8,7 @@ import { fileStatus } from '~/src/server/common/constants/file-status'
 import { sendSqsMessage } from '~/src/server/common/helpers/sqs/send-sqs-message'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
 
-const callbackQueueUrl = config.get('sqsScanResultsCallback')
+const callbackQueueUrl = config.get('sqsScanResultsCallback.queueUrl')
 
 async function processScanComplete(server, uploadId, fileId) {
   const uploadAndFiles = await server.redis.findUploadAndFiles(uploadId)

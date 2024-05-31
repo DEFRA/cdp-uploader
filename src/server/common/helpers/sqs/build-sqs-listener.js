@@ -8,6 +8,13 @@ const sqsListener = {
     register: async (server, options) => {
       const queueUrl = options.config.queueUrl
 
+      const batchMessageHandler = async function (messages) {
+        const messageHandlerPromises = messages.map((message) =>
+          options.messageHandler(message, queueUrl, server)
+        )
+        await Promise.all(messageHandlerPromises)
+      }
+
       server.logger.info(`Listening for scan result events on ${queueUrl}`)
 
       const listener = Consumer.create({
@@ -18,8 +25,8 @@ const sqsListener = {
         visibilityTimeout: options.config.visibilityTimeout,
         pollingWaitTimeMs: options.config.pollingWaitTimeMs,
         shouldDeleteMessages: false,
-        handleMessage: (message) =>
-          options.messageHandler(message, queueUrl, server),
+        batchSize: options.config.batchSize,
+        handleMessageBatch: (messages) => batchMessageHandler(messages),
         sqs: server.sqs
       })
 

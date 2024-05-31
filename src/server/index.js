@@ -103,7 +103,8 @@ async function createServer() {
           queueUrl: 'mock-clamav',
           visibilityTimeout: 5,
           waitTimeSeconds: 20,
-          pollingWaitTimeMs: 10
+          pollingWaitTimeMs: 10,
+          batchSize: 1
         },
         messageHandler: async (message, queueUrl, server) =>
           await handleMockVirusScanner(message, queueUrl, server)
