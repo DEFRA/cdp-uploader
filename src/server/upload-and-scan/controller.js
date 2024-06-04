@@ -1,5 +1,3 @@
-import Boom from '@hapi/boom'
-
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
 import { handleMultipart } from '~/src/server/upload-and-scan/helpers/handle-multipart'
 import { uploadPathValidation } from '~/src/server/upload-and-scan/helpers/upload-validation'
@@ -33,7 +31,11 @@ const uploadController = {
     const uploadId = request.params.id
     if (!uploadId) {
       request.logger.info('Failed to upload, no uploadId')
-      return Boom.notFound('Failed to upload. No uploadId provided')
+      return h
+        .response({
+          message: 'Failed to upload. No uploadId provided'
+        })
+        .code(404)
     }
 
     const uploadDetails = await request.redis.findUploadDetails(uploadId)
@@ -42,7 +44,11 @@ const uploadController = {
 
     if (!uploadDetails) {
       uploadLogger.info(`uploadId ${uploadId} does not exist - upload failed`)
-      return Boom.notFound('Failed to upload. UploadId does not exist')
+      return h
+        .response({
+          message: 'Failed to upload. UploadId does not exist'
+        })
+        .code(404)
     }
 
     uploadLogger.debug({ uploadDetails }, `Upload request received`)
@@ -52,7 +58,11 @@ const uploadController = {
       uploadLogger.warn(
         `uploadId ${uploadId} has already been used to upload files`
       )
-      return h.redirect(uploadDetails.request.redirect) // TODO: how do we communicate this failure reason?
+      return h
+        .response({
+          message: `uploadId ${uploadId} has already been used to upload files`
+        })
+        .code(422)
     }
 
     try {
