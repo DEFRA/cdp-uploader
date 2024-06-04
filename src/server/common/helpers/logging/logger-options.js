@@ -19,6 +19,7 @@ if (isDevelopment) {
 
 const loggerOptions = {
   enabled: !config.get('isTest'),
+  ignorePaths: ['/health'],
   redact: {
     paths: redactionPaths,
     remove: true

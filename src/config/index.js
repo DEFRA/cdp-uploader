@@ -128,7 +128,7 @@ const config = convict({
   redisKeyPrefix: {
     doc: 'Redis cache key prefix name used to isolate the cached results across multiple clients',
     format: String,
-    default: 'cdp-uploader',
+    default: 'cdp-uploader:',
     env: 'REDIS_KEY_PREFIX'
   },
   redisTtl: {
