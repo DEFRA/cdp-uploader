@@ -78,7 +78,7 @@ async function handleFile(
     files.hasError = true
     files.errorMessage = fileErrorMessages.tooBig.replace(
       '$MAXSIZE',
-      filesize(maxFileSize, { standard: 'jedec' })
+      filesize(maxFileSize, { standard: 'si' })
     )
   }
 

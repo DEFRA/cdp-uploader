@@ -93,7 +93,7 @@ describe('#handleFile', () => {
         ext: 'jpg',
         mime: 'image/jpeg'
       },
-      fileLength: 1024 * 1024 * 2
+      fileLength: 2 * 1000 * 1000
     })
 
     expect(
@@ -101,7 +101,7 @@ describe('#handleFile', () => {
         uploadId,
         {
           ...mockUploadDetails(uploadId),
-          request: { maxFileSize: 1024 * 1024 }
+          request: { maxFileSize: 1000 * 1000 }
         },
         'file-id-678910',
         {},
@@ -131,7 +131,7 @@ describe('#handleFile', () => {
         ext: 'jpg',
         mime: 'image/jpeg'
       },
-      fileLength: 1000 * 1000 * 2
+      fileLength: 2 * 1000 * 1000
     })
 
     expect(
@@ -139,7 +139,7 @@ describe('#handleFile', () => {
         uploadId,
         {
           ...mockUploadDetails(uploadId),
-          request: { maxFileSize: 1000 * 256 }
+          request: { maxFileSize: 256 * 1000 }
         },
         'file-id-678910',
         {},
@@ -154,7 +154,7 @@ describe('#handleFile', () => {
       'file-id-678910',
       expect.objectContaining({
         hasError: true,
-        errorMessage: 'The selected file must be smaller than 250 KB',
+        errorMessage: 'The selected file must be smaller than 256 kB',
         fileStatus: 'rejected'
       })
     )

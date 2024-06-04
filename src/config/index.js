@@ -234,7 +234,7 @@ const config = convict({
   maxFileSize: {
     doc: 'Max file size uploader will accept in bytes. Must be equal to or less than the nginx max',
     format: Number,
-    default: 200 * 1024 * 1024,
+    default: 100 * 1000 * 1000,
     env: 'MAX_FILE_SIZE'
   },
   bucketsAllowlist: {

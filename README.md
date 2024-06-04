@@ -78,13 +78,15 @@ Example `/initiate` request:
 
 #### Body parameters:
 
-| Parameter name | Description                                                        | Required |
-| -------------- | ------------------------------------------------------------------ | -------- |
-| redirect       | Url to redirect to after file has been successfully uploaded.      | yes      |
-| s3Bucket       | S3 bucket that file will be moved to once the scanning is complete | yes      |
-| s3Path         | 'Folder' in bucket where scanned files will be placed              | no       |
-| callback       | Url that will be called once all files in upload have been scanned | no       |
-| metadata       | Map of additional information related to upload                    | no       |
+| Parameter name | Description                                                         | Required |
+| -------------- | ------------------------------------------------------------------- | -------- |
+| redirect       | Url to redirect to after file has been successfully uploaded.       | yes      |
+| s3Bucket       | S3 bucket that file will be moved to once the scanning is complete  | yes      |
+| s3Path         | 'Folder' in bucket where scanned files will be placed               | no       |
+| callback       | Url that will be called once all files in upload have been scanned  | no       |
+| metadata       | Map of additional information related to upload                     | no       |
+| mimeTypes      | List of accepted mimeTypes                                          | no       |
+| maxFileSize    | Maximum size in bytes that a file can be (10MB is 10 _ 1000 _ 1000) | no       |
 
 > [!NOTE]
 > We will generate an uploadId for the upload and fileIds for files in the upload request. Files (objects) will be moved to destination bucket under the path uploadId/fileId which will be prefixed with the bucket path if it has been provided.
