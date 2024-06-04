@@ -4,7 +4,6 @@ import { config } from '~/src/config'
 import { initiateValidation } from '~/src/server/initiate/helpers/initiate-validation'
 import { uploadStatus } from '~/src/server/common/helpers/upload-status'
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
-import { withQueryParams } from '~/src/server/common/helpers/with-query-params'
 import { counter } from '~/src/server/common/helpers/metrics'
 
 const appBaseUrl = config.get('appBaseUrl')
@@ -24,10 +23,6 @@ const initiateController = {
   handler: async (request, h) => {
     const uploadId = crypto.randomUUID()
     const initiateRequest = request.payload
-
-    initiateRequest.redirect = withQueryParams(initiateRequest.redirect, {
-      uploadId
-    })
 
     const uploadDetails = {
       uploadId,
