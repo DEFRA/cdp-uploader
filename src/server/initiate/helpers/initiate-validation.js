@@ -35,7 +35,6 @@ const callbackValidation = isProduction
 
 const initiateValidation = custom.object({
   redirect: redirectValidation,
-  callback: callbackValidation,
   s3Bucket: Joi.string()
     .required()
     .valid(...bucketsAllowlist)
@@ -44,9 +43,10 @@ const initiateValidation = custom.object({
         'No permission to write to bucket - Please contact CDP Portal Team'
     }),
   s3Path: Joi.string().optional(),
+  callback: callbackValidation,
+  metadata: Joi.object().unknown(true).default({}),
   mimeTypes: Joi.array().items(Joi.string()).optional(),
-  maxFileSize: Joi.number().integer().positive().optional(),
-  metadata: Joi.object().unknown(true).default({})
+  maxFileSize: Joi.number().integer().positive().optional()
 })
 
 export { initiateValidation }
