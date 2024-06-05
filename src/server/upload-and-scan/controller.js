@@ -15,6 +15,9 @@ import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relativ
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
   options: {
+    timeout: {
+      socket: false
+    },
     validate: {
       params: uploadPathValidation
     },
@@ -24,7 +27,8 @@ const uploadController = {
       output: 'stream',
       parse: true,
       maxBytes: config.get('maxFileSize'),
-      uploads: 'uploads'
+      uploads: 'uploads',
+      timeout: false
     }
   },
   handler: async (request, h) => {
