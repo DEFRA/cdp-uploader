@@ -22,7 +22,7 @@ const sqsListener = {
         attributeNames: ['SentTimestamp'],
         messageAttributeNames: ['All'],
         waitTimeSeconds: options.config.waitTimeSeconds,
-        visibilityTimeout: options.config.visibilityTimeout,
+        // visibilityTimeout: options.config.visibilityTimeout,
         pollingWaitTimeMs: options.config.pollingWaitTimeMs,
         shouldDeleteMessages: false,
         batchSize: options.config.batchSize,
