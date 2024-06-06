@@ -5,7 +5,8 @@ function toScanResultResponse(uploadId, uploadDetails, files, debug) {
   return {
     ...(debug && {
       debug: {
-        request: uploadDetails.request
+        request: uploadDetails.request,
+        processingTime: uploadDetails.uploadProcessingTime
       }
     }),
     uploadStatus: uploadDetails.uploadStatus,
