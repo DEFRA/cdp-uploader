@@ -29,6 +29,7 @@ async function processScanComplete(server, uploadId, fileId) {
 
     uploadDetails.ready = readyDate.toISOString()
     uploadDetails.numberOfRejectedFiles = numberOfRejectedFiles(files)
+    uploadDetails.uploadProcessingTime = processingTime
 
     await server.redis.storeUploadDetails(uploadId, uploadDetails)
 
@@ -37,7 +38,17 @@ async function processScanComplete(server, uploadId, fileId) {
       uploadDetails,
       fileId
     )
-    readyFileLogger.info('Upload marked as ready')
+    const fileSizes = files
+      .filter((file) => file?.contentLength)
+      .map((file) => file.contentLength)
+
+    readyFileLogger.info(
+      {
+        fileSizes,
+        uploadProcessingTime: processingTime
+      },
+      'Upload marked as ready'
+    )
 
     if (uploadDetails.request.callback) {
       try {
