@@ -52,7 +52,9 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
 
   if (fileDetails.delivered) {
     await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
-    fileLogger.warn(`Duplicate SQS message - Clean file (already delivered)`)
+    fileLogger.warn(
+      `Deleting duplicate SQS message - Clean file (already delivered)`
+    )
     return
   }
 
@@ -92,7 +94,13 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
         fileDetails.s3Bucket = uploadDetails.request.s3Bucket
         fileDetails.s3Key = destinationKey
         await server.redis.storeFileDetails(fileId, fileDetails)
-        await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
+        // If we fail to delete the message (e.g. receipt handle has expired), we don't want a failure to stop the
+        // upload from being marked as ready. Duplicate delivered message code will delete the message
+        try {
+          await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
+        } catch (err) {
+          fileLogger.error({ err }, `Failed to delete SQS message`)
+        }
         fileLogger.info(`File ${fileId} was delivered to ${destination}`)
       } else {
         fileLogger.error(
