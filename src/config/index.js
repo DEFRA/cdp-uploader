@@ -156,12 +156,6 @@ const config = convict({
       default: 'cdp-clamav-results',
       env: 'SQS_SCAN_RESULTS'
     },
-    visibilityTimeout: {
-      doc: 'The timeout (in seconds) that the received messages are hidden from subsequent retrieve requests',
-      format: Number,
-      default: 5,
-      env: 'SQS_SCAN_RESULTS_VISIBILITY_TIMEOUT'
-    },
     waitTimeSeconds: {
       doc: 'The duration for which the call will wait for a message to arrive in the queue before returning',
       format: Number,
@@ -187,12 +181,6 @@ const config = convict({
       format: String,
       default: 'cdp-uploader-scan-results-callback.fifo',
       env: 'SQS_SCAN_RESULTS_CALLBACK'
-    },
-    visibilityTimeout: {
-      doc: 'The timeout (in seconds) that the received messages are hidden from subsequent retrieve requests',
-      format: Number,
-      default: 60,
-      env: 'SQS_SCAN_RESULTS_CALLBACK_VISIBILITY_TIMEOUT'
     },
     waitTimeSeconds: {
       doc: 'The duration for which the call will wait for a message to arrive in the queue before returning',
