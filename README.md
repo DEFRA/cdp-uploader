@@ -262,7 +262,7 @@ The `errorMessage` field is a test description of why the file was rejected.
 | Any server side error in CDP-Uploader                                                       | `The selected file could not be uploaded – try again` |
 |                                                                                             |                                                       |
 
-The messages are based on the [https://design-system.service.gov.uk/components/file-upload/](GDS File Upload guidelines).
+The messages are based on the [GDS File Upload guidelines](https://design-system.service.gov.uk/components/file-upload/)
 
 The intention of the `errorMessage` field is that the content can be displayed directly to the end user.
 
