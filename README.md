@@ -254,7 +254,7 @@ A rejected file has the following data set:
 The `errorMessage` field is a test description of why the file was rejected.
 
 | Cause                                                                                       | errorMessage                                          |
-|---------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
 | Virus detected                                                                              | `The selected file contains a virus`                  |
 | File is empty                                                                               | `The selected file is empty`                          |
 | File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `The selected file must be smaller than $MAXSIZE`     |
@@ -265,7 +265,6 @@ The `errorMessage` field is a test description of why the file was rejected.
 The messages are based on the [https://design-system.service.gov.uk/components/file-upload/](GDS File Upload guidelines).
 
 The intention of the `errorMessage` field is that the content can be displayed directly to the end user.
-
 
 ## Callback
 
