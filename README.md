@@ -228,19 +228,44 @@ The API is intended to be polled by the frontend services, it is not public and 
 
 #### File field in form
 
-| Parameter Name      | Description                                                                                                  |
-| ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| fileId              | uuid of the file.                                                                                            |
-| filename            | filename of file uploaded, if present                                                                        |
-| contentType         | The mime type as declared in the multipart upload                                                            |
-| fileStatus          | `complete` or `rejected` if the virus scan has completed, `pending` if its still in progress                 |
-| contentLength       | Size of file in bytes                                                                                        |
-| checksumSha256      | SHA256 check sum of file recieved by cdp-uploader before uploading to S3 bucket                              |
-| detectedContentType | The mime type as detected by the CDP-Uploader                                                                |
-| s3Bucket            | S3 bucket where scanned file is moved. Only set if file status is `complete`                                 |
-| s3Key               | S3 Path where scanned file is moved. Includes path prefix if set. Only set when fileStatus is `complete`     |
-| hasError            | Only set to true if the file had an error - fileStatus is `rejected` (e.g. infected, unable to be saved etc) |
-| errorMessage        | Reason why the file was rejected. Only set when fileStatus is `rejected`                                     |
+| Parameter Name      | Description                                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| fileId              | uuid of the file.                                                                                                                  |
+| filename            | filename of file uploaded, if present                                                                                              |
+| contentType         | The mime type as declared in the multipart upload                                                                                  |
+| fileStatus          | `complete` or `rejected` if the virus scan has completed, `pending` if its still in progress                                       |
+| contentLength       | Size of file in bytes                                                                                                              |
+| checksumSha256      | SHA256 check sum of file recieved by cdp-uploader before uploading to S3 bucket                                                    |
+| detectedContentType | The mime type as detected by the CDP-Uploader                                                                                      |
+| s3Bucket            | S3 bucket where scanned file is moved. Only set if file status is `complete`                                                       |
+| s3Key               | S3 Path where scanned file is moved. Includes path prefix if set. Only set when fileStatus is `complete`                           |
+| hasError            | `true/false` Only set to true if the file has been rejected or could not be delivered. Reason is supplied in `errorMessage` field. |
+| errorMessage        | Reason why file was rejected. Error message is based on GDS design guidelines and can be show directly to the end-user.            |
+
+#### Error Handling
+
+A file can be rejected by uploader for a number of reasons. When this happens no file will be delivered to the destination S3 bucket.
+A rejected file has the following data set:
+
+- fileStatus: rejected
+- hasError: true
+- errorMessage: string
+
+The `errorMessage` field is a test description of why the file was rejected.
+
+| Cause                                                                                       | errorMessage                                          |
+|---------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| Virus detected                                                                              | `The selected file contains a virus`                  |
+| File is empty                                                                               | `The selected file is empty`                          |
+| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `The selected file must be smaller than $MAXSIZE`     |
+| File doesn't match the mime types set in the init call                                      | `The selected file must be a $MIMETYPES`              |
+| Any server side error in CDP-Uploader                                                       | `The selected file could not be uploaded – try again` |
+|                                                                                             |                                                       |
+
+The messages are based on the [https://design-system.service.gov.uk/components/file-upload/](GDS File Upload guidelines).
+
+The intention of the `errorMessage` field is that the content can be displayed directly to the end user.
+
 
 ## Callback
 
