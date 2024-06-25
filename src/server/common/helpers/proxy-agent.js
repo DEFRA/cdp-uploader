@@ -1,6 +1,7 @@
-import { config } from '~/src/config'
+import { URL } from 'node:url'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import { Url } from 'url'
+
+import { config } from '~/src/config'
 
 const proxyAgent = () => {
   const httpsProxy = config.get('httpsProxy')
@@ -8,7 +9,7 @@ const proxyAgent = () => {
   if (!httpsProxy) {
     return null
   } else {
-    const proxyUrl = new Url(httpsProxy)
+    const proxyUrl = new URL(httpsProxy)
     return {
       url: proxyUrl,
       agent: new HttpsProxyAgent(proxyUrl)
