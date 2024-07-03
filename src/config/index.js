@@ -105,43 +105,45 @@ const config = convict({
     default: null,
     env: 'CDP_HTTPS_PROXY'
   },
-  redisHost: {
-    doc: 'Redis cache host',
-    format: String,
-    default: '127.0.0.1',
-    env: 'REDIS_HOST'
-  },
-  redisUsername: {
-    doc: 'Redis cache username',
-    format: '*',
-    default: '',
-    sensitive: true,
-    env: 'REDIS_USERNAME'
-  },
-  redisPassword: {
-    doc: 'Redis cache password',
-    format: '*',
-    default: '',
-    sensitive: true,
-    env: 'REDIS_PASSWORD'
-  },
-  redisKeyPrefix: {
-    doc: 'Redis cache key prefix name used to isolate the cached results across multiple clients',
-    format: String,
-    default: 'cdp-uploader:',
-    env: 'REDIS_KEY_PREFIX'
-  },
-  redisTtl: {
-    doc: 'Redis cache global ttl',
-    format: Number,
-    default: oneWeekMillis,
-    env: 'REDIS_TTL'
-  },
-  useSingleInstanceCache: {
-    doc: 'Enable the use of a single instance Redis Cache',
-    format: Boolean,
-    default: process.env.NODE_ENV !== 'production',
-    env: 'USE_SINGLE_INSTANCE_CACHE'
+  redis: {
+    host: {
+      doc: 'Redis cache host',
+      format: String,
+      default: '127.0.0.1',
+      env: 'REDIS_HOST'
+    },
+    username: {
+      doc: 'Redis cache username',
+      format: '*',
+      default: '',
+      sensitive: true,
+      env: 'REDIS_USERNAME'
+    },
+    password: {
+      doc: 'Redis cache password',
+      format: '*',
+      default: '',
+      sensitive: true,
+      env: 'REDIS_PASSWORD'
+    },
+    keyPrefix: {
+      doc: 'Redis cache key prefix name used to isolate the cached results across multiple clients',
+      format: String,
+      default: 'cdp-uploader:',
+      env: 'REDIS_KEY_PREFIX'
+    },
+    ttl: {
+      doc: 'Redis cache global ttl',
+      format: Number,
+      default: oneWeekMillis,
+      env: 'REDIS_TTL'
+    },
+    useSingleInstanceCache: {
+      doc: 'Enable the use of a single instance Redis Cache',
+      format: Boolean,
+      default: process.env.NODE_ENV !== 'production',
+      env: 'USE_SINGLE_INSTANCE_CACHE'
+    }
   },
   quarantineBucket: {
     doc: 'S3 bucket for storing unscanned files',

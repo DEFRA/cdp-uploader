@@ -1,6 +1,5 @@
 import IoRedis from 'ioredis'
 
-import { config } from '~/src/config'
 import { createLogger } from '~/src/server/common/helpers/logging/logger'
 
 /**
@@ -11,34 +10,36 @@ import { createLogger } from '~/src/server/common/helpers/logging/logger'
  *
  * @returns {Cluster | Redis}
  */
-function buildRedisClient() {
+function buildRedisClient(config) {
   const logger = createLogger()
   const port = 6379
   const db = 0
+  const keyPrefix = config.keyPrefix
+  const host = config.host
   let redisClient
 
-  if (config.get('useSingleInstanceCache')) {
+  if (config.useSingleInstanceCache) {
     redisClient = new IoRedis({
       port,
-      host: config.get('redisHost'),
+      host,
       db,
-      keyPrefix: config.get('redisKeyPrefix')
+      keyPrefix
     })
   } else {
     redisClient = new IoRedis.Cluster(
       [
         {
-          host: config.get('redisHost'),
+          host,
           port
         }
       ],
       {
-        keyPrefix: config.get('redisKeyPrefix'),
+        keyPrefix,
         slotsRefreshTimeout: 2000,
         dnsLookup: (address, callback) => callback(null, address),
         redisOptions: {
-          username: config.get('redisUsername'),
-          password: config.get('redisPassword'),
+          username: config.username,
+          password: config.password,
           db,
           tls: {}
         }
@@ -53,8 +54,8 @@ function buildRedisClient() {
   })
 
   redisClient.on('close', () => {
-    logger.info('Redis connection closed attempting reconnect')
     if (redisClient.autoreconnect === true) {
+      logger.info('Redis connection closed attempting reconnect')
       redisClient.connect()
     }
   })
