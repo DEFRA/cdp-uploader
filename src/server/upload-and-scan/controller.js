@@ -123,9 +123,9 @@ const uploadController = {
         return h.redirect(uploadDetails.request.redirect)
       } else {
         // Local Development
-        // Locally upload and the services using it are running on different ports so relative urls wont work.
-        // As a work around to save having lots of `isDevelopment` checks in the tenants we uplift the relative url
-        // to be a absolute url using the referer header. If the redirect is already absolute it will use that instead.
+        // Locally upload and the services using it are running on different ports so relative urls won't work.
+        // As a workaround to save having lots of `isDevelopment` checks in the tenants we uplift the relative url
+        // to be an absolute url using the referer header. If the redirect is already absolute it will use that instead.
         return h.redirect(
           relativeToAbsolute(
             request.headers.referer,

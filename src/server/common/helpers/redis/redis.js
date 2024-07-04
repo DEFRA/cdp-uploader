@@ -1,5 +1,5 @@
-import { RedisService } from '~/src/server/common/helpers/redis-service'
-import { buildRedisClient } from '~/src/server/common/helpers/redis-client'
+import { RedisService } from '~/src/server/common/helpers/redis/redis-service'
+import { buildRedisClient } from '~/src/server/common/helpers/redis/redis-client'
 import { config } from '~/src/config'
 
 const redis = {

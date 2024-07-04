@@ -1,3 +1,3 @@
-import { secureContext } from '~/src/server/plugins/secure-context'
+import { secureContext } from '~/src/server/common/helpers/secure-context/secure-context'
 
 export { secureContext }

@@ -58,11 +58,23 @@ const config = convict({
     default: '/public',
     env: 'ASSET_PATH'
   },
-  localstackEndpoint: {
-    doc: 'Localstack endpoint',
+  awsRegion: {
+    doc: 'AWS region',
     format: String,
-    default: 'http://localhost:4566',
-    env: 'LOCALSTACK_ENDPOINT'
+    default: 'eu-west-2',
+    env: 'AWS_REGION'
+  },
+  sqsEndpoint: {
+    doc: 'AWS SQS endpoint',
+    format: String,
+    default: 'http://127.0.0.1:4566',
+    env: 'SQS_ENDPOINT'
+  },
+  s3Endpoint: {
+    doc: 'AWS S3 endpoint',
+    format: String,
+    default: 'http://127.0.0.1:4566',
+    env: 'S3_ENDPOINT'
   },
   isProduction: {
     doc: 'If this application running in the production environment',
@@ -84,12 +96,6 @@ const config = convict({
     format: ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'],
     default: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
     env: 'LOG_LEVEL'
-  },
-  awsRegion: {
-    doc: 'AWS region',
-    format: String,
-    default: 'eu-west-2',
-    env: 'AWS_REGION'
   },
   httpProxy: {
     doc: 'HTTP Proxy',

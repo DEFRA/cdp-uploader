@@ -2,19 +2,19 @@ import path from 'node:path'
 import hapi from '@hapi/hapi'
 
 import { config } from '~/src/config'
-import { router } from '~/src/server/plugins/router'
+import { router } from '~/src/server/router'
 import { catchAll } from '~/src/server/common/helpers/errors'
 import { failAction } from '~/src/server/common/helpers/fail-action'
 import {
   mockClamavListener,
   scanResultCallbackListener,
   scanResultListener
-} from '~/src/server/plugins/sqs-listener'
+} from '~/src/server/common/helpers/sqs/sqs-listener'
 import { secureContext } from '~/src/server/common/helpers/secure-context'
-import { requestLogger } from '~/src/server/plugins/request-logger'
-import { redis } from '~/src/server/plugins/redis'
-import { s3Client } from '~/src/server/plugins/s3-client'
-import { sqsClient } from '~/src/server/plugins/sqs-client'
+import { requestLogger } from '~/src/server/common/helpers/logging/request-logger'
+import { redis } from '~/src/server/common/helpers/redis/redis'
+import { s3Client } from '~/src/server/common/helpers/s3/s3-client'
+import { sqsClient } from '~/src/server/common/helpers/sqs/sqs-client'
 
 const isProduction = config.get('isProduction')
 
