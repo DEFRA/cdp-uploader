@@ -7,16 +7,15 @@ const redis = {
     name: 'redisService',
     version: '0.1.0',
     register: async (server, options) => {
-      const redisService = new RedisService(
-        buildRedisClient(options.config),
-        options.config.ttl
-      )
+      const client = buildRedisClient(options.config)
+      const redisService = new RedisService(client, options.config.ttl)
+
       server.decorate('request', 'redis', redisService)
       server.decorate('server', 'redis', redisService)
 
       server.events.on('stop', () => {
         server.logger.info(`Closing Redis client`)
-        redisService.disconnect()
+        client.disconnect()
       })
     }
   },

@@ -56,11 +56,6 @@ class RedisService {
       files
     }
   }
-
-  disconnect() {
-    this.client.autoreconnect = false
-    this.client.disconnect()
-  }
 }
 
 export { RedisService }
