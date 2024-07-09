@@ -1,6 +1,6 @@
-class RedisHelper {
-  constructor(redis, ttlMillis) {
-    this.client = redis
+class RedisService {
+  constructor(redisClient, ttlMillis) {
+    this.client = redisClient
     this.ttlMillis = ttlMillis
   }
 
@@ -56,11 +56,6 @@ class RedisHelper {
       files
     }
   }
-
-  async disconnect() {
-    this.client.autoreconnect = false
-    return this.client.disconnect()
-  }
 }
 
-export { RedisHelper }
+export { RedisService }
