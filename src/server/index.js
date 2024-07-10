@@ -15,6 +15,7 @@ import { requestLogger } from '~/src/server/common/helpers/logging/request-logge
 import { redis } from '~/src/server/common/helpers/redis/redis'
 import { s3Client } from '~/src/server/common/helpers/s3/s3-client'
 import { sqsClient } from '~/src/server/common/helpers/sqs/sqs-client'
+import { pulse } from '~/src/server/common/helpers/pulse'
 
 const isProduction = config.get('isProduction')
 
@@ -49,6 +50,7 @@ async function createServer() {
 
   await server.register([
     requestLogger,
+    pulse,
     redis,
     s3Client,
     sqsClient,
