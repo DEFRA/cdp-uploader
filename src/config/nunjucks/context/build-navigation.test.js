@@ -1,4 +1,4 @@
-import { buildNavigation } from '~/src/config/nunjucks/context/build-navigation'
+import { buildNavigation } from '~/src/config/nunjucks/context/build-navigation.js'
 
 const mockRequest = ({ path } = {}) => ({
   path

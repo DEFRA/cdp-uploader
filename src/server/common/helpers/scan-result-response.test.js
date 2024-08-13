@@ -1,8 +1,8 @@
-import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
-import { uploadDetailsSuccessFixture } from '~/src/__fixtures__/upload-details-success'
-import { uploadDetailsRejectedVirusFixture } from '~/src/__fixtures__/upload-details-rejected-virus'
-import { fileDetailsRejectedVirusFixture } from '~/src/__fixtures__/file-details-rejected-virus'
-import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete'
+import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response.js'
+import { uploadDetailsSuccessFixture } from '~/src/__fixtures__/upload-details-success.js'
+import { uploadDetailsRejectedVirusFixture } from '~/src/__fixtures__/upload-details-rejected-virus.js'
+import { fileDetailsRejectedVirusFixture } from '~/src/__fixtures__/file-details-rejected-virus.js'
+import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete.js'
 
 describe('#toScanResultResponse', () => {
   test('Should provide expected response with debug enabled for non rejected upload', () => {

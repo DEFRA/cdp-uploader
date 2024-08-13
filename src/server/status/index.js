@@ -1,4 +1,4 @@
-import { statusController } from '~/src/server/status/controller'
+import { statusController } from '~/src/server/status/controller.js'
 
 const status = {
   plugin: {

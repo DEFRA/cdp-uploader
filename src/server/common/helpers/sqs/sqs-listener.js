@@ -1,8 +1,9 @@
 import { Consumer } from 'sqs-consumer'
-import { config } from '~/src/config'
-import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result'
-import { handleScanResultsCallback } from '~/src/server/callback/listener/handle-scan-results-callback'
-import { handleMockVirusScanner } from '~/src/server/test-harness/mock-virus-scanner'
+
+import { config } from '~/src/config/index.js'
+import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result.js'
+import { handleScanResultsCallback } from '~/src/server/callback/listener/handle-scan-results-callback.js'
+import { handleMockVirusScanner } from '~/src/server/test-harness/mock-virus-scanner.js'
 
 const sqsListener = {
   plugin: {

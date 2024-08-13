@@ -1,10 +1,11 @@
-import { config } from '~/src/config'
-import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream'
-import { fileStatus } from '~/src/server/common/constants/file-status'
-import { counter } from '~/src/server/common/helpers/metrics'
-import { fileSize } from '~/src/server/common/helpers/metrics/counter'
-import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
 import { filesize } from 'filesize'
+
+import { config } from '~/src/config/index.js'
+import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream.js'
+import { fileStatus } from '~/src/server/common/constants/file-status.js'
+import { counter } from '~/src/server/common/helpers/metrics/index.js'
+import { fileSize } from '~/src/server/common/helpers/metrics/counter.js'
+import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
 
 const quarantineBucket = config.get('quarantineBucket')
 const uploaderMaxSize = config.get('maxFileSize')

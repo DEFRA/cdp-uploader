@@ -1,5 +1,6 @@
 import Joi from 'joi'
-import { config } from '~/src/config'
+
+import { config } from '~/src/config/index.js'
 
 const isProduction = config.get('isProduction')
 const bucketsAllowlist = config.get('bucketsAllowlist')

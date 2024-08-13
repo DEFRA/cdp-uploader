@@ -1,5 +1,5 @@
-import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
-import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
+import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response.js'
+import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
 
 const statusController = {
   handler: async (request, h) => {

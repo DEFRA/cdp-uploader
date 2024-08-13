@@ -1,4 +1,4 @@
-import { uploadController } from '~/src/server/upload-and-scan/controller'
+import { uploadController } from '~/src/server/upload-and-scan/controller.js'
 
 const uploadAndScan = {
   plugin: {

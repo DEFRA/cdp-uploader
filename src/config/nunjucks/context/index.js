@@ -1,8 +1,8 @@
 import path from 'path'
 
-import { config } from '~/src/config'
-import { createLogger } from '~/src/server/common/helpers/logging/logger'
-import { buildNavigation } from '~/src/config/nunjucks/context/build-navigation'
+import { config } from '~/src/config/index.js'
+import { createLogger } from '~/src/server/common/helpers/logging/logger.js'
+import { buildNavigation } from '~/src/config/nunjucks/context/build-navigation.js'
 
 const logger = createLogger()
 const assetPath = config.get('assetPath')

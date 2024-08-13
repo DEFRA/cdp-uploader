@@ -1,14 +1,14 @@
 import path from 'node:path'
 
-import { config } from '~/src/config'
-import { fileStatus } from '~/src/server/common/constants/file-status'
-import { scanStatus } from '~/src/server/common/constants/scan-status'
-import { moveS3Object } from '~/src/server/common/helpers/s3/move-s3-object'
-import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
-import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
-import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
-import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete'
-import { counter } from '~/src/server/common/helpers/metrics'
+import { config } from '~/src/config/index.js'
+import { fileStatus } from '~/src/server/common/constants/file-status.js'
+import { scanStatus } from '~/src/server/common/constants/scan-status.js'
+import { moveS3Object } from '~/src/server/common/helpers/s3/move-s3-object.js'
+import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
+import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
+import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
+import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
+import { counter } from '~/src/server/common/helpers/metrics/index.js'
 
 const quarantineBucket = config.get('quarantineBucket')
 

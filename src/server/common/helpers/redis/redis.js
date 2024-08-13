@@ -1,6 +1,6 @@
-import { RedisService } from '~/src/server/common/helpers/redis/redis-service'
-import { buildRedisClient } from '~/src/server/common/helpers/redis/redis-client'
-import { config } from '~/src/config'
+import { RedisService } from '~/src/server/common/helpers/redis/redis-service.js'
+import { buildRedisClient } from '~/src/server/common/helpers/redis/redis-client.js'
+import { config } from '~/src/config/index.js'
 
 const redis = {
   plugin: {

@@ -1,6 +1,6 @@
-import { fileStatus } from '~/src/server/common/constants/file-status'
-import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages'
-import { updateFormsResponse } from '~/src/server/common/helpers/update-forms-response'
+import { fileStatus } from '~/src/server/common/constants/file-status.js'
+import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
+import { updateFormsResponse } from '~/src/server/common/helpers/update-forms-response.js'
 
 describe('#updateFieldsResponse', () => {
   let formData

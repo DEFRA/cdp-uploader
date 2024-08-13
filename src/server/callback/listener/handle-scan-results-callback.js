@@ -1,7 +1,8 @@
-import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response'
-import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
 import fetch from 'node-fetch'
-import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
+
+import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response.js'
+import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
+import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
 
 async function handleScanResultsCallback(message, callbackQueueUrl, server) {
   const receiptHandle = message.ReceiptHandle

@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   rootDir: '.',
   testEnvironment: 'node',
   verbose: true,
@@ -12,10 +12,8 @@ module.exports = {
   coveragePathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/.server',
-    '<rootDir>/.public',
     '<rootDir>/src/__fixtures__',
-    '<rootDir>/test-helpers',
-    '<rootDir>/mock-api'
+    '<rootDir>/src/test-helpers'
   ],
   coverageDirectory: '<rootDir>/coverage'
 }

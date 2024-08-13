@@ -51,4 +51,4 @@ ARG PORT
 ENV PORT ${PORT}
 EXPOSE ${PORT}
 
-CMD [ "node", "./.server" ]
+CMD [ "node", "." ]

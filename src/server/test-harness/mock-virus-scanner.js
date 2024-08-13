@@ -1,7 +1,8 @@
-import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
-import { config } from '~/src/config'
 import { SendMessageCommand } from '@aws-sdk/client-sqs'
 import { HeadObjectCommand } from '@aws-sdk/client-s3'
+
+import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
+import { config } from '~/src/config/index.js'
 
 async function handleMockVirusScanner(message, queue, server) {
   try {

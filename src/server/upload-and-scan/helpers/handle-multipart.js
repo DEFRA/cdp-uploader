@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
 import { Stream } from 'node:stream'
 
-import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file'
-import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
+import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
+import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
 
 function isFile(formPart) {
   return formPart instanceof Stream

@@ -1,21 +1,21 @@
 import path from 'node:path'
 import hapi from '@hapi/hapi'
 
-import { config } from '~/src/config'
-import { router } from '~/src/server/router'
-import { catchAll } from '~/src/server/common/helpers/errors'
-import { failAction } from '~/src/server/common/helpers/fail-action'
+import { config } from '~/src/config/index.js'
+import { router } from '~/src/server/router.js'
+import { catchAll } from '~/src/server/common/helpers/errors.js'
+import { failAction } from '~/src/server/common/helpers/fail-action.js'
 import {
   mockClamavListener,
   scanResultCallbackListener,
   scanResultListener
-} from '~/src/server/common/helpers/sqs/sqs-listener'
-import { secureContext } from '~/src/server/common/helpers/secure-context'
-import { requestLogger } from '~/src/server/common/helpers/logging/request-logger'
-import { redis } from '~/src/server/common/helpers/redis/redis'
-import { s3Client } from '~/src/server/common/helpers/s3/s3-client'
-import { sqsClient } from '~/src/server/common/helpers/sqs/sqs-client'
-import { pulse } from '~/src/server/common/helpers/pulse'
+} from '~/src/server/common/helpers/sqs/sqs-listener.js'
+import { secureContext } from '~/src/server/common/helpers/secure-context.js'
+import { requestLogger } from '~/src/server/common/helpers/logging/request-logger.js'
+import { redis } from '~/src/server/common/helpers/redis/redis.js'
+import { s3Client } from '~/src/server/common/helpers/s3/s3-client.js'
+import { sqsClient } from '~/src/server/common/helpers/sqs/sqs-client.js'
+import { pulse } from '~/src/server/common/helpers/pulse.js'
 
 const isProduction = config.get('isProduction')
 

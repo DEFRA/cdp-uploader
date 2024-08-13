@@ -2,10 +2,10 @@ import path from 'path'
 import nunjucks from 'nunjucks'
 import hapiVision from '@hapi/vision'
 
-import { config } from '~/src/config'
-import { context } from './context'
-import * as filters from './filters'
-import * as globals from './globals'
+import { config } from '~/src/config/index.js'
+import { context } from '~/src/config/context/index.js'
+import * as filters from '~/src/config/filters/index.js'
+import * as globals from '~/src/config/globals.js'
 
 const nunjucksEnvironment = nunjucks.configure(
   [

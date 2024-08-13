@@ -220,7 +220,7 @@ The API is intended to be polled by the frontend services, it is not public and 
 
 | Parameter Name        | Description                                                                                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| uploaderStatus        | Have all scans completed, can be `initiated`, `pending` or `ready`                                                                                                        |
+| uploaderStatus        | Have all scans completed, can be `initiated`, `pending` or `ready`                                                                                           |
 | metadata              | Extra data and identified set by the requesting service in the /initialize call. Returned exactly as they were presented                                     |
 | form                  | An object representing each field in the multipart request. Text fields are preserved exactly as they were sent, file fields contain details about the file. |
 | numberOfRejectedFiles | Total number of files that have been rejected by the uploader                                                                                                |

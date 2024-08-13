@@ -1,4 +1,4 @@
-import { initiateController } from '~/src/server/initiate/controller'
+import { initiateController } from '~/src/server/initiate/controller.js'
 
 const initiate = {
   plugin: {

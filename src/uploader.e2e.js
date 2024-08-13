@@ -1,8 +1,9 @@
-import { createServer } from '~/src/server'
-import { config } from '~/src/config'
 import fetch from 'node-fetch'
 import FormData from 'form-data'
 import * as fs from 'fs'
+
+import { createServer } from '~/src/server/index.js'
+import { config } from '~/src/config/index.js'
 
 describe('#e2e', () => {
   const statusMaxRetries = 60

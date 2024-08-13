@@ -1,4 +1,4 @@
-import { healthController } from '~/src/server/health/controller'
+import { healthController } from '~/src/server/health/controller.js'
 
 describe('#healthController', () => {
   const mockViewHandler = {

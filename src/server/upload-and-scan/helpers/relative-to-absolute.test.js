@@ -1,4 +1,4 @@
-import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relative-to-absolute'
+import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relative-to-absolute.js'
 
 describe('#relative-to-absolute', () => {
   test('should convert a path and host into a valid url', () => {
