@@ -1,11 +1,9 @@
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'path'
 import { CleanWebpackPlugin } from 'clean-webpack-plugin'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import WebpackAssetsManifest from 'webpack-assets-manifest'
 
-const require = createRequire(import.meta.url)
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const webpackConfig = {
@@ -16,9 +14,9 @@ const webpackConfig = {
 }
 
 export default {
-  //   context: path.resolve(dirname, 'src/client'),
+  context: path.resolve(dirname, 'src/client'),
   entry: {
-    application: './src/client/assets/javascripts/application.js'
+    application: './assets/javascripts/application.js'
   },
   mode: webpackConfig.isDevelopment ? 'development' : 'production',
   ...(webpackConfig.isDevelopment && { devtool: 'source-map' }),
@@ -28,7 +26,7 @@ export default {
   },
   output: {
     filename: 'js/[name].[fullhash].js',
-    path: path.resolve(__dirname, '.public'),
+    path: path.join(dirname, '.public'),
     library: '[name]'
   },
   module: {
