@@ -5,7 +5,7 @@
   },
   "ignore": [
     "**/*.test.*",
-    "./src/test-helpers",
+    "./src/server/common/test-helpers",
     "./src/client",
     "./src/common/assets"
   ],

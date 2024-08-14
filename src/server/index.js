@@ -48,8 +48,13 @@ async function createServer() {
     }
   })
 
+  await server.register([requestLogger])
+
+  if (isProduction) {
+    await server.register(secureContext)
+  }
+
   await server.register([
-    requestLogger,
     pulse,
     redis,
     s3Client,
@@ -58,10 +63,6 @@ async function createServer() {
     scanResultListener,
     scanResultCallbackListener
   ])
-
-  if (isProduction) {
-    await server.register(secureContext)
-  }
 
   // Local development & testing only
   if (!isProduction && config.get('mockVirusScanEnabled')) {

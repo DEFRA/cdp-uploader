@@ -1,4 +1,5 @@
-import path from 'path'
+import path from 'node:path'
+import { readFileSync } from 'node:fs'
 
 import { config } from '~/src/config/index.js'
 import { createLogger } from '~/src/server/common/helpers/logging/logger.js'
@@ -6,32 +7,43 @@ import { buildNavigation } from '~/src/config/nunjucks/context/build-navigation.
 
 const logger = createLogger()
 const assetPath = config.get('assetPath')
-
-const manifestPath = path.resolve(
+const manifestPath = path.join(
   config.get('root'),
-  '.public',
-  'manifest.json'
+  '.public/assets-manifest.json'
 )
+
+/** @type {Record<string, string> | undefined} */
 let webpackManifest
 
-try {
-  webpackManifest = require(manifestPath)
-} catch (error) {
-  logger.error('Webpack Manifest assets file not found')
-}
+/**
+ * @param {Request | null} request
+ */
+export function context(request) {
+  if (!webpackManifest) {
+    try {
+      webpackManifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+    } catch (error) {
+      logger.error(`Webpack ${path.basename(manifestPath)} not found`)
+    }
+  }
 
-function context(request) {
   return {
+    assetPath: `${assetPath}/assets`,
     serviceName: config.get('serviceName'),
     serviceUrl: '/',
     breadcrumbs: [],
     navigation: buildNavigation(request),
-    getAssetPath: function (asset) {
-      const webpackAssetPath = webpackManifest[asset]
 
-      return `${assetPath}/${webpackAssetPath}`
+    /**
+     * @param {string} asset
+     */
+    getAssetPath(asset) {
+      const webpackAssetPath = webpackManifest?.[asset]
+      return `${assetPath}/${webpackAssetPath ?? asset}`
     }
   }
 }
 
-export { context }
+/**
+ * @import { Request } from '@hapi/hapi'
+ */

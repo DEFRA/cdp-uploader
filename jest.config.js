@@ -13,7 +13,7 @@ export default {
     '<rootDir>/node_modules/',
     '<rootDir>/.server',
     '<rootDir>/src/__fixtures__',
-    '<rootDir>/src/test-helpers'
+    '<rootDir>/src/server/common/test-helpers'
   ],
   coverageDirectory: '<rootDir>/coverage'
 }

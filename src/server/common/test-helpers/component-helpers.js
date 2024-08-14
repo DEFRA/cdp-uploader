@@ -1,20 +1,17 @@
+import { fileURLToPath } from 'node:url'
 import path from 'path'
 import nunjucks from 'nunjucks'
 import { load } from 'cheerio'
 import { camelCase } from 'lodash'
-
 import * as filters from '~/src/config/nunjucks/filters/index.js'
 import * as globals from '~/src/config/nunjucks/globals.js'
 
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 const nunjucksTestEnv = nunjucks.configure(
   [
-    'node_modules/govuk-frontend/dist/',
-    path.normalize(
-      path.resolve(__dirname, '../..', 'src', 'server', 'common', 'templates')
-    ),
-    path.normalize(
-      path.resolve(__dirname, '../..', 'src', 'server', 'common', 'components')
-    )
+    '~/node_modules/govuk-frontend/dist/',
+    path.normalize(path.resolve(dirname, '../templates')),
+    path.normalize(path.resolve(dirname, '../components'))
   ],
   {
     trimBlocks: true,
@@ -22,15 +19,20 @@ const nunjucksTestEnv = nunjucks.configure(
   }
 )
 
-Object.keys(globals).forEach((global) => {
-  nunjucksTestEnv.addFilter(global, globals[global])
+Object.entries(globals).forEach(([name, global]) => {
+  nunjucksTestEnv.addGlobal(name, global)
 })
 
-Object.keys(filters).forEach((filter) => {
-  nunjucksTestEnv.addFilter(filter, filters[filter])
+Object.entries(filters).forEach(([name, filter]) => {
+  nunjucksTestEnv.addFilter(name, filter)
 })
 
-function renderComponent(componentName, params, callBlock) {
+/**
+ * @param {string} componentName
+ * @param {object} params
+ * @param {string} [callBlock]
+ */
+export function renderComponent(componentName, params, callBlock) {
   const macroPath = `${componentName}/macro.njk`
   const macroName = `app${
     componentName.charAt(0).toUpperCase() + camelCase(componentName.slice(1))
@@ -44,7 +46,5 @@ function renderComponent(componentName, params, callBlock) {
     macroString += `{{- ${macroName}(${macroParams}) -}}`
   }
 
-  return load(nunjucksTestEnv.renderString(macroString))
+  return load(nunjucksTestEnv.renderString(macroString, {}))
 }
-
-export { renderComponent }

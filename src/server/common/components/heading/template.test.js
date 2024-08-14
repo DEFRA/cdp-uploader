@@ -1,4 +1,4 @@
-import { renderComponent } from '~/src/test-helpers/component-helpers.js'
+import { renderComponent } from '~/src/server/common/test-helpers/component-helpers.js'
 
 describe('Heading Component', () => {
   let $heading
