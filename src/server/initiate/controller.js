@@ -20,7 +20,7 @@ const initiateController = {
       allow: 'application/json'
     }
   },
-  handler: async (request, h) => {
+  async handler(request, h) {
     const uploadId = crypto.randomUUID()
     const initiateRequest = request.payload
 

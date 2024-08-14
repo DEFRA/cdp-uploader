@@ -10,7 +10,7 @@ const sqsListener = {
     name: 'sqsListener',
     multiple: true,
     version: '0.1.0',
-    register: async (server, options) => {
+    register(server, options) {
       const queueUrl = options.config.queueUrl
 
       const batchMessageHandler = async function (messages) {

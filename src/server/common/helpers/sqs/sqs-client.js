@@ -5,7 +5,7 @@ const sqsClient = {
   plugin: {
     name: 'sqsClient',
     version: '0.1.0',
-    register: async (server, options) => {
+    register(server, options) {
       const sqsClient = new SQSClient({
         region: config.get('awsRegion'),
         endpoint: config.get('sqsEndpoint')

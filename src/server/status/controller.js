@@ -2,7 +2,7 @@ import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-re
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
 
 const statusController = {
-  handler: async (request, h) => {
+  async handler(request, h) {
     const uploadId = request.params.id
 
     const debug = request.query.debug?.toLowerCase() === 'true'

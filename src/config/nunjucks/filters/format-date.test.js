@@ -2,8 +2,9 @@ import { formatDate } from '~/src/config/nunjucks/filters/format-date.js'
 
 describe('#formatDate', () => {
   beforeAll(() => {
-    jest.useFakeTimers('modern')
-    jest.setSystemTime(new Date('2023-04-01'))
+    jest.useFakeTimers({
+      now: new Date('2023-04-01')
+    })
   })
 
   afterAll(() => {

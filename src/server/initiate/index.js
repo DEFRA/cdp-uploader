@@ -3,7 +3,7 @@ import { initiateController } from '~/src/server/initiate/controller.js'
 const initiate = {
   plugin: {
     name: 'initiate',
-    register: async (server) => {
+    register(server) {
       server.route([
         {
           method: 'POST',

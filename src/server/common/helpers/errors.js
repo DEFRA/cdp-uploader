@@ -16,7 +16,7 @@ function statusCodeMessage(statusCode) {
 function catchAll(request, h) {
   const { response } = request
 
-  if (!response.isBoom) {
+  if (!('isBoom' in response)) {
     return h.continue
   }
 

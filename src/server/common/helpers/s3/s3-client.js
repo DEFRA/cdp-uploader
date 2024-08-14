@@ -5,7 +5,7 @@ const s3Client = {
   plugin: {
     name: 's3Client',
     version: '0.1.0',
-    register: async (server, options) => {
+    register(server, options) {
       const s3Client = new S3Client({
         region: config.get('awsRegion'),
         endpoint: config.get('s3Endpoint'),

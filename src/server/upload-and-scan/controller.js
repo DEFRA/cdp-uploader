@@ -31,7 +31,7 @@ const uploadController = {
       timeout: false
     }
   },
-  handler: async (request, h) => {
+  async handler(request, h) {
     const uploadId = request.params.id
     if (!uploadId) {
       request.logger.info('Failed to upload, no uploadId')

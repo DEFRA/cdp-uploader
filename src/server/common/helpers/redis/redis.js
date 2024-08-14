@@ -6,7 +6,7 @@ const redis = {
   plugin: {
     name: 'redisService',
     version: '0.1.0',
-    register: async (server, options) => {
+    register(server, options) {
       const client = buildRedisClient(options.config)
       const redisService = new RedisService(client, options.config.ttl)
 

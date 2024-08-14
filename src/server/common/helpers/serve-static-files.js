@@ -3,7 +3,7 @@ import { config } from '~/src/config/index.js'
 const serveStaticFiles = {
   plugin: {
     name: 'staticFiles',
-    register: async (server) => {
+    register(server) {
       server.route([
         {
           options: {

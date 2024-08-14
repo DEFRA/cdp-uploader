@@ -1,4 +1,4 @@
-import ecsFormat from '@elastic/ecs-pino-format'
+import { ecsFormat } from '@elastic/ecs-pino-format'
 
 import { config } from '~/src/config/index.js'
 import { redactedUploadContext } from '~/src/server/common/helpers/logging/upload-redaction.js'

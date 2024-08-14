@@ -5,10 +5,13 @@ import { status } from '~/src/server/status/index.js'
 import { initiate } from '~/src/server/initiate/index.js'
 import { uploadAndScan } from '~/src/server/upload-and-scan/index.js'
 
+/**
+ * @satisfies {ServerRegisterPluginObject<void>}
+ */
 const router = {
   plugin: {
     name: 'router',
-    register: async (server) => {
+    async register(server) {
       await server.register([inert])
       await server.register([health, initiate, status, uploadAndScan])
     }
@@ -16,3 +19,7 @@ const router = {
 }
 
 export { router }
+
+/**
+ * @import { ServerRegisterPluginObject } from '@hapi/hapi'
+ */

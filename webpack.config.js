@@ -1,77 +1,118 @@
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'path'
+import CopyPlugin from 'copy-webpack-plugin'
 import { CleanWebpackPlugin } from 'clean-webpack-plugin'
-import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import TerserPlugin from 'terser-webpack-plugin'
 import WebpackAssetsManifest from 'webpack-assets-manifest'
 
+const { NODE_ENV = 'development' } = process.env
+
+const require = createRequire(import.meta.url)
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const webpackConfig = {
-  isDevelopment: process.env.NODE_ENV !== 'production',
-  stylesheets: {
-    components: path.resolve(dirname, 'src', 'server', 'common', 'components')
-  }
-}
+const govukFrontendPath = path.dirname(
+  require.resolve('govuk-frontend/package.json')
+)
 
+/**
+ * @type {Configuration}
+ */
 export default {
   context: path.resolve(dirname, 'src/client'),
   entry: {
-    application: './assets/javascripts/application.js'
+    application: {
+      import: ['./javascripts/application.js', './stylesheets/application.scss']
+    }
   },
-  mode: webpackConfig.isDevelopment ? 'development' : 'production',
-  ...(webpackConfig.isDevelopment && { devtool: 'source-map' }),
+  experiments: {
+    outputModule: true
+  },
+  mode: NODE_ENV === 'production' ? 'production' : 'development',
+  devtool: NODE_ENV === 'production' ? 'source-map' : 'inline-source-map',
   watchOptions: {
     aggregateTimeout: 200,
     poll: 1000
   },
   output: {
-    filename: 'js/[name].[fullhash].js',
+    filename:
+      NODE_ENV === 'production'
+        ? 'javascripts/[name].[contenthash:7].min.js'
+        : 'javascripts/[name].js',
+
+    chunkFilename:
+      NODE_ENV === 'production'
+        ? 'javascripts/[name].[chunkhash:7].min.js'
+        : 'javascripts/[name].js',
+
     path: path.join(dirname, '.public'),
-    library: '[name]'
+    publicPath: '/public/',
+    libraryTarget: 'module',
+    module: true
+  },
+  resolve: {
+    alias: {
+      '/public/assets': path.join(govukFrontendPath, 'dist/govuk/assets')
+    }
   },
   module: {
     rules: [
-      ...(webpackConfig.isDevelopment
-        ? [
-            {
-              test: /\.js$/,
-              enforce: 'pre',
-              use: ['source-map-loader']
-            }
-          ]
-        : []),
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: [['@babel/preset-env', { targets: 'defaults' }]]
-          }
-        }
+        test: /\.(js|mjs|scss)$/,
+        loader: 'source-map-loader',
+        enforce: 'pre'
       },
       {
-        test: /\.(?:s[ac]|c)ss$/i,
+        test: /\.js$/,
+        loader: 'babel-loader',
+        exclude: /node_modules/,
+        options: {
+          browserslistEnv: 'javascripts',
+          cacheDirectory: true,
+          extends: path.join(dirname, 'babel.config.cjs'),
+          presets: [
+            [
+              '@babel/preset-env',
+              {
+                // Apply bug fixes to avoid transforms
+                bugfixes: true,
+
+                // Apply smaller "loose" transforms for browsers
+                loose: true,
+
+                // Skip CommonJS modules transform
+                modules: false
+              }
+            ]
+          ]
+        },
+
+        // Flag loaded modules as side effect free
+        sideEffects: false
+      },
+      {
+        test: /\.scss$/,
+        type: 'asset/resource',
+        generator: {
+          binary: false,
+          filename:
+            NODE_ENV === 'production'
+              ? 'stylesheets/[name].[contenthash:7].min.css'
+              : 'stylesheets/[name].css'
+        },
         use: [
-          'style-loader',
-          {
-            loader: MiniCssExtractPlugin.loader,
-            options: {
-              publicPath: '../',
-              esModule: false
-            }
-          },
-          'css-loader',
-          ...(webpackConfig.isDevelopment ? ['resolve-url-loader'] : []),
+          'postcss-loader',
           {
             loader: 'sass-loader',
             options: {
-              ...(webpackConfig.isDevelopment && { sourceMap: true }),
               sassOptions: {
-                outputStyle: 'compressed',
-                quietDeps: true,
-                includePaths: [webpackConfig.stylesheets.components]
-              }
+                includePaths: [
+                  path.join(dirname, 'src/server/common/components')
+                ],
+                outputStyle: 'expanded',
+                quietDeps: true
+              },
+              warnRuleAsWarning: true
             }
           }
         ]
@@ -80,32 +121,73 @@ export default {
         test: /\.(png|svg|jpe?g|gif)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'images/[name].[contenthash][ext]'
+          filename: 'assets/images/[name][ext]'
         }
       },
       {
         test: /\.(ico)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'images/[name][ext]'
+          filename: 'assets/images/[name][ext]'
         }
       },
       {
         test: /\.(woff|woff2|eot|ttf|otf)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'fonts/[name].[contenthash][ext]'
+          filename: 'assets/fonts/[name][ext]'
         }
       }
     ]
   },
+  optimization: {
+    minimize: NODE_ENV === 'production',
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          // Use webpack default compress options
+          // https://webpack.js.org/configuration/optimization/#optimizationminimizer
+          compress: { passes: 2 },
+
+          // Allow Terser to remove @preserve comments
+          format: { comments: false },
+
+          // Include sources content from dependency source maps
+          sourceMap: {
+            includeSources: true
+          },
+
+          // Compatibility workarounds
+          safari10: true
+        }
+      })
+    ],
+
+    // Skip bundling unused modules
+    providedExports: true,
+    sideEffects: true,
+    usedExports: true
+  },
   plugins: [
     new CleanWebpackPlugin(),
-    new WebpackAssetsManifest({
-      output: 'manifest.json'
-    }),
-    new MiniCssExtractPlugin({
-      filename: 'css/[name].[fullhash].css'
+    new WebpackAssetsManifest(),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.join(govukFrontendPath, 'dist/govuk/assets'),
+          to: 'assets'
+        }
+      ]
     })
-  ]
+  ],
+  stats: {
+    errorDetails: true,
+    loggingDebug: ['sass-loader'],
+    preset: 'minimal'
+  },
+  target: 'browserslist:javascripts'
 }
+
+/**
+ * @import { Configuration } from 'webpack'
+ */
