@@ -279,6 +279,44 @@ The payload contains all of the fields submitted in the HTML form with the value
 Frontend services are expected to validate the content of the payload and present any errors back to the user.
 Any files uploaded by a user will never be sent directly to the frontend service.
 
+# Configuration
+
+Runtime environment variables required or optional.
+
+Add these where relevant to:
+
+### App config
+
+For configurations that are not sensitive and per staging and prod environments.
+https://github.com/DEFRA/cdp-app-config
+
+### Secrets
+
+For sensitive config for staging and prod environments
+this can be self-serviced in your portal service page's **secrets** tab.
+
+https://portal.cdp-int.defra.cloud/services/YOURSERVICE/secrets
+
+### Docker compose
+
+For local docker compose setups add these to your setup,
+e.g. modify locally your `compose/aws.env` or similar.
+
+### Local dev env var
+
+Set as environment variables locally.
+E.g. as `export` commands if using **bash**, or `.envrc` if using [**direnv**](https://direnv.net/)
+
+## Configuration names
+
+| Config name            | ENV_VAR                 | Default | Required | Purpose                                                                               |
+| ---------------------- | ----------------------- | ------- | -------- | ------------------------------------------------------------------------------------- |
+| `bucketsAllowlist`     | CONSUMER_BUCKETS        | []      | [x]      | A list of buckets uploader can write to. Can not be empty if not in development mode. |
+| `mockVirusScanEnabled` | MOCK_VIRUS_SCAN_ENABLED | false   |          | Boolean. Useful in local development                                                  |
+
+There are several other configs, such as AWS details, SQS queue names, polling times etc.
+For more details and other service configuration look in `src/config/index.js`
+
 # Local development
 
 ### Developing services that use the CDP-Uploader
