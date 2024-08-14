@@ -19,7 +19,7 @@ if (isDevelopment) {
 
 const loggerOptions = {
   enabled: !config.get('isTest'),
-  ignorePaths: ['/health'],
+  ignorePaths: ['/health', '/favicon.ico'],
   redact: {
     paths: redactionPaths,
     remove: true
