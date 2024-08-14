@@ -10,7 +10,7 @@ import {
   scanResultCallbackListener,
   scanResultListener
 } from '~/src/server/common/helpers/sqs/sqs-listener.js'
-import { secureContext } from '~/src/server/common/helpers/secure-context.js'
+import { secureContext } from '~/src/server/common/helpers/secure-context/index.js'
 import { requestLogger } from '~/src/server/common/helpers/logging/request-logger.js'
 import { redis } from '~/src/server/common/helpers/redis/redis.js'
 import { s3Client } from '~/src/server/common/helpers/s3/s3-client.js'

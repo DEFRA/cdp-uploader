@@ -1,16 +1,22 @@
-const path = require('path')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const WebpackAssetsManifest = require('webpack-assets-manifest')
+import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
+import path from 'path'
+import { CleanWebpackPlugin } from 'clean-webpack-plugin'
+import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+import WebpackAssetsManifest from 'webpack-assets-manifest'
+
+const require = createRequire(import.meta.url)
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const webpackConfig = {
   isDevelopment: process.env.NODE_ENV !== 'production',
   stylesheets: {
-    components: path.resolve(__dirname, 'src', 'server', 'common', 'components')
+    components: path.resolve(dirname, 'src', 'server', 'common', 'components')
   }
 }
 
-module.exports = {
+export default {
+  //   context: path.resolve(dirname, 'src/client'),
   entry: {
     application: './src/client/assets/javascripts/application.js'
   },
