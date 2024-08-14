@@ -1,9 +1,9 @@
 import inert from '@hapi/inert'
 
-import { health } from '~/src/server/health.js'
-import { status } from '~/src/server/status.js'
-import { initiate } from '~/src/server/initiate.js'
-import { uploadAndScan } from '~/src/server/upload-and-scan.js'
+import { health } from '~/src/server/health/index.js'
+import { status } from '~/src/server/status/index.js'
+import { initiate } from '~/src/server/initiate/index.js'
+import { uploadAndScan } from '~/src/server/upload-and-scan/index.js'
 
 const router = {
   plugin: {
