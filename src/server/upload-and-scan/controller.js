@@ -26,7 +26,7 @@ const uploadController = {
       multipart: true,
       output: 'stream',
       parse: true,
-      maxBytes: config.get('maxFileSize'),
+      maxBytes: config.get('maxMultipartUploadSize'),
       uploads: 'uploads',
       timeout: false
     }

@@ -227,8 +227,14 @@ const config = convict({
     default: process.env.NODE_ENV !== 'production',
     env: 'MOCK_VIRUS_SCAN_ENABLED'
   },
+  maxMultipartUploadSize: {
+    doc: 'Max multipart upload size',
+    format: Number,
+    default: 1000 * 1000 * 1000,
+    env: 'MAX_MULTIPART_UPLOAD_SIZE'
+  },
   maxFileSize: {
-    doc: 'Max file size uploader will accept in bytes. Must be equal to or less than the nginx max',
+    doc: 'Max file size uploader will accept in bytes',
     format: Number,
     default: 100 * 1000 * 1000,
     env: 'MAX_FILE_SIZE'
