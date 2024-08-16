@@ -20,7 +20,7 @@ describe('#e2e', () => {
   })
 
   afterAll(async () => {
-    server.stop({ timeout: 4000 })
+    await server.stop({ timeout: 4000 })
   })
 
   test('healthcheck should return 200', async () => {

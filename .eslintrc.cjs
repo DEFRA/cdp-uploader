@@ -115,6 +115,7 @@ module.exports = {
     },
     {
       env: {
+        jest: true,
         'jest/globals': true
       },
       extends: [
@@ -122,7 +123,7 @@ module.exports = {
         'plugin:jest/recommended',
         'plugin:jest/style'
       ],
-      files: ['**/*.test.{cjs,js}', '**/__mocks__/**'],
+      files: ['**/*.test.{cjs,js}', '**/*.e2e.{cjs,js}', '**/__mocks__/**'],
       plugins: ['jest'],
       rules: {
         // Allow Jest to assert on mocked unbound methods
