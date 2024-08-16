@@ -1,5 +1,8 @@
 import { config } from '~/src/config/index.js'
 
+/**
+ * @satisfies {ServerRegisterPluginObject<void>}
+ */
 const serveStaticFiles = {
   plugin: {
     name: 'staticFiles',
@@ -42,3 +45,7 @@ const serveStaticFiles = {
 }
 
 export { serveStaticFiles }
+
+/**
+ * @import { ServerRegisterPluginObject } from '@hapi/hapi'
+ */

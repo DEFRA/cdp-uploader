@@ -19,7 +19,7 @@ import { pulse } from '~/src/server/common/helpers/pulse.js'
 
 const isProduction = config.get('isProduction')
 
-async function createServer() {
+export async function createServer() {
   const server = hapi.server({
     port: config.get('port'),
     routes: {
@@ -73,5 +73,3 @@ async function createServer() {
 
   return server
 }
-
-export { createServer }

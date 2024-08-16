@@ -8,7 +8,7 @@ import { uploadAndScan } from '~/src/server/upload-and-scan/index.js'
 /**
  * @satisfies {ServerRegisterPluginObject<void>}
  */
-const router = {
+export const router = {
   plugin: {
     name: 'router',
     async register(server) {
@@ -17,8 +17,6 @@ const router = {
     }
   }
 }
-
-export { router }
 
 /**
  * @import { ServerRegisterPluginObject } from '@hapi/hapi'

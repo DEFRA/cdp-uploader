@@ -1,3 +1,7 @@
+/**
+ * @param {{ timestamp: string }} a
+ * @param {{ timestamp: string }} b
+ */
 function sortByTimestampAsc(a, b) {
   if (a.timestamp > b.timestamp) {
     return 1
@@ -10,6 +14,10 @@ function sortByTimestampAsc(a, b) {
   return 0
 }
 
+/**
+ * @param {{ timestamp: string }} a
+ * @param {{ timestamp: string }} b
+ */
 function sortByTimestampDesc(a, b) {
   if (a.timestamp < b.timestamp) {
     return 1

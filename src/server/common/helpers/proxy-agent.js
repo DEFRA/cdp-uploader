@@ -3,7 +3,7 @@ import { HttpsProxyAgent } from 'https-proxy-agent'
 
 import { config } from '~/src/config/index.js'
 
-const proxyAgent = () => {
+export function proxyAgent() {
   const httpsProxy = config.get('httpsProxy')
 
   if (!httpsProxy) {
@@ -16,5 +16,3 @@ const proxyAgent = () => {
     }
   }
 }
-
-export { proxyAgent }

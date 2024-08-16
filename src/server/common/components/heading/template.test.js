@@ -1,6 +1,7 @@
 import { renderComponent } from '~/src/server/common/test-helpers/component-helpers.js'
 
 describe('Heading Component', () => {
+  /** @type {CheerioAPI} */
   let $heading
 
   describe('With caption', () => {
@@ -12,19 +13,23 @@ describe('Heading Component', () => {
     })
 
     test('Should render app heading component', () => {
-      expect($heading('[data-testid="app-heading"]').length).toEqual(1)
+      expect($heading('[data-testid="app-heading"]')).toHaveLength(1)
     })
 
     test('Should contain expected heading', () => {
-      expect(
-        $heading('[data-testid="app-heading-title"]').text().trim()
-      ).toEqual('Services')
+      expect($heading('[data-testid="app-heading-title"]').text().trim()).toBe(
+        'Services'
+      )
     })
 
     test('Should have expected heading caption', () => {
       expect(
         $heading('[data-testid="app-heading-caption"]').text().trim()
-      ).toEqual('A page showing available services')
+      ).toBe('A page showing available services')
     })
   })
 })
+
+/**
+ * @import { CheerioAPI } from 'cheerio'
+ */

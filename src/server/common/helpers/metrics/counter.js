@@ -6,7 +6,11 @@ import {
 import { config } from '~/src/config/index.js'
 import { createLogger } from '~/src/server/common/helpers/logging/logger.js'
 
-const counter = async (metricName, value = 1) => {
+/**
+ * @param {string} metricName
+ * @param {number} value
+ */
+export async function counter(metricName, value = 1) {
   if (!config.get('isProduction')) return
   const logger = createLogger()
 
@@ -19,7 +23,7 @@ const counter = async (metricName, value = 1) => {
   }
 }
 
-const fileSize = async (metricName, value) => {
+export async function fileSize(metricName, value) {
   if (!config.get('isProduction')) return
   const logger = createLogger()
 
@@ -32,7 +36,7 @@ const fileSize = async (metricName, value) => {
   }
 }
 
-const millis = async (metricName, value) => {
+export async function millis(metricName, value) {
   if (!config.get('isProduction')) return
   const logger = createLogger()
 
@@ -49,5 +53,3 @@ const millis = async (metricName, value) => {
     logger.warn(e)
   }
 }
-
-export { counter, fileSize, millis }

@@ -1,6 +1,7 @@
 import { renderComponent } from '~/src/server/common/test-helpers/component-helpers.js'
 
 describe('Breadcrumbs Component', () => {
+  /** @type {Cheerio<Element>} */
   let $breadcrumbs
 
   beforeEach(() => {
@@ -19,8 +20,8 @@ describe('Breadcrumbs Component', () => {
 
   test('Should render expected number of breadcrumbs', () => {
     expect(
-      $breadcrumbs.find('[data-testid="app-breadcrumbs-list-item"]').length
-    ).toEqual(2)
+      $breadcrumbs.find('[data-testid="app-breadcrumbs-list-item"]')
+    ).toHaveLength(2)
   })
 
   test('First breadcrumb should be a link', () => {
@@ -29,8 +30,8 @@ describe('Breadcrumbs Component', () => {
       .first()
       .find('[data-testid="app-breadcrumbs-link"]')
 
-    expect($firstBreadcrumbLink.attr('href')).toEqual('/deployments')
-    expect($firstBreadcrumbLink.attr('class')).toEqual('app-breadcrumbs__link')
+    expect($firstBreadcrumbLink.attr('href')).toBe('/deployments')
+    expect($firstBreadcrumbLink.attr('class')).toBe('app-breadcrumbs__link')
   })
 
   test('Last breadcrumb should not be a link', () => {
@@ -43,3 +44,7 @@ describe('Breadcrumbs Component', () => {
     )
   })
 })
+
+/**
+ * @import { CheerioAPI, Cheerio, Element } from 'cheerio'
+ */

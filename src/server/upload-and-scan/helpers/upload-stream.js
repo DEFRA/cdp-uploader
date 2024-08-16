@@ -40,7 +40,7 @@ async function uploadStream(
 
   const uploadResult = await upload.done()
   const fileTypeResult = await FileType.fromStream(fileTypeStream)
-  const checksumSha256 = await uploadResult.ChecksumSHA256
+  const checksumSha256 = uploadResult.ChecksumSHA256
 
   const fileLength = await findS3ContentLength(
     s3Client,
