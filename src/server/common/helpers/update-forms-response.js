@@ -3,8 +3,8 @@
  * @description
  * - Add data to formData fields data matched by fileId
  * - Pass items without fileId through, as is
- * @param formData
- * @param files
+ * @param {*} formData
+ * @param {*} files
  * @returns {{}|*}
  */
 function updateFormsResponse(formData, files) {
