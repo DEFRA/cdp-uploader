@@ -463,8 +463,9 @@ Note the exposed endpoint is `https://localhost:4566`
 You need local buckets setup in localstack
 
 ```bash
-awslocal s3 mb s3://cdp-uploader-quarantine --endpoint-url http://localhost:4566
-awslocal s3 mb s3://my-bucket --endpoint-url http://localhost:4566
+
+aws --endpoint-url=http://localhost:4566 s3 mb s3://my-bucket
+aws --endpoint-url=http://localhost:4566 s3 mb s3://cdp-uploader-quarantine
 ```
 
 The `--endpoint-url http://localhost:4566` may not be needed depending on how your `awslocal` is set up.
@@ -473,14 +474,14 @@ Also note depending on how your _localstack_ is running the endpoint may be `htt
 ### List local buckets
 
 ```bash
-awslocal s3 list-buckets
+aws --endpoint-url=http://localhost:4566 s3 list-buckets
 ```
 
 ### View bucket contents
 
 ```bash
-awslocal s3 ls s3://cdp-uploader-quarantine
-awslocal s3 ls s3://my-bucket
+aws --endpoint-url=http://localhost:4566 s3 ls s3://cdp-uploader-quarantine
+aws --endpoint-url=http://localhost:4566 s3 ls s3://my-bucket
 ```
 
 Of view in your browser:
@@ -493,22 +494,22 @@ http://localhost:4566/my-bucket/
 ### Empty bucket contents
 
 ```bash
-awslocal s3 rm s3://cdp-uploader-quarantine --recursive
-awslocal s3 rm s3://my-bucket --recursive
+aws --endpoint-url=http://localhost:4566 s3 rm s3://cdp-uploader-quarantine --recursive
+aws --endpoint-url=http://localhost:4566 s3 rm s3://my-bucket --recursive
 ```
 
 ### Setup local queues
 
 ```bash
-awslocal sqs create-queue --queue-name cdp-clamav-results
-awslocal sqs create-queue --queue-name cdp-uploader-scan-results-callback.fifo --attributes "{\"FifoQueue\":\"true\",\"ContentBasedDeduplication\": \"true\"}"
+aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name cdp-clamav-results
+aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name cdp-uploader-scan-results-callback.fifo --attributes "{\"FifoQueue\":\"true\",\"ContentBasedDeduplication\": \"true\"}"
 ```
 
 ### Purge local queues
 
 ```bash
-awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/000000000000/cdp-clamav-results
-awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/000000000000/cdp-uploader-scan-results-callback.fifo
+aws --endpoint-url=http://localhost:4566 sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/000000000000/cdp-clamav-results
+aws --endpoint-url=http://localhost:4566 sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/000000000000/cdp-uploader-scan-results-callback.fifo
 ```
 
 ### Setup local test harness
@@ -516,8 +517,8 @@ awslocal sqs purge-queue --region eu-west-2 --queue-url http://localhost:4566/00
 When running locally there is a built-in test harness to simulate scan results. This requires an extra setup step
 
 ```bash
-awslocal sqs create-queue --queue-name mock-clamav
-awslocal s3api put-bucket-notification-configuration\
+aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name mock-clamav
+aws --endpoint-url=http://localhost:4566 s3api put-bucket-notification-configuration\
     --bucket $BUCKET_NAME\
     --notification-configuration '{
                                       "QueueConfigurations": [

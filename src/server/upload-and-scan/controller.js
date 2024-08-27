@@ -24,7 +24,7 @@ const uploadController = {
     payload: {
       allow: 'multipart/form-data',
       multipart: true,
-      output: 'stream',
+      output: 'file',
       parse: true,
       maxBytes: config.get('maxMultipartUploadSize'),
       uploads: 'uploads',
