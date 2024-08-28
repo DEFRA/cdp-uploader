@@ -7,7 +7,7 @@ const uploadAndScan = {
       server.route([
         {
           method: 'POST',
-          path: '/upload-and-scan/{id}',
+          path: '/upload-and-scan/{uploadId}',
           ...uploadController
         }
       ])

@@ -1,7 +1,7 @@
 import Joi from 'joi'
 
 const uploadPathValidation = Joi.object({
-  id: Joi.string().uuid().required()
+  uploadId: Joi.string().uuid().required()
 })
 
 export { uploadPathValidation }

@@ -32,7 +32,7 @@ const uploadController = {
     }
   },
   handler: async (request, h) => {
-    const uploadId = request.params.id
+    const uploadId = request.params.uploadId
     if (!uploadId) {
       request.logger.info('Failed to upload, no uploadId')
       return h
