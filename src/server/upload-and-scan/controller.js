@@ -84,7 +84,7 @@ const uploadController = {
             request
           )
 
-          if (responseValue) {
+          if (responseValue || responseValue === '') {
             elemFields.push(responseValue)
           }
           if (fileId && status) {
