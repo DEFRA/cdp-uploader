@@ -24,7 +24,7 @@ const uploadController = {
     payload: {
       allow: 'multipart/form-data',
       multipart: true,
-      output: 'stream',
+      output: 'file',
       parse: true,
       maxBytes: config.get('maxMultipartUploadSize'),
       uploads: 'uploads',
@@ -32,7 +32,7 @@ const uploadController = {
     }
   },
   handler: async (request, h) => {
-    const uploadId = request.params.id
+    const uploadId = request.params.uploadId
     if (!uploadId) {
       request.logger.info('Failed to upload, no uploadId')
       return h
@@ -84,7 +84,7 @@ const uploadController = {
             request
           )
 
-          if (responseValue) {
+          if (responseValue || responseValue === '') {
             elemFields.push(responseValue)
           }
           if (fileId && status) {
