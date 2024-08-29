@@ -131,7 +131,18 @@ describe('#handleFile', () => {
       {
         ...mockUploadDetails(uploadId),
         request: {
-          mimeTypes: ['image/gif']
+          mimeTypes: [
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/csv',
+            'application/vnd.oasis.opendocument.text',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'application/rtf',
+            'text/plain',
+            'application/pdf',
+            'image/png'
+          ]
         }
       },
       { headers: { 'content-type': 'image/jpeg' } },
@@ -142,7 +153,8 @@ describe('#handleFile', () => {
       fileId,
       expect.objectContaining({
         hasError: true,
-        errorMessage: 'The selected file must be a image/gif',
+        errorMessage:
+          'The selected file must be a DOC, DOCX, CSV, ODT, XLSX, XLS, RTF, TXT, PDF or PNG',
         fileStatus: 'rejected'
       })
     )

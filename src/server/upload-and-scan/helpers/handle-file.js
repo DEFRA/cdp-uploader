@@ -9,6 +9,7 @@ import { unlink } from 'node:fs/promises'
 import FileType from 'file-type'
 import crypto from 'node:crypto'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
+import mime from 'mime-types'
 
 const quarantineBucket = config.get('quarantineBucket')
 const uploaderMaxSize = config.get('maxFileSize')
@@ -120,13 +121,27 @@ function rejectWrongMimeType(file, contentType, mimeTypes) {
   // TODO: what do we do with the detected mime type
   const mimeTypeMismatch =
     mimeTypes && !mimeTypes.some((m) => m === contentType)
+
+  const createMessage = () => {
+    const extensions = mimeTypes
+      .map((mimeType) => mime.extension(mimeType))
+      .filter(Boolean)
+      .map((mimeType) => mimeType.toUpperCase())
+    const uniqueExtensions = Array.from(new Set(extensions))
+
+    const last = uniqueExtensions.pop()
+    return uniqueExtensions.length
+      ? uniqueExtensions.join(', ') + ' or ' + last
+      : last
+  }
+
   return mimeTypeMismatch
     ? {
         fileStatus: fileStatus.rejected,
         hasError: true,
         errorMessage: fileErrorMessages.wrongType.replace(
           '$MIMETYPES',
-          mimeTypes.join(', ')
+          createMessage()
         )
       }
     : {}
