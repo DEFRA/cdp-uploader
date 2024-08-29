@@ -35,9 +35,9 @@
   "author": "Defra DDTS",
   "license": "OGL-UK-3.0",
   "dependencies": {
-    "@aws-sdk/client-s3": "3.556.0",
-    "@aws-sdk/client-sqs": "3.556.0",
-    "@aws-sdk/credential-providers": "3.556.0",
+    "@aws-sdk/client-s3": "3.637.0",
+    "@aws-sdk/client-sqs": "3.637.0",
+    "@aws-sdk/credential-providers": "3.637.0",
     "@aws-sdk/lib-storage": "3.556.0",
     "@babel/runtime": "7.24.4",
     "@elastic/ecs-pino-format": "1.5.0",
@@ -102,7 +102,7 @@
     "style-loader": "4.0.0",
     "stylelint": "16.4.0",
     "stylelint-config-gds": "2.0.0",
-    "webpack": "5.91.0",
+    "webpack": "5.94.0",
     "webpack-assets-manifest": "5.2.1",
     "webpack-cli": "5.1.4"
   }
