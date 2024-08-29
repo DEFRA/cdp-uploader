@@ -271,7 +271,7 @@ describe('#e2e', () => {
             contentType: 'image/jpeg',
             fileStatus: 'rejected',
             hasError: true,
-            errorMessage: 'The selected file must be a text/plain, text/json'
+            errorMessage: 'The selected file must be a TXT'
           }
         }
       })
