@@ -5,13 +5,11 @@ const s3Client = {
   plugin: {
     name: 's3Client',
     version: '0.1.0',
-    register(server) {
+    register(server, options) {
       const s3Client = new S3Client({
-        region: config.get('awsRegion'),
-        endpoint: config.get('s3Endpoint'),
-        ...(config.get('isDevelopment') && {
-          forcePathStyle: true
-        })
+        region: options.region,
+        endpoint: options.endpoint,
+        forcePathStyle: options.isDevelopment
       })
 
       server.decorate('request', 's3', s3Client)
@@ -22,6 +20,11 @@ const s3Client = {
         s3Client.destroy()
       })
     }
+  },
+  options: {
+    region: config.get('awsRegion'),
+    endpoint: config.get('s3Endpoint'),
+    isDevelopment: config.get('isDevelopment')
   }
 }
 

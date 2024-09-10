@@ -37,6 +37,7 @@ USER root
 RUN apk update && \
     apk add curl
 USER node
+RUN mkdir "uploads"
 
 ARG PARENT_VERSION
 LABEL uk.gov.defra.ffc.parent-image=defradigital/node:${PARENT_VERSION}

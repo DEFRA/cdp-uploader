@@ -1,7 +1,7 @@
 import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
-import { uploadStream } from '~/src/server/upload-and-scan/helpers/upload-stream.js'
+import { uploadFile } from '~/src/server/upload-and-scan/helpers/upload-file.js'
 
-jest.mock('~/src/server/upload-and-scan/helpers/upload-stream')
+jest.mock('~/src/server/upload-and-scan/helpers/upload-file')
 
 describe('#handleFile', () => {
   const mockUploadDetails = (uploadId) => ({
@@ -19,20 +19,27 @@ describe('#handleFile', () => {
     },
     fileIds: []
   })
+  const mockLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    child: jest.fn(() => {
+      return {
+        error: jest.fn()
+      }
+    })
+  }
   const mockRequest = {
     redis: {
       storeFileDetails: jest.fn().mockResolvedValue({})
-    }
-  }
-  const mockLogger = {
-    warn: jest.fn(),
-    debug: jest.fn()
+    },
+    logger: mockLogger
   }
 
   test('Should provide expected filePart', async () => {
     const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
 
-    uploadStream.mockResolvedValue({
+    uploadFile.mockResolvedValue({
       Bucket: 'cdp-uploader-quarantine',
       fileTypeResult: {
         ext: 'jpg',
@@ -45,39 +52,25 @@ describe('#handleFile', () => {
       await handleFile(
         uploadId,
         mockUploadDetails(uploadId),
-        'file-id-678910',
-        {},
-        mockRequest,
-        mockLogger
+        { filename: 'file-id-678910' },
+        mockRequest
       )
     ).toMatchObject({
-      fileId: 'file-id-678910'
+      filename: 'file-id-678910'
     })
   })
 
   test('Should reject empty files', async () => {
     const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
 
-    uploadStream.mockResolvedValue({
-      Bucket: 'cdp-uploader-quarantine',
-      fileTypeResult: {
-        ext: 'jpg',
-        mime: 'image/jpeg'
-      },
-      fileLength: 0
-    })
-
     expect(
       await handleFile(
         uploadId,
         mockUploadDetails(uploadId),
-        'file-id-678910',
-        {},
-        mockRequest,
-        mockLogger
+        { bytes: 0 },
+        mockRequest
       )
     ).toMatchObject({
-      fileId: 'file-id-678910',
       missing: true
     })
 
@@ -87,33 +80,18 @@ describe('#handleFile', () => {
   test('Should reject files that exceed the max size', async () => {
     const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
 
-    uploadStream.mockResolvedValue({
-      Bucket: 'cdp-uploader-quarantine',
-      fileTypeResult: {
-        ext: 'jpg',
-        mime: 'image/jpeg'
+    const { fileId } = await handleFile(
+      uploadId,
+      {
+        ...mockUploadDetails(uploadId),
+        request: { maxFileSize: 1000 * 1000 }
       },
-      fileLength: 2 * 1000 * 1000
-    })
-
-    expect(
-      await handleFile(
-        uploadId,
-        {
-          ...mockUploadDetails(uploadId),
-          request: { maxFileSize: 1000 * 1000 }
-        },
-        'file-id-678910',
-        {},
-        mockRequest,
-        mockLogger
-      )
-    ).toMatchObject({
-      fileId: 'file-id-678910'
-    })
+      { bytes: 1000 * 1000 + 1 },
+      mockRequest
+    )
 
     expect(mockRequest.redis.storeFileDetails).toHaveBeenLastCalledWith(
-      'file-id-678910',
+      fileId,
       expect.objectContaining({
         hasError: true,
         errorMessage: 'The selected file must be smaller than 1 MB',
@@ -125,33 +103,18 @@ describe('#handleFile', () => {
   test('Should reject files that exceed the max size and show the error in KB if its low enough', async () => {
     const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
 
-    uploadStream.mockResolvedValue({
-      Bucket: 'cdp-uploader-quarantine',
-      fileTypeResult: {
-        ext: 'jpg',
-        mime: 'image/jpeg'
+    const { fileId } = await handleFile(
+      uploadId,
+      {
+        ...mockUploadDetails(uploadId),
+        request: { maxFileSize: 256 * 1000 }
       },
-      fileLength: 2 * 1000 * 1000
-    })
-
-    expect(
-      await handleFile(
-        uploadId,
-        {
-          ...mockUploadDetails(uploadId),
-          request: { maxFileSize: 256 * 1000 }
-        },
-        'file-id-678910',
-        {},
-        mockRequest,
-        mockLogger
-      )
-    ).toMatchObject({
-      fileId: 'file-id-678910'
-    })
+      { bytes: 2 * 1000 * 1000 },
+      mockRequest
+    )
 
     expect(mockRequest.redis.storeFileDetails).toHaveBeenLastCalledWith(
-      'file-id-678910',
+      fileId,
       expect.objectContaining({
         hasError: true,
         errorMessage: 'The selected file must be smaller than 256 kB',
@@ -163,38 +126,35 @@ describe('#handleFile', () => {
   test('Should reject files that are not the correct mime type', async () => {
     const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
 
-    uploadStream.mockResolvedValue({
-      Bucket: 'cdp-uploader-quarantine',
-      fileTypeResult: {
-        ext: 'jpg',
-        mime: 'image/jpeg'
+    const { fileId } = await handleFile(
+      uploadId,
+      {
+        ...mockUploadDetails(uploadId),
+        request: {
+          mimeTypes: [
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/csv',
+            'application/vnd.oasis.opendocument.text',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'application/rtf',
+            'text/plain',
+            'application/pdf',
+            'image/png'
+          ]
+        }
       },
-      fileLength: 1001
-    })
-
-    expect(
-      await handleFile(
-        uploadId,
-        {
-          ...mockUploadDetails(uploadId),
-          request: {
-            mimeTypes: ['image/gif']
-          }
-        },
-        'file-id-678910',
-        {},
-        mockRequest,
-        mockLogger
-      )
-    ).toMatchObject({
-      fileId: 'file-id-678910'
-    })
+      { headers: { 'content-type': 'image/jpeg' } },
+      mockRequest
+    )
 
     expect(mockRequest.redis.storeFileDetails).toHaveBeenLastCalledWith(
-      'file-id-678910',
+      fileId,
       expect.objectContaining({
         hasError: true,
-        errorMessage: 'The selected file must be a image/gif',
+        errorMessage:
+          'The selected file must be a DOC, DOCX, CSV, ODT, XLSX, XLS, RTF, TXT, PDF or PNG',
         fileStatus: 'rejected'
       })
     )

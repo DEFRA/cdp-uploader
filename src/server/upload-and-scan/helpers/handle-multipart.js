@@ -1,11 +1,7 @@
-import crypto from 'node:crypto'
-import { Stream } from 'node:stream'
-
 import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
-import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
 
 function isFile(formPart) {
-  return formPart instanceof Stream
+  return formPart instanceof Object
 }
 
 async function handleMultipart(
@@ -17,17 +13,8 @@ async function handleMultipart(
   if (!isFile(multipartValue)) {
     return { responseValue: multipartValue }
   } else {
-    const fileId = crypto.randomUUID()
-    const fileLogger = createFileLogger(request.logger, uploadDetails, fileId)
-
-    const { filename, contentType, fileStatus, missing } = await handleFile(
-      uploadId,
-      uploadDetails,
-      fileId,
-      multipartValue,
-      request,
-      fileLogger
-    )
+    const { fileId, filename, contentType, fileStatus, missing } =
+      await handleFile(uploadId, uploadDetails, multipartValue, request)
 
     if (missing) {
       return {}

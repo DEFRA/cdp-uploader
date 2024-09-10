@@ -27,22 +27,18 @@ function updateFormsResponse(formData, files) {
       const isArray = Array.isArray(fieldValue)
       const fieldValues = isArray ? fieldValue : [fieldValue]
 
-      const updatedFieldValues = fieldValues
-        .map((fieldValue) => {
-          const matchedFileUpdate = files.find(
-            (fileUpdate) => fileUpdate?.fileId === fieldValue?.fileId
-          )
+      const updatedFieldValues = fieldValues.map((fieldValue) => {
+        const matchedFileUpdate = files.find(
+          (fileUpdate) => fileUpdate?.fileId === fieldValue?.fileId
+        )
 
-          if (matchedFileUpdate) {
-            return {
+        return matchedFileUpdate
+          ? {
               ...fieldValue,
               ...updateFields(matchedFileUpdate)
             }
-          }
-
-          return fieldValue
-        })
-        .filter(Boolean)
+          : fieldValue
+      })
 
       updatedFields[fieldKey] = isArray
         ? updatedFieldValues
