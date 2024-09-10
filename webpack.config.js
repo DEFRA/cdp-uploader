@@ -106,11 +106,10 @@ export default {
             loader: 'sass-loader',
             options: {
               sassOptions: {
-                includePaths: [
-                  path.join(dirname, 'src/server/common/components')
-                ],
-                outputStyle: 'expanded',
-                quietDeps: true
+                loadPaths: [path.join(dirname, 'src/server/common/components')],
+                quietDeps: true,
+                sourceMapIncludeSources: true,
+                style: 'expanded'
               },
               warnRuleAsWarning: true
             }
