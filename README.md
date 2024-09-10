@@ -2,40 +2,65 @@
 
 Core delivery platform Node.js Frontend Template.
 
-- [cdp-uploader](#cdp-uploader)
-  - [Requirements](#requirements)
-    - [Node.js](#nodejs)
-  - [API](#api)
-    - [Initiate](#post-initiate)
-    - [Upload](#post-upload-and-scanuploadid)
-    - [Status](#get-statusuploadid)
-    - [Callback]()
-  - [Local development](#local-development)
-    - [Developing services that use CDP-Uploader](#developing-services-that-use-the-cdp-uploader)
-    - [Setup](#setup-for-developing-cdp-uploader)
-      - [Docker Compose](#docker-compose)
-    - [Development](#development)
-      - [Updating dependencies](#updating-dependencies)
-    - [AWS CLI](#aws-cli)
-    - [AWS Local](#aws-local)
-      - [AWS local alias](#aws-local-alias)
-    - [LocalStack](#localstack)
-      - [Docker](#docker)
-    - [Localstack CLI](#localstack-cli)
-      - [Setup local S3 buckets](#setup-local-s3-buckets)
-      - [List local buckets](#list-local-buckets)
-      - [View bucket contents](#view-bucket-contents)
-      - [Empty bucket contents](#empty-bucket-contents)
-      - [Setup local queues](#setup-local-queues)
-      - [Purge local queues](#purge-local-queues)
-    - [Local JSON API](#local-json-api)
-    - [Production](#production)
-    - [Npm scripts](#npm-scripts)
-  - [Docker](#docker-1)
-    - [Development image](#development-image)
-    - [Production image](#production-image)
-  - [Licence](#licence)
-    - [About the licence](#about-the-licence)
+* [Requirements](#requirements)
+  * [Node.js](#nodejs)
+* [API](#api)
+  * [POST /initiate](#post-initiate)
+    * [HTTP Headers:](#http-headers)
+    * [Body parameters:](#body-parameters)
+    * [Example response](#example-response)
+  * [POST /upload-and-scan/{uploadId}](#post-upload-and-scanuploadid)
+    * [Path Parameters](#path-parameters)
+    * [Response](#response)
+  * [GET /status/{uploadId}](#get-statusuploadid)
+    * [Path Parameters](#path-parameters-1)
+    * [Query Parameters](#query-parameters)
+    * [Response Payload with Debug](#response-payload-with-debug)
+    * [Response Payload without Debug](#response-payload-without-debug)
+    * [File field in form](#file-field-in-form)
+    * [Error Handling](#error-handling)
+  * [Callback](#callback)
+    * [Intended use](#intended-use)
+* [Configuration](#configuration)
+  * [App config](#app-config)
+  * [Secrets](#secrets)
+  * [Docker compose](#docker-compose)
+  * [Local dev env var](#local-dev-env-var)
+  * [Configuration names](#configuration-names)
+* [Local development](#local-development)
+  * [Developing services that use the CDP-Uploader](#developing-services-that-use-the-cdp-uploader)
+    * [Docker Compose](#docker-compose-1)
+    * [Relative vs Absolute URLs](#relative-vs-absolute-urls)
+    * [Test Harness (mock scanning)](#test-harness-mock-scanning)
+    * [EICAR files and local development](#eicar-files-and-local-development)
+  * [Setup for developing CDP-Uploader](#setup-for-developing-cdp-uploader)
+  * [Development](#development)
+    * [Updating dependencies](#updating-dependencies)
+    * [Tests](#tests)
+      * [Unit tests](#unit-tests)
+      * [End-to-end tests](#end-to-end-tests)
+      * [Smoke tests](#smoke-tests)
+  * [AWS CLI](#aws-cli)
+  * [AWS Local](#aws-local)
+    * [AWS local alias](#aws-local-alias)
+  * [LocalStack](#localstack)
+    * [Docker](#docker)
+  * [Localstack CLI](#localstack-cli)
+    * [Setup local S3 buckets](#setup-local-s3-buckets)
+    * [List local buckets](#list-local-buckets)
+    * [View bucket contents](#view-bucket-contents)
+    * [Empty bucket contents](#empty-bucket-contents)
+    * [Setup local queues](#setup-local-queues)
+    * [Purge local queues](#purge-local-queues)
+    * [Setup local test harness](#setup-local-test-harness)
+  * [Local JSON API](#local-json-api)
+  * [Production](#production)
+  * [Npm scripts](#npm-scripts)
+* [Docker](#docker-1)
+  * [Development image](#development-image)
+  * [Production image](#production-image)
+* [Licence](#licence)
+  * [About the licence](#about-the-licence)
 
 # Requirements
 
@@ -73,13 +98,13 @@ Example `/initiate` request:
 #### HTTP Headers:
 
 | Header name | Description                                       | Required |
-| ----------- | ------------------------------------------------- | -------- |
+|-------------|---------------------------------------------------|----------|
 | User-Agent  | Identifier of the service that calls cdp-uploader | TBD      |
 
 #### Body parameters:
 
 | Parameter name | Description                                                         | Required |
-| -------------- | ------------------------------------------------------------------- | -------- |
+|----------------|---------------------------------------------------------------------|----------|
 | redirect       | Url to redirect to after file has been successfully uploaded.       | yes      |
 | s3Bucket       | S3 bucket that file will be moved to once the scanning is complete  | yes      |
 | s3Path         | 'Folder' in bucket where scanned files will be placed               | no       |
@@ -89,7 +114,9 @@ Example `/initiate` request:
 | maxFileSize    | Maximum size in bytes that a file can be (10MB is 10 _ 1000 _ 1000) | no       |
 
 > [!NOTE]
-> We will generate an uploadId for the upload and fileIds for files in the upload request. Files (objects) will be moved to destination bucket under the path uploadId/fileId which will be prefixed with the bucket path if it has been provided.
+> We will generate an uploadId for the upload and fileIds for files in the upload request. Files (objects) will be moved
+> to destination bucket under the path uploadId/fileId which will be prefixed with the bucket path if it has been
+> provided.
 
 #### Example response
 
@@ -102,7 +129,7 @@ Example `/initiate` request:
 ```
 
 | Parameter name | Description                                      | Required |
-| -------------- | ------------------------------------------------ | -------- |
+|----------------|--------------------------------------------------|----------|
 | uploadId       | Identifier used for the upload                   | yes      |
 | uploadUrl      | Url which must be used for the upload            | yes      |
 | statusUrl      | Endpoint that can be polled for status of upload | yes      |
@@ -112,10 +139,11 @@ Example `/initiate` request:
 #### Path Parameters
 
 | Parameter Name | Description                                                              |
-| -------------- | ------------------------------------------------------------------------ |
+|----------------|--------------------------------------------------------------------------|
 | uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
 
-This will be a `multipart/form-data` request to the `uploadAndScanUrl` url provided in the initiate response. This request should happen directly from the users browser to the cdp-uploader.
+This will be a `multipart/form-data` request to the `uploadAndScanUrl` url provided in the initiate response. This
+request should happen directly from the users browser to the cdp-uploader.
 
 Example `/upload-and-scan/${uploadId}` request:
 
@@ -126,7 +154,7 @@ Example `/upload-and-scan/${uploadId}` request:
   enctype="multipart/form-data"
 >
   <label for="file">File</label>
-  <input id="file" name="file" type="file" />
+  <input id="file" name="file" type="file"/>
   <button>Upload</button>
 </form>
 ```
@@ -138,18 +166,19 @@ Once the upload has been successful, the user will be redirected to the `redirec
 ## GET /status/{uploadId}
 
 The status API provides information about uploaded files, virus scan status and S3 location.
-The API is intended to be polled by the frontend services, it is not public and cannot be called direct from the browser.
+The API is intended to be polled by the frontend services, it is not public and cannot be called direct from the
+browser.
 
 #### Path Parameters
 
 | Parameter Name | Description                                                              |
-| -------------- | ------------------------------------------------------------------------ |
+|----------------|--------------------------------------------------------------------------|
 | uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
 
 #### Query Parameters
 
 | Parameter Name | Description                                                                     |
-| -------------- | ------------------------------------------------------------------------------- |
+|----------------|---------------------------------------------------------------------------------|
 | debug          | set to 'true' to debug information. Currently contains initiate request payload |
 
 > [!NOTE]
@@ -219,7 +248,7 @@ The API is intended to be polled by the frontend services, it is not public and 
 ```
 
 | Parameter Name        | Description                                                                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | uploaderStatus        | Have all scans completed, can be `initiated`, `pending` or `ready`                                                                                           |
 | metadata              | Extra data and identified set by the requesting service in the /initialize call. Returned exactly as they were presented                                     |
 | form                  | An object representing each field in the multipart request. Text fields are preserved exactly as they were sent, file fields contain details about the file. |
@@ -229,7 +258,7 @@ The API is intended to be polled by the frontend services, it is not public and 
 #### File field in form
 
 | Parameter Name      | Description                                                                                                                        |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+|---------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | fileId              | uuid of the file.                                                                                                                  |
 | filename            | filename of file uploaded, if present                                                                                              |
 | contentType         | The mime type as declared in the multipart upload                                                                                  |
@@ -244,7 +273,8 @@ The API is intended to be polled by the frontend services, it is not public and 
 
 #### Error Handling
 
-A file can be rejected by uploader for a number of reasons. When this happens no file will be delivered to the destination S3 bucket.
+A file can be rejected by uploader for a number of reasons. When this happens no file will be delivered to the
+destination S3 bucket.
 A rejected file has the following data set:
 
 - fileStatus: rejected
@@ -254,7 +284,7 @@ A rejected file has the following data set:
 The `errorMessage` field is a test description of why the file was rejected.
 
 | Cause                                                                                       | errorMessage                                          |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+|---------------------------------------------------------------------------------------------|-------------------------------------------------------|
 | Virus detected                                                                              | `The selected file contains a virus`                  |
 | File is empty                                                                               | `The selected file is empty`                          |
 | File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `The selected file must be smaller than $MAXSIZE`     |
@@ -268,13 +298,17 @@ The intention of the `errorMessage` field is that the content can be displayed d
 
 ## Callback
 
-If a callback url has been provided in the initiate request, we will POST a callback to your service once scanning is complete and files have been moved to your services bucket. The payload is exactly the same as the response from the [Status](#get-statusuploadid) endpoint (without debug enabled).
+If a callback url has been provided in the initiate request, we will POST a callback to your service once scanning is
+complete and files have been moved to your services bucket. The payload is exactly the same as the response from
+the [Status](#get-statusuploadid) endpoint (without debug enabled).
 
 #### Intended use
 
 Frontend services will poll the /status endpoint after a user has uploaded a file.
 
-The payload contains all of the fields submitted in the HTML form with the values preserved with the exception of any fields that contained files. These fields are replaced with an object showing if they passed the scan and where in S3 they can be accessed.
+The payload contains all of the fields submitted in the HTML form with the values preserved with the exception of any
+fields that contained files. These fields are replaced with an object showing if they passed the scan and where in S3
+they can be accessed.
 
 Frontend services are expected to validate the content of the payload and present any errors back to the user.
 Any files uploaded by a user will never be sent directly to the frontend service.
@@ -310,7 +344,7 @@ E.g. as `export` commands if using **bash**, or `.envrc` if using [**direnv**](h
 ## Configuration names
 
 | Config name            | ENV_VAR                 | Default | Required | Purpose                                                                               |
-| ---------------------- | ----------------------- | ------- | -------- | ------------------------------------------------------------------------------------- |
+|------------------------|-------------------------|---------|----------|---------------------------------------------------------------------------------------|
 | `bucketsAllowlist`     | CONSUMER_BUCKETS        | []      | [x]      | A list of buckets uploader can write to. Can not be empty if not in development mode. |
 | `mockVirusScanEnabled` | MOCK_VIRUS_SCAN_ENABLED | false   |          | Boolean. Useful in local development                                                  |
 
@@ -321,13 +355,15 @@ For more details and other service configuration look in `src/config/index.js`
 
 ### Developing services that use the CDP-Uploader
 
-If your service is going to use the CDP-Uploader to receive files you may want to start by running the uploader locally. The easiest way to do this is using `docker compose`.
+If your service is going to use the CDP-Uploader to receive files you may want to start by running the uploader locally.
+The easiest way to do this is using `docker compose`.
 
 #### Docker Compose
 
 The CDP-Uploader project provide as base [compose.yml](compose.yml) file to get you started.
 
-Copy [compose.yml](compose.yml) as well as the [./compose](./compose) folder into your own project and running `docker compose pull` and then `docker compose up`.
+Copy [compose.yml](compose.yml) as well as the [./compose](./compose) folder into your own project and running
+`docker compose pull` and then `docker compose up`.
 
 This will start:
 
@@ -335,20 +371,24 @@ This will start:
 - localstack (a local AWS emulator)
 - cdp-uploader
 
-It will also inject a [start-up script](./compose/start-localstack.sh) into the localstack container that automatically creates the queues and buckets needed by the uploader as well as a test bucket named 'my-bucket'.
-If your service requires its own bucket you can add a line to [start-localstack.sh](./compose/start-localstack.sh) script to create one.
+It will also inject a [start-up script](./compose/start-localstack.sh) into the localstack container that automatically
+creates the queues and buckets needed by the uploader as well as a test bucket named 'my-bucket'.
+If your service requires its own bucket you can add a line to [start-localstack.sh](./compose/start-localstack.sh)
+script to create one.
 
 ```yaml
 aws --endpoint-url=http://localhost:4566 s3 mb s3://cdp-uploader-quarantine
 aws --endpoint-url=http://localhost:4566 s3 mb s3://my-bucket
 
-## Insert your bucket here, e.g.
+  ## Insert your bucket here, e.g.
 aws --endpoint-url=http://localhost:4566 s3 mb s3://your-service-bucket
 ```
 
 > [!NOTE]
-> The script sets the mock AWS region to be `eu-west-2`. See [aws.env](./compose/aws.env) for the other localstack environment variables.
-> If your service is also talking to S3 then it will need to use the same region and credentials when talking to localstack.
+> The script sets the mock AWS region to be `eu-west-2`. See [aws.env](./compose/aws.env) for the other localstack
+> environment variables.
+> If your service is also talking to S3 then it will need to use the same region and credentials when talking to
+> localstack.
 > The can be done by simply setting environment variables before running your sevices locally:
 >
 > ```bash
@@ -363,19 +403,24 @@ Any other supporting services can be added to the compose file as required.
 
 #### Relative vs Absolute URLs
 
-In a real environment relative urls work fine since all the services are behind the same host, however locally they're going to be running on different ports so relative redirect URLs won't work!
+In a real environment relative urls work fine since all the services are behind the same host, however locally they're
+going to be running on different ports so relative redirect URLs won't work!
 
-When run in `development` mode the cdp-uploader will convert relative redirect urls into absolute urls using the 'referer' header. This should make uploader behave more or less the same locally as it would in a real environment.
+When run in `development` mode the cdp-uploader will convert relative redirect urls into absolute urls using the '
+referer' header. This should make uploader behave more or less the same locally as it would in a real environment.
 
 #### Test Harness (mock scanning)
 
 When running locally the CDP-Uploader will be running with its mock virus scanner enabled.
 
-This _does not_ actually virus scan files, rather it simulates a response based on filename. If you submit a file with the word `virus` in the name it will be flagged as infected.
+This _does not_ actually virus scan files, rather it simulates a response based on filename. If you submit a file with
+the word `virus` in the name it will be flagged as infected.
 
 #### EICAR files and local development
 
-The test harness does not support [EICAR](https://www.eicar.org/download-anti-malware-testfile/) virus test files yet, so if you are submitting one and getting a `CLEAN` response back from the uploader's test harness, this is expected. In the real environments EICAR files will work.
+The test harness does not support [EICAR](https://www.eicar.org/download-anti-malware-testfile/) virus test files yet,
+so if you are submitting one and getting a `CLEAN` response back from the uploader's test harness, this is expected. In
+the real environments EICAR files will work.
 
 ## Setup for developing CDP-Uploader
 
@@ -401,6 +446,43 @@ options around updates check the package docs.
 
 ```bash
 ncu -i
+```
+
+### Tests
+
+#### Unit tests
+
+To run unit tests:
+
+```bash
+npm test
+```
+
+#### End-to-end tests
+
+To run end-to-end tests, you will need to have a few docker compose services running locally:
+
+```bash
+docker compose pull
+docker compose up -d localstack redis
+npm run test:e2e
+````
+
+#### Smoke tests
+
+To run smoke tests start up the `cdp-uploader` via docker compose:
+
+```bash
+cd cdp-uploader
+docker compose pull
+docker compose up
+```
+
+Then clone https://github.com/DEFRA/cdp-uploader-smoke-tests and run it:
+
+```bash
+cd cdp-uploader-smoke-tests
+ENVIRONMENT=local npm run test
 ```
 
 ## AWS CLI
