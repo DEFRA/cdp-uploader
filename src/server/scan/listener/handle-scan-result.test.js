@@ -221,7 +221,7 @@ describe('#handleScanResult', () => {
         files: [fileDetailsPendingFixture],
         uploadDetails: uploadDetailsPendingFixture
       })
-      moveS3Object.mockResolvedValue(true)
+      jest.mocked(moveS3Object).mockResolvedValue(true)
 
       result = await handleScanResult(
         virusCheckMessageCleanFixture,
@@ -303,7 +303,7 @@ describe('#handleScanResult', () => {
         files: [fileDetailsPendingFixture],
         uploadDetails: uploadDetailsPendingFixture
       })
-      moveS3Object.mockResolvedValue(false)
+      jest.mocked(moveS3Object).mockResolvedValue(false)
 
       result = await handleScanResult(
         virusCheckMessageCleanFixture,
