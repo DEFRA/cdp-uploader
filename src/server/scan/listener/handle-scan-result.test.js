@@ -39,7 +39,7 @@ describe('#handleScanResult', () => {
   const loggerChildSpy = jest.spyOn(logger, 'child').mockReturnValue(mockLogger)
 
   beforeAll(() => {
-    jest.useFakeTimers('modern')
+    jest.useFakeTimers()
     jest.setSystemTime(new Date('2024-04-29T14:10:00'))
   })
 
