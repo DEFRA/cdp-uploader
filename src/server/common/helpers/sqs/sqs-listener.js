@@ -24,7 +24,6 @@ const sqsListener = {
 
       const listener = Consumer.create({
         queueUrl,
-        messageAttributeNames: ['All'],
         waitTimeSeconds: options.config.waitTimeSeconds,
         pollingWaitTimeMs: options.config.pollingWaitTimeMs,
         shouldDeleteMessages: false,
