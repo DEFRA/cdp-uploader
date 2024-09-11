@@ -10,9 +10,9 @@ import { virusCheckMessageCleanFixture } from '~/src/__fixtures__/virus-check-me
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
 import { virusCheckMessageInfectedFixture } from '~/src/__fixtures__/virus-check-message-infected.js'
 
-jest.mock('~/src/server/common/helpers/sqs/delete-sqs-message')
-jest.mock('~/src/server/scan/listener/helpers/process-scan-complete')
-jest.mock('~/src/server/common/helpers/s3/move-s3-object')
+jest.mock('~/src/server/common/helpers/sqs/delete-sqs-message.js')
+jest.mock('~/src/server/scan/listener/helpers/process-scan-complete.js')
+jest.mock('~/src/server/common/helpers/s3/move-s3-object.js')
 
 describe('#handleScanResult', () => {
   const logger = createLogger()
