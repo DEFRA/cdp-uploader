@@ -3,9 +3,9 @@
  * @description
  * - Add data to formData fields data matched by fileId
  * - Pass items without fileId through, as is
- * @param {*} formData
- * @param {*} files
- * @returns {{}|*}
+ * @param {object} formData
+ * @param {object[]} files
+ * @returns {*}
  */
 function updateFormsResponse(formData, files) {
   // ordered with keys that appear in ready at bottom (so status ordering remains same)
