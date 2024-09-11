@@ -37,6 +37,7 @@ describe('#handleScanResult', () => {
   }
   // @ts-expect-error mocking working as expected, type ignored
   const loggerChildSpy = jest.spyOn(logger, 'child').mockReturnValue(mockLogger)
+  const mockMoveS3Object = jest.mocked(moveS3Object)
 
   beforeAll(() => {
     jest.useFakeTimers()
@@ -221,7 +222,7 @@ describe('#handleScanResult', () => {
         files: [fileDetailsPendingFixture],
         uploadDetails: uploadDetailsPendingFixture
       })
-      jest.mocked(moveS3Object).mockResolvedValue(true)
+      mockMoveS3Object.mockResolvedValue(true)
 
       result = await handleScanResult(
         virusCheckMessageCleanFixture,
@@ -303,7 +304,7 @@ describe('#handleScanResult', () => {
         files: [fileDetailsPendingFixture],
         uploadDetails: uploadDetailsPendingFixture
       })
-      jest.mocked(moveS3Object).mockResolvedValue(false)
+      mockMoveS3Object.mockResolvedValue(false)
 
       result = await handleScanResult(
         virusCheckMessageCleanFixture,
