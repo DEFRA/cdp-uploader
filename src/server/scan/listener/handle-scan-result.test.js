@@ -35,6 +35,7 @@ describe('#handleScanResult', () => {
     warn: jest.fn(),
     error: jest.fn()
   }
+  // @ts-expect-error mocking working as expected, type ignored
   const loggerChildSpy = jest.spyOn(logger, 'child').mockReturnValue(mockLogger)
 
   beforeAll(() => {
