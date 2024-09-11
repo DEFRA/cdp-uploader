@@ -174,7 +174,7 @@ export const config = convict({
       env: 'SQS_SCAN_RESULTS_WAIT_TIME_SECONDS'
     },
     pollingWaitTimeMs: {
-      doc: 'The duration to wait before repolling the queue',
+      doc: 'The duration to wait before re-polling the queue',
       format: Number,
       default: 0,
       env: 'SQS_SCAN_RESULTS_POLLING_WAIT_TIME_MS'
