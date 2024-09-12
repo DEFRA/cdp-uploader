@@ -345,7 +345,7 @@ E.g. as `export` commands if using **bash**, or `.envrc` if using [**direnv**](h
 
 | Config name            | ENV_VAR                 | Default | Required | Purpose                                                                               |
 |------------------------|-------------------------|---------|----------|---------------------------------------------------------------------------------------|
-| `bucketsAllowlist`     | CONSUMER_BUCKETS        | []      | [x]      | A list of buckets uploader can write to. Can not be empty if not in development mode. |
+| `bucketsAllowlist`     | CONSUMER_BUCKETS        | []      | [x]      | A comma separated list of buckets uploader can write to. Can not be empty if not in development mode. |
 | `mockVirusScanEnabled` | MOCK_VIRUS_SCAN_ENABLED | false   |          | Boolean. Useful in local development                                                  |
 
 There are several other configs, such as AWS details, SQS queue names, polling times etc.
@@ -466,7 +466,7 @@ To run end-to-end tests, you will need to have a few docker compose services run
 docker compose pull
 docker compose up -d localstack redis
 npm run test:e2e
-````
+```
 
 #### Smoke tests
 
