@@ -1,9 +1,12 @@
-import { config } from '~/src/config'
+import { config } from '~/src/config/index.js'
 
+/**
+ * @satisfies {ServerRegisterPluginObject<void>}
+ */
 const serveStaticFiles = {
   plugin: {
     name: 'staticFiles',
-    register: async (server) => {
+    register(server) {
       server.route([
         {
           options: {
@@ -42,3 +45,7 @@ const serveStaticFiles = {
 }
 
 export { serveStaticFiles }
+
+/**
+ * @import { ServerRegisterPluginObject } from '@hapi/hapi'
+ */

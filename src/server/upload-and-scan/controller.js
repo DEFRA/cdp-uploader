@@ -1,16 +1,16 @@
-import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
-import { handleMultipart } from '~/src/server/upload-and-scan/helpers/handle-multipart'
-import { uploadPathValidation } from '~/src/server/upload-and-scan/helpers/upload-validation'
+import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
+import { handleMultipart } from '~/src/server/upload-and-scan/helpers/handle-multipart.js'
+import { uploadPathValidation } from '~/src/server/upload-and-scan/helpers/upload-validation.js'
 import {
   isInitiated,
   uploadStatus
-} from '~/src/server/common/helpers/upload-status'
-import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject'
-import { counter } from '~/src/server/common/helpers/metrics'
-import { config } from '~/src/config'
-import { fileStatus } from '~/src/server/common/constants/file-status'
-import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete'
-import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relative-to-absolute'
+} from '~/src/server/common/helpers/upload-status.js'
+import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject.js'
+import { counter } from '~/src/server/common/helpers/metrics/index.js'
+import { config } from '~/src/config/index.js'
+import { fileStatus } from '~/src/server/common/constants/file-status.js'
+import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
+import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relative-to-absolute.js'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -31,7 +31,7 @@ const uploadController = {
       timeout: false
     }
   },
-  handler: async (request, h) => {
+  async handler(request, h) {
     const uploadId = request.params.uploadId
     if (!uploadId) {
       request.logger.info('Failed to upload, no uploadId')

@@ -1,5 +1,5 @@
 import { ChecksumAlgorithm, PutObjectCommand } from '@aws-sdk/client-s3'
-import { findS3ContentLength } from '~/src/server/common/helpers/s3/find-s3-content-length'
+import { findS3ContentLength } from '~/src/server/common/helpers/s3/find-s3-content-length.js'
 import { readFile } from 'node:fs/promises'
 
 async function uploadFile(

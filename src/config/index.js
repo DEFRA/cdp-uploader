@@ -1,5 +1,8 @@
 import convict from 'convict'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const oneWeekMillis = 7 * 24 * 60 * 60 * 1000
 
@@ -17,7 +20,7 @@ convict.addFormat({
   }
 })
 
-const config = convict({
+export const config = convict({
   env: {
     doc: 'The application environment.',
     format: ['production', 'development', 'test'],
@@ -50,7 +53,7 @@ const config = convict({
   root: {
     doc: 'Project root',
     format: String,
-    default: path.normalize(path.join(__dirname, '..', '..'))
+    default: path.resolve(dirname, '../..')
   },
   assetPath: {
     doc: 'Asset path',
@@ -97,21 +100,21 @@ const config = convict({
     default: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
     env: 'LOG_LEVEL'
   },
-  httpProxy: {
+  httpProxy: /** @type {SchemaObj<string | null>} */ ({
     doc: 'HTTP Proxy',
     format: String,
     nullable: true,
     default: null,
     env: 'CDP_HTTP_PROXY'
-  },
-  httpsProxy: {
+  }),
+  httpsProxy: /** @type {SchemaObj<string | null>} */ ({
     doc: 'HTTPS Proxy',
     format: String,
     nullable: true,
     default: null,
     env: 'CDP_HTTPS_PROXY'
-  },
-  redis: {
+  }),
+  redis: /** @type {Schema<RedisConfig>} */ ({
     host: {
       doc: 'Redis cache host',
       format: String,
@@ -150,7 +153,7 @@ const config = convict({
       default: process.env.NODE_ENV !== 'production',
       env: 'USE_SINGLE_INSTANCE_CACHE'
     }
-  },
+  }),
   quarantineBucket: {
     doc: 'S3 bucket for storing unscanned files',
     format: String,
@@ -171,7 +174,7 @@ const config = convict({
       env: 'SQS_SCAN_RESULTS_WAIT_TIME_SECONDS'
     },
     pollingWaitTimeMs: {
-      doc: 'The duration to wait before repolling the queue',
+      doc: 'The duration to wait before re-polling the queue',
       format: Number,
       default: 0,
       env: 'SQS_SCAN_RESULTS_POLLING_WAIT_TIME_MS'
@@ -249,4 +252,7 @@ const config = convict({
 
 config.validate({ allowed: 'strict' })
 
-export { config }
+/**
+ * @import { Schema, SchemaObj} from 'convict'
+ * @import { RedisConfig } from '~/src/server/common/helpers/redis/redis-client.js'
+ */

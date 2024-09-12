@@ -1,13 +1,13 @@
-import { config } from '~/src/config'
+import { config } from '~/src/config/index.js'
 import {
   isReady,
   isUploadPending,
   uploadStatus
-} from '~/src/server/common/helpers/upload-status'
-import { fileStatus } from '~/src/server/common/constants/file-status'
-import { sendSqsMessage } from '~/src/server/common/helpers/sqs/send-sqs-message'
-import { createFileLogger } from '~/src/server/common/helpers/logging/logger'
-import { millis } from '~/src/server/common/helpers/metrics/counter'
+} from '~/src/server/common/helpers/upload-status.js'
+import { fileStatus } from '~/src/server/common/constants/file-status.js'
+import { sendSqsMessage } from '~/src/server/common/helpers/sqs/send-sqs-message.js'
+import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
+import { millis } from '~/src/server/common/helpers/metrics/counter.js'
 
 const callbackQueueUrl = config.get('sqsScanResultsCallback.queueUrl')
 

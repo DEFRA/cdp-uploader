@@ -1,10 +1,10 @@
 import * as crypto from 'node:crypto'
 
-import { config } from '~/src/config'
-import { initiateValidation } from '~/src/server/initiate/helpers/initiate-validation'
-import { uploadStatus } from '~/src/server/common/helpers/upload-status'
-import { createUploadLogger } from '~/src/server/common/helpers/logging/logger'
-import { counter } from '~/src/server/common/helpers/metrics'
+import { config } from '~/src/config/index.js'
+import { initiateValidation } from '~/src/server/initiate/helpers/initiate-validation.js'
+import { uploadStatus } from '~/src/server/common/helpers/upload-status.js'
+import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
+import { counter } from '~/src/server/common/helpers/metrics/index.js'
 
 const appBaseUrl = config.get('appBaseUrl')
 const isDevelopment = config.get('isDevelopment')
@@ -20,7 +20,7 @@ const initiateController = {
       allow: 'application/json'
     }
   },
-  handler: async (request, h) => {
+  async handler(request, h) {
     const uploadId = crypto.randomUUID()
     const initiateRequest = request.payload
 

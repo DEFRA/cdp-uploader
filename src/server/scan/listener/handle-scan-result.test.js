@@ -1,18 +1,18 @@
-import { createLogger } from '~/src/server/common/helpers/logging/logger'
-import { moveS3Object } from '~/src/server/common/helpers/s3/move-s3-object'
-import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result'
-import { fileDetailsPendingFixture } from '~/src/__fixtures__/file-details-pending'
-import { uploadDetailsReadyFixture } from '~/src/__fixtures__/upload-details-ready'
-import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete'
-import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message'
-import { uploadDetailsPendingFixture } from '~/src/__fixtures__/upload-details-pending'
-import { virusCheckMessageCleanFixture } from '~/src/__fixtures__/virus-check-message-clean'
-import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete'
-import { virusCheckMessageInfectedFixture } from '~/src/__fixtures__/virus-check-message-infected'
+import { createLogger } from '~/src/server/common/helpers/logging/logger.js'
+import { moveS3Object } from '~/src/server/common/helpers/s3/move-s3-object.js'
+import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result.js'
+import { fileDetailsPendingFixture } from '~/src/__fixtures__/file-details-pending.js'
+import { uploadDetailsReadyFixture } from '~/src/__fixtures__/upload-details-ready.js'
+import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete.js'
+import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
+import { uploadDetailsPendingFixture } from '~/src/__fixtures__/upload-details-pending.js'
+import { virusCheckMessageCleanFixture } from '~/src/__fixtures__/virus-check-message-clean.js'
+import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
+import { virusCheckMessageInfectedFixture } from '~/src/__fixtures__/virus-check-message-infected.js'
 
-jest.mock('~/src/server/common/helpers/sqs/delete-sqs-message')
-jest.mock('~/src/server/scan/listener/helpers/process-scan-complete')
-jest.mock('~/src/server/common/helpers/s3/move-s3-object')
+jest.mock('~/src/server/common/helpers/sqs/delete-sqs-message.js')
+jest.mock('~/src/server/scan/listener/helpers/process-scan-complete.js')
+jest.mock('~/src/server/common/helpers/s3/move-s3-object.js')
 
 describe('#handleScanResult', () => {
   const logger = createLogger()
@@ -35,10 +35,12 @@ describe('#handleScanResult', () => {
     warn: jest.fn(),
     error: jest.fn()
   }
+  // @ts-expect-error mocking working as expected, type ignored
   const loggerChildSpy = jest.spyOn(logger, 'child').mockReturnValue(mockLogger)
+  const mockMoveS3Object = jest.mocked(moveS3Object)
 
   beforeAll(() => {
-    jest.useFakeTimers('modern')
+    jest.useFakeTimers()
     jest.setSystemTime(new Date('2024-04-29T14:10:00'))
   })
 
@@ -220,7 +222,7 @@ describe('#handleScanResult', () => {
         files: [fileDetailsPendingFixture],
         uploadDetails: uploadDetailsPendingFixture
       })
-      moveS3Object.mockResolvedValue(true)
+      mockMoveS3Object.mockResolvedValue(true)
 
       result = await handleScanResult(
         virusCheckMessageCleanFixture,
@@ -302,7 +304,7 @@ describe('#handleScanResult', () => {
         files: [fileDetailsPendingFixture],
         uploadDetails: uploadDetailsPendingFixture
       })
-      moveS3Object.mockResolvedValue(false)
+      mockMoveS3Object.mockResolvedValue(false)
 
       result = await handleScanResult(
         virusCheckMessageCleanFixture,

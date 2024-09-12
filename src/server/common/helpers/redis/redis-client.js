@@ -1,27 +1,50 @@
-import IoRedis from 'ioredis'
+import { Cluster, Redis } from 'ioredis'
 
-import { createLogger } from '~/src/server/common/helpers/logging/logger'
+import { createLogger } from '~/src/server/common/helpers/logging/logger.js'
+
+/**
+ * @typedef {object} RedisConfig
+ * @property {string} host
+ * @property {string} username
+ * @property {string} password
+ * @property {string} keyPrefix
+ * @property {boolean} useSingleInstanceCache
+ */
 
 /**
  * Setup Redis and provide a redis client
  *
  * Local development - 1 Redis instance
- * Out in the wild - Elasticache / Redis Cluster with username and password
- *
+ * Environments - Elasticache / Redis Cluster with username and password
+ * @param {RedisConfig} redisConfig - Redis config
  * @returns {Cluster | Redis}
  */
-function buildRedisClient(redisConfig) {
+export function buildRedisClient(redisConfig) {
   const logger = createLogger()
   const port = 6379
   const db = 0
   const keyPrefix = redisConfig.keyPrefix
   const host = redisConfig.host
+  let redisClient
 
-  const client = redisConfig.useSingleInstanceCache
-    ? new IoRedis({ port, host, db, keyPrefix })
-    : new IoRedis.Cluster([{ host, port }], {
+  if (redisConfig.useSingleInstanceCache) {
+    redisClient = new Redis({
+      port,
+      host,
+      db,
+      keyPrefix
+    })
+  } else {
+    redisClient = new Cluster(
+      [
+        {
+          host,
+          port
+        }
+      ],
+      {
         keyPrefix,
-        slotsRefreshTimeout: 2000,
+        slotsRefreshTimeout: 10000,
         dnsLookup: (address, callback) => callback(null, address),
         redisOptions: {
           username: redisConfig.username,
@@ -29,17 +52,17 @@ function buildRedisClient(redisConfig) {
           db,
           tls: {}
         }
-      })
+      }
+    )
+  }
 
-  client.on('connect', () => {
+  redisClient.on('connect', () => {
     logger.info('Connected to Redis server')
   })
 
-  client.on('error', (error) => {
+  redisClient.on('error', (error) => {
     logger.error(`Redis connection error ${error}`)
   })
 
-  return client
+  return redisClient
 }
-
-export { buildRedisClient }

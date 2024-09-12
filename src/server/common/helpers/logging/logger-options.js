@@ -1,7 +1,7 @@
-import ecsFormat from '@elastic/ecs-pino-format'
+import { ecsFormat } from '@elastic/ecs-pino-format'
 
-import { config } from '~/src/config'
-import { redactedUploadContext } from '~/src/server/common/helpers/logging/upload-redaction'
+import { config } from '~/src/config/index.js'
+import { redactedUploadContext } from '~/src/server/common/helpers/logging/upload-redaction.js'
 
 const isDevelopment = config.get('isDevelopment')
 const redactionPaths = [
@@ -17,15 +17,23 @@ if (isDevelopment) {
   redactionPaths.push(...['req', 'res', 'responseTime'])
 }
 
-const loggerOptions = {
+/**
+ * @satisfies {Options}
+ */
+export const loggerOptions = {
   enabled: !config.get('isTest'),
-  ignorePaths: ['/health'],
+  ignorePaths: ['/health', '/favicon.ico'],
   redact: {
     paths: redactionPaths,
     remove: true
   },
   level: config.get('logLevel'),
-  ...(isDevelopment ? { transport: { target: 'pino-pretty' } } : ecsFormat())
+  ...(isDevelopment
+    ? { transport: { target: 'pino-pretty' } }
+    : /** @type {Omit<LoggerOptions, 'mixin' | 'transport'>} */ (ecsFormat()))
 }
 
-export { loggerOptions }
+/**
+ * @import { Options } from 'hapi-pino'
+ * @import { LoggerOptions } from 'pino'
+ */

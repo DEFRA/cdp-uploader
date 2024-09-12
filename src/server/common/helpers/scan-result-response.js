@@ -1,4 +1,4 @@
-import { updateFormsResponse } from '~/src/server/common/helpers/update-forms-response'
+import { updateFormsResponse } from '~/src/server/common/helpers/update-forms-response.js'
 
 function toScanResultResponse(uploadId, uploadDetails, files, debug) {
   // preserve ordering of mandatory & optional keys between status changes

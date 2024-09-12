@@ -1,15 +1,20 @@
 import { Consumer } from 'sqs-consumer'
-import { config } from '~/src/config'
-import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result'
-import { handleScanResultsCallback } from '~/src/server/callback/listener/handle-scan-results-callback'
-import { handleMockVirusScanner } from '~/src/server/test-harness/mock-virus-scanner'
+
+import { config } from '~/src/config/index.js'
+import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result.js'
+import { handleScanResultsCallback } from '~/src/server/callback/listener/handle-scan-results-callback.js'
+import { handleMockVirusScanner } from '~/src/server/test-harness/mock-virus-scanner.js'
+
+/**
+ * @typedef {StopOptions} StopOptions
+ */
 
 const sqsListener = {
   plugin: {
     name: 'sqsListener',
     multiple: true,
     version: '0.1.0',
-    register: async (server, options) => {
+    register(server, options) {
       const queueUrl = options.config.queueUrl
 
       const batchMessageHandler = async function (messages) {
@@ -23,8 +28,6 @@ const sqsListener = {
 
       const listener = Consumer.create({
         queueUrl,
-        attributeNames: ['SentTimestamp'],
-        messageAttributeNames: ['All'],
         waitTimeSeconds: options.config.waitTimeSeconds,
         pollingWaitTimeMs: options.config.pollingWaitTimeMs,
         shouldDeleteMessages: false,
@@ -45,9 +48,9 @@ const sqsListener = {
         server.logger.error(`timeout error ${queueUrl} : ${error.message}`)
       })
 
-      server.events.on('closing', () => {
+      server.events.on('closing', (/** @type {StopOptions} */ options) => {
         server.logger.info(`Closing sqs listener for ${queueUrl}`)
-        listener.stop()
+        listener.stop(options)
       })
 
       listener.start()
@@ -89,3 +92,6 @@ const mockClamavListener = {
 }
 
 export { scanResultListener, scanResultCallbackListener, mockClamavListener }
+/**
+ * @import {StopOptions} from 'sqs-consumer'
+ */

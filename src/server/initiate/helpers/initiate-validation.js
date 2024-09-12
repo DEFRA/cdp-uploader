@@ -1,5 +1,6 @@
 import Joi from 'joi'
-import { config } from '~/src/config'
+
+import { config } from '~/src/config/index.js'
 
 const isProduction = config.get('isProduction')
 const bucketsAllowlist = config.get('bucketsAllowlist')
@@ -13,7 +14,7 @@ const custom = Joi.extend((joi) => {
     },
     rules: {
       cdpDomain: {
-        validate(value, helpers, args, options) {
+        validate(value, helpers) {
           const url = new URL(value)
           if (url.hostname.endsWith('cdp-int.defra.cloud')) {
             return value

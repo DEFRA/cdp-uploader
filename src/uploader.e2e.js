@@ -1,25 +1,28 @@
-import { createServer } from '~/src/server'
-import { config } from '~/src/config'
+import * as fs from 'fs'
+import { setTimeout as asyncSetTimeout } from 'node:timers/promises'
+
 import fetch from 'node-fetch'
 import FormData from 'form-data'
-import * as fs from 'fs'
 
-describe('#e2e', () => {
-  const statusMaxRetries = 60
-  const statusWaitDelayMS = 1000
+import { createServer } from '~/src/server/index.js'
+import { config } from '~/src/config/index.js'
+
+describe('#uploaderE2e', () => {
+  const oneMinute = 60 * 1000
   let server
 
   beforeAll(async () => {
-    config.set('sqsScanResultsCallbackVisibilityTimeout', 50)
     config.set('mockVirusResultDelay', 0)
 
     server = await createServer()
-    await server.initialize()
     await server.start()
   })
 
   afterAll(async () => {
-    server.stop({ timeout: 4000 })
+    server.events.emit('closing', { abort: true })
+    server.events.emit('stop')
+
+    await server.stop({ timeout: 0 })
   })
 
   test('healthcheck should return 200', async () => {
@@ -79,6 +82,7 @@ describe('#e2e', () => {
     })
 
     const status = JSON.parse(statusResult.payload)
+
     expect(status).toMatchObject({
       uploadStatus: 'ready',
       metadata: initPayload.metadata,
@@ -108,12 +112,7 @@ describe('#e2e', () => {
 
       expect(uploadResult.status).toBe(302)
 
-      const status = await waitForReady(
-        server,
-        initBody.statusUrl,
-        statusMaxRetries,
-        statusWaitDelayMS
-      )
+      const status = await waitForReady(server, initBody.statusUrl)
 
       expect(status).toMatchObject({
         uploadStatus: 'ready',
@@ -133,7 +132,7 @@ describe('#e2e', () => {
       expect(status.form.file.fileId).toEqual(expect.any(String))
       expect(status.form.file.contentLength).toBeGreaterThan(0)
     },
-    5000 + statusMaxRetries * statusWaitDelayMS
+    oneMinute
   )
 
   test(
@@ -158,12 +157,7 @@ describe('#e2e', () => {
 
       expect(uploadResult.status).toBe(302)
 
-      const status = await waitForReady(
-        server,
-        initBody.statusUrl,
-        statusMaxRetries,
-        statusWaitDelayMS
-      )
+      const status = await waitForReady(server, initBody.statusUrl)
 
       expect(status).toMatchObject({
         uploadStatus: 'ready',
@@ -184,7 +178,7 @@ describe('#e2e', () => {
       expect(status.form.file.fileId).toEqual(expect.any(String))
       expect(status.form.file.contentLength).toBeGreaterThan(0)
     },
-    5000 + statusMaxRetries * statusWaitDelayMS
+    oneMinute
   )
 
   test(
@@ -207,12 +201,7 @@ describe('#e2e', () => {
 
       expect(uploadResult.status).toBe(302)
 
-      const status = await waitForReady(
-        server,
-        initBody.statusUrl,
-        statusMaxRetries,
-        statusWaitDelayMS
-      )
+      const status = await waitForReady(server, initBody.statusUrl)
 
       expect(status).toMatchObject({
         uploadStatus: 'ready',
@@ -231,7 +220,7 @@ describe('#e2e', () => {
       expect(status.form.file.fileId).toEqual(expect.any(String))
       expect(status.form.file.contentLength).toBeGreaterThan(0)
     },
-    5000 + statusMaxRetries * statusWaitDelayMS
+    oneMinute
   )
 
   test(
@@ -256,12 +245,7 @@ describe('#e2e', () => {
 
       expect(uploadResult.status).toBe(302)
 
-      const status = await waitForReady(
-        server,
-        initBody.statusUrl,
-        statusMaxRetries,
-        statusWaitDelayMS
-      )
+      const status = await waitForReady(server, initBody.statusUrl)
 
       expect(status).toMatchObject({
         uploadStatus: 'ready',
@@ -280,7 +264,7 @@ describe('#e2e', () => {
       expect(status.form.file.fileId).toEqual(expect.any(String))
       expect(status.form.file.contentLength).toBeGreaterThan(0)
     },
-    5000 + statusMaxRetries * statusWaitDelayMS
+    oneMinute
   )
 
   test(
@@ -303,12 +287,7 @@ describe('#e2e', () => {
 
       expect(uploadResult.status).toBe(302)
 
-      const status = await waitForReady(
-        server,
-        initBody.statusUrl,
-        statusMaxRetries,
-        statusWaitDelayMS
-      )
+      const status = await waitForReady(server, initBody.statusUrl)
 
       expect(status).toMatchObject({
         uploadStatus: 'ready',
@@ -327,14 +306,15 @@ describe('#e2e', () => {
       expect(status.form.file.s3Key).toBeUndefined()
       expect(status.form.file.fileId).toEqual(expect.any(String))
     },
-    5000 + statusMaxRetries * statusWaitDelayMS
+    oneMinute
   )
 })
 
-function delay(time) {
-  return new Promise((resolve) => setTimeout(resolve, time))
-}
-
+/**
+ * @param {Server} server
+ * @param {object} params
+ * @returns {Promise<*>}
+ */
 async function initUpload(server, params = {}) {
   const initPayload = {
     redirect: 'http://localhost/redirect',
@@ -357,26 +337,35 @@ async function initUpload(server, params = {}) {
   return initBody
 }
 
-async function waitForReady(
-  server,
-  statusUrl,
-  maxRetries = 60,
-  delayMS = 1000
-) {
+/**
+ * @param {Server} server
+ * @param {string} statusUrl
+ * @returns {Promise<*>}
+ */
+async function waitForReady(server, statusUrl) {
+  const oneSecond = 1000
+  const maxRetries = 60
   let retries = 0
-  let status = null
+  let status
 
   while (retries < maxRetries) {
-    const statusResult = await server.inject({
+    const { payload } = await server.inject({
       method: 'get',
       url: statusUrl
     })
-    status = JSON.parse(statusResult.payload)
+    status = JSON.parse(payload)
+
     if (status.uploadStatus === 'ready') {
-      return status
+      break
     }
-    await delay(delayMS)
+
+    await asyncSetTimeout(oneSecond)
     retries++
   }
+
   return status
 }
+
+/**
+ * @import {Server} from '@hapi/hapi'
+ */

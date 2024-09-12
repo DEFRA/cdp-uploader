@@ -1,0 +1,5 @@
+*.config.*
+*.test.*
+*.e2e.*
+__fixtures__
+test-helpers

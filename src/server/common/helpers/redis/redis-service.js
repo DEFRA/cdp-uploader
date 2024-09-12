@@ -48,7 +48,7 @@ class RedisService {
       )
 
       await Promise.all(fileDetailsPromises).then((fileDetails) => {
-        fileDetails.filter(Boolean).map((r) => files.push(r))
+        return fileDetails.filter(Boolean).map((r) => files.push(r))
       })
     }
     return {

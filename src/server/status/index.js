@@ -1,9 +1,9 @@
-import { statusController } from '~/src/server/status/controller'
+import { statusController } from '~/src/server/status/controller.js'
 
 const status = {
   plugin: {
     name: 'status',
-    register: async (server) => {
+    register(server) {
       server.route([
         {
           method: 'GET',

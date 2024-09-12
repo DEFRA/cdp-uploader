@@ -1,12 +1,16 @@
 import { SendMessageCommand } from '@aws-sdk/client-sqs'
-import crypto from 'node:crypto'
 
 /**
- * @param sqs
- * @param queue
- * @param messageBody
- * @param messageDeduplicationId
- * @param messageAttributes
+ * @typedef {SQSClient} SQSClient
+ * @typedef {MessageAttributeValue} MessageAttributeValue
+ */
+
+/**
+ * @param {SQSClient} sqs
+ * @param {string} queue
+ * @param {object} messageBody
+ * @param {string} messageDeduplicationId
+ * @param {Record<string, MessageAttributeValue>} messageAttributes
  * @returns {Promise<*>}
  */
 async function sendSqsMessage(
@@ -28,3 +32,7 @@ async function sendSqsMessage(
 }
 
 export { sendSqsMessage }
+
+/**
+ * @import { SQSClient, MessageAttributeValue } from '@aws-sdk/client-sqs'
+ */

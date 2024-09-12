@@ -1,7 +1,4 @@
-import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file'
-import { uploadFile } from '~/src/server/upload-and-scan/helpers/upload-file'
-
-jest.mock('~/src/server/upload-and-scan/helpers/upload-file')
+import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
 
 describe('#handleFile', () => {
   const mockUploadDetails = (uploadId) => ({
@@ -38,15 +35,6 @@ describe('#handleFile', () => {
 
   test('Should provide expected filePart', async () => {
     const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
-
-    uploadFile.mockResolvedValue({
-      Bucket: 'cdp-uploader-quarantine',
-      fileTypeResult: {
-        ext: 'jpg',
-        mime: 'image/jpeg'
-      },
-      fileLength: 57573
-    })
 
     expect(
       await handleFile(

@@ -1,5 +1,5 @@
-import { sortByTimestamp } from '~/src/server/common/helpers/sort-by-timestamp'
-import { productsFixture } from '~/src/__fixtures__/products'
+import { sortByTimestamp } from '~/src/server/common/helpers/sort-by-timestamp.js'
+import { productsFixture } from '~/src/__fixtures__/products.js'
 
 describe('#sortByTimestamp', () => {
   test('Should provide "desc" sorting by default', () => {

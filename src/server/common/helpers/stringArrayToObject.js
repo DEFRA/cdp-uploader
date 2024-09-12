@@ -5,7 +5,7 @@ function stringArrayToObject(payload) {
     const parts = key.replace(/\[/g, '.').replace(/]/g, '').split('.')
     const value = parts.pop()
 
-    if (parts.length) {
+    if (parts.length && value) {
       const asObject = parts.reduce(
         (object, part) => (object[part] = object[part] || {}),
         payLoadCopy

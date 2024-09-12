@@ -1,11 +1,11 @@
 import { S3Client } from '@aws-sdk/client-s3'
-import { config } from '~/src/config'
+import { config } from '~/src/config/index.js'
 
 const s3Client = {
   plugin: {
     name: 's3Client',
     version: '0.1.0',
-    register: async (server, options) => {
+    register(server, options) {
       const s3Client = new S3Client({
         region: options.region,
         endpoint: options.endpoint,

@@ -1,21 +1,24 @@
-module.exports = {
+/**
+ * @type {Config}
+ */
+export default {
   rootDir: '.',
-  testEnvironment: 'node',
   verbose: true,
   resetModules: true,
   clearMocks: true,
-  silent: true,
+  silent: false,
   testMatch: ['**/src/**/*.test.js'],
+  globalTeardown: '<rootDir>/.jest/teardown.js',
   reporters: ['default', ['github-actions', { silent: false }], 'summary'],
-  setupFilesAfterEnv: ['<rootDir>/jest-setup.js'],
   collectCoverageFrom: ['src/**/*.js'],
   coveragePathIgnorePatterns: [
     '<rootDir>/node_modules/',
     '<rootDir>/.server',
-    '<rootDir>/.public',
     '<rootDir>/src/__fixtures__',
-    '<rootDir>/test-helpers',
-    '<rootDir>/mock-api'
+    '<rootDir>/src/server/common/test-helpers'
   ],
   coverageDirectory: '<rootDir>/coverage'
 }
+/**
+ * @import { Config } from 'jest'
+ */

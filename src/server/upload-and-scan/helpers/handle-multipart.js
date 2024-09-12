@@ -1,4 +1,4 @@
-import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file'
+import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
 
 function isFile(formPart) {
   return formPart instanceof Object

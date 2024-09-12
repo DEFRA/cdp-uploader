@@ -1,4 +1,4 @@
-import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject'
+import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject.js'
 
 describe('#stringArrayToObject', () => {
   const mockPayload = {
