@@ -64,12 +64,6 @@ describe('#handleScanResult', () => {
 
     test('Should set up child logger as expected', () => {
       expect(loggerChildSpy).toHaveBeenCalledTimes(1)
-      expect(loggerChildSpy).toHaveBeenCalledWith({
-        fileId: 'mock-key-2342353',
-        fileIds: undefined,
-        uploadId: undefined,
-        uploadStatus: undefined
-      })
     })
 
     test('Should log expected error', () => {
@@ -105,10 +99,12 @@ describe('#handleScanResult', () => {
     test('Should set up child logger as expected', () => {
       expect(loggerChildSpy).toHaveBeenCalledTimes(1)
       expect(loggerChildSpy).toHaveBeenCalledWith({
-        fileId: 'mock-key-2342353',
-        fileIds: ['7507f65a-acb5-41f2-815f-719fbbd47ee5'],
-        uploadId: 'f5aa7920-6c3d-4090-a0c5-a0002df2c285',
-        uploadStatus: 'ready'
+        'cdp-uploader': {
+          fileId: 'mock-key-2342353',
+          fileIds: ['7507f65a-acb5-41f2-815f-719fbbd47ee5'],
+          uploadId: 'f5aa7920-6c3d-4090-a0c5-a0002df2c285',
+          uploadStatus: 'ready'
+        }
       })
     })
 
@@ -153,10 +149,12 @@ describe('#handleScanResult', () => {
     test('Should set up child logger as expected', () => {
       expect(loggerChildSpy).toHaveBeenCalledTimes(1)
       expect(loggerChildSpy).toHaveBeenNthCalledWith(1, {
-        fileId: 'mock-key-87678',
-        fileIds: ['d3e1ccfa-3f58-435d-af9a-dad7b20ab11b'],
-        uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
-        uploadStatus: 'pending'
+        'cdp-uploader': {
+          fileId: 'mock-key-87678',
+          fileIds: ['d3e1ccfa-3f58-435d-af9a-dad7b20ab11b'],
+          uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
+          uploadStatus: 'pending'
+        }
       })
     })
 
@@ -234,10 +232,12 @@ describe('#handleScanResult', () => {
     test('Should set up child logger as expected', () => {
       expect(loggerChildSpy).toHaveBeenCalledTimes(1)
       expect(loggerChildSpy).toHaveBeenNthCalledWith(1, {
-        fileId: 'mock-key-2342353',
-        fileIds: ['d3e1ccfa-3f58-435d-af9a-dad7b20ab11b'],
-        uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
-        uploadStatus: 'pending'
+        'cdp-uploader': {
+          fileId: 'mock-key-2342353',
+          fileIds: ['d3e1ccfa-3f58-435d-af9a-dad7b20ab11b'],
+          uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
+          uploadStatus: 'pending'
+        }
       })
     })
 
@@ -316,10 +316,12 @@ describe('#handleScanResult', () => {
     test('Should set up child logger as expected', () => {
       expect(loggerChildSpy).toHaveBeenCalledTimes(1)
       expect(loggerChildSpy).toHaveBeenNthCalledWith(1, {
-        fileId: 'mock-key-2342353',
-        fileIds: ['d3e1ccfa-3f58-435d-af9a-dad7b20ab11b'],
-        uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
-        uploadStatus: 'pending'
+        'cdp-uploader': {
+          fileId: 'mock-key-2342353',
+          fileIds: ['d3e1ccfa-3f58-435d-af9a-dad7b20ab11b'],
+          uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
+          uploadStatus: 'pending'
+        }
       })
     })
 

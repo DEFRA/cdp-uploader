@@ -8,18 +8,22 @@ function createLogger() {
 
 function createUploadLogger(logger, uploadDetails) {
   return logger.child({
-    uploadId: uploadDetails?.uploadId,
-    uploadStatus: uploadDetails?.uploadStatus,
-    fileIds: uploadDetails?.fileIds
+    'cdp-uploader': {
+      uploadId: uploadDetails?.uploadId,
+      uploadStatus: uploadDetails?.uploadStatus,
+      fileIds: uploadDetails?.fileIds
+    }
   })
 }
 
 function createFileLogger(logger, uploadDetails, fileId) {
   return logger.child({
-    uploadId: uploadDetails?.uploadId,
-    uploadStatus: uploadDetails?.uploadStatus,
-    fileIds: uploadDetails?.fileIds,
-    fileId
+    'cdp-uploader': {
+      uploadId: uploadDetails?.uploadId,
+      uploadStatus: uploadDetails?.uploadStatus,
+      fileIds: uploadDetails?.fileIds,
+      fileId
+    }
   })
 }
 
