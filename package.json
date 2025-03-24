@@ -5,7 +5,7 @@
   "main": ".server/index.js",
   "type": "module",
   "engines": {
-    "node": ">=20.11.1"
+    "node": ">=22.13.1"
   },
   "scripts": {
     "build": "run-s build:frontend build:server",
