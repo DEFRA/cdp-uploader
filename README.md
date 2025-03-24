@@ -21,6 +21,8 @@ Core delivery platform Node.js Frontend Template.
     * [Error Handling](#error-handling)
   * [Callback](#callback)
     * [Intended use](#intended-use)
+* [S3](#s3)
+  * [Object metadata on S3 Objects](#object-metadata-on-s3-objects)
 * [Configuration](#configuration)
   * [App config](#app-config)
   * [Secrets](#secrets)
@@ -95,13 +97,13 @@ Example `/initiate` request:
 }
 ```
 
-#### HTTP Headers:
+### HTTP Headers:
 
 | Header name | Description                                       | Required |
 |-------------|---------------------------------------------------|----------|
 | User-Agent  | Identifier of the service that calls cdp-uploader | TBD      |
 
-#### Body parameters:
+### Body parameters:
 
 | Parameter name | Description                                                           | Required |
 |----------------|-----------------------------------------------------------------------|----------|
@@ -118,7 +120,7 @@ Example `/initiate` request:
 > to destination bucket under the path uploadId/fileId which will be prefixed with the bucket path if it has been
 > provided.
 
-#### Example response
+### Example response
 
 ```json
 {
@@ -136,7 +138,7 @@ Example `/initiate` request:
 
 ## POST /upload-and-scan/{uploadId}
 
-#### Path Parameters
+### Path Parameters
 
 | Parameter Name | Description                                                              |
 |----------------|--------------------------------------------------------------------------|
@@ -159,7 +161,7 @@ Example `/upload-and-scan/${uploadId}` request:
 </form>
 ```
 
-#### Response
+### Response
 
 Once the upload has been successful, the user will be redirected to the `redirect` url provided in the initiate request.
 
@@ -169,13 +171,13 @@ The status API provides information about uploaded files, virus scan status and 
 The API is intended to be polled by the frontend services, it is not public and cannot be called direct from the
 browser.
 
-#### Path Parameters
+### Path Parameters
 
 | Parameter Name | Description                                                              |
 |----------------|--------------------------------------------------------------------------|
 | uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
 
-#### Query Parameters
+### Query Parameters
 
 | Parameter Name | Description                                                                     |
 |----------------|---------------------------------------------------------------------------------|
@@ -184,7 +186,7 @@ browser.
 > [!NOTE]
 > Debug should not be used in production
 
-#### Response Payload with Debug
+### Response Payload with Debug
 
 ```json
 {
@@ -220,7 +222,7 @@ browser.
 }
 ```
 
-#### Response Payload without Debug
+### Response Payload without Debug
 
 ```json
 {
@@ -255,7 +257,7 @@ browser.
 | numberOfRejectedFiles | Total number of files that have been rejected by the uploader                                                                                                |
 | debug.request         | When set to true, the initiate request payload received by cdp-uploader                                                                                      |
 
-#### File field in form
+### File field in form
 
 | Parameter Name      | Description                                                                                                                        |
 |---------------------|------------------------------------------------------------------------------------------------------------------------------------|
@@ -271,7 +273,7 @@ browser.
 | hasError            | `true/false` Only set to true if the file has been rejected or could not be delivered. Reason is supplied in `errorMessage` field. |
 | errorMessage        | Reason why file was rejected. Error message is based on GDS design guidelines and can be show directly to the end-user.            |
 
-#### Error Handling
+### Error Handling
 
 A file can be rejected by uploader for a number of reasons. When this happens no file will be delivered to the
 destination S3 bucket.
@@ -302,7 +304,7 @@ If a callback url has been provided in the initiate request, we will POST a call
 complete and files have been moved to your services bucket. The payload is exactly the same as the response from
 the [Status](#get-statusuploadid) endpoint (without debug enabled).
 
-#### Intended use
+### Intended use
 
 Frontend services will poll the /status endpoint after a user has uploaded a file.
 
@@ -313,30 +315,45 @@ they can be accessed.
 Frontend services are expected to validate the content of the payload and present any errors back to the user.
 Any files uploaded by a user will never be sent directly to the frontend service.
 
+# S3
+
+## Object metadata on S3 Objects
+The objects placed in your buckets contain the following metadata fields and will be returned by AWS as response headers
+
+| Parameter Name             | Description                                                                                                                                      |
+|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| Content-Type               | AWS system defined metadata of what AWS deem the content type to be.                                                                             |
+| x-amz-meta-contenttype     | What cdp-uploader deemed the content-type to be from inspecting the file.                                                                        |
+| x-amz-meta-encodedfilename | Name of uploaded file when it contained non ascii characters. This is RFC-2047 encoded. Optional.                                                |
+| x-amz-meta-filename        | Name of uploaded file when it does not contain non ascii characters. x-amz-meta-encodedfilename will be returned instead when it does. Optional. |
+| x-amz-meta-fileid          | uuid of the file.                                                                                                                                |
+| x-amz-meta-uploadid        | Unique id for that upload. UploadId is provided via the `/initiate` call.                                                                        |
+
+
 # Configuration
 
 Runtime environment variables required or optional.
 
 Add these where relevant to:
 
-### App config
+## App config
 
 For configurations that are not sensitive and per staging and prod environments.
 https://github.com/DEFRA/cdp-app-config
 
-### Secrets
+## Secrets
 
 For sensitive config for staging and prod environments
 this can be self-serviced in your portal service page's **secrets** tab.
 
 https://portal.cdp-int.defra.cloud/services/YOURSERVICE/secrets
 
-### Docker compose
+## Docker compose
 
 For local docker compose setups add these to your setup,
 e.g. modify locally your `compose/aws.env` or similar.
 
-### Local dev env var
+## Local dev env var
 
 Set as environment variables locally.
 E.g. as `export` commands if using **bash**, or `.envrc` if using [**direnv**](https://direnv.net/)
@@ -353,12 +370,12 @@ For more details and other service configuration look in `src/config/index.js`
 
 # Local development
 
-### Developing services that use the CDP-Uploader
+## Developing services that use the CDP-Uploader
 
 If your service is going to use the CDP-Uploader to receive files you may want to start by running the uploader locally.
 The easiest way to do this is using `docker compose`.
 
-#### Docker Compose
+### Docker Compose
 
 The CDP-Uploader project provide as base [compose.yml](compose.yml) file to get you started.
 
@@ -401,7 +418,7 @@ If everything has worked as expected the CDP-Uploader will be available on `loca
 
 Any other supporting services can be added to the compose file as required.
 
-#### Relative vs Absolute URLs
+### Relative vs Absolute URLs
 
 In a real environment relative urls work fine since all the services are behind the same host, however locally they're
 going to be running on different ports so relative redirect URLs won't work!
@@ -409,14 +426,14 @@ going to be running on different ports so relative redirect URLs won't work!
 When run in `development` mode the cdp-uploader will convert relative redirect urls into absolute urls using the '
 referer' header. This should make uploader behave more or less the same locally as it would in a real environment.
 
-#### Test Harness (mock scanning)
+### Test Harness (mock scanning)
 
 When running locally the CDP-Uploader will be running with its mock virus scanner enabled.
 
 This _does not_ actually virus scan files, rather it simulates a response based on filename. If you submit a file with
 the word `virus` in the name it will be flagged as infected.
 
-#### EICAR files and local development
+### EICAR files and local development
 
 The test harness does not support [EICAR](https://www.eicar.org/download-anti-malware-testfile/) virus test files yet,
 so if you are submitting one and getting a `CLEAN` response back from the uploader's test harness, this is expected. In

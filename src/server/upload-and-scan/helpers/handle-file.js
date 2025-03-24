@@ -10,6 +10,7 @@ import FileType from 'file-type'
 import crypto from 'node:crypto'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
 import mime from 'mime-types'
+import rfc2047 from 'rfc2047'
 
 const quarantineBucket = config.get('quarantineBucket')
 const uploaderMaxSize = config.get('maxFileSize')
@@ -20,6 +21,7 @@ async function handleFile(uploadId, uploadDetails, file, request) {
 
   try {
     const filename = file?.filename
+    const encodedFilename = rfc2047.encode(filename)
     const contentType = file?.headers?.['content-type']
     const fileKey = `${uploadId}/${fileId}`
 
@@ -50,7 +52,7 @@ async function handleFile(uploadId, uploadDetails, file, request) {
         uploadId,
         fileId,
         ...(contentType && { contentType }),
-        ...(filename && { filename })
+        ...(encodedFilename && { encodedFilename })
       }
 
       // TODO: check result of upload and redirect on error
