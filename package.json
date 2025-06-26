@@ -26,7 +26,7 @@
     "lint:types": "tsc --build tsconfig.json",
     "postversion": "git add package.json package-lock.json && git commit -m $npm_package_version",
     "test": "TZ=UTC jest --coverage --verbose",
-    "test:e2e": "TZ=UTC jest --verbose --testMatch \"**/src/**/uploader.e2e.js\"",
+    "test:e2e": "AWS_REGION=eu-west-2 AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test TZ=UTC jest --ci --testMatch '**/src/**/uploader.e2e.js'",
     "test:watch": "jest --runTestsByPath ./test",
     "server:watch": "nodemon --exec tsx --enable-source-maps ./src",
     "server:debug": "nodemon --exec tsx --enable-source-maps --inspect=9239 ./src",
@@ -41,7 +41,7 @@
     "@aws-sdk/client-sqs": "3.556.0",
     "@aws-sdk/credential-providers": "3.556.0",
     "@aws-sdk/lib-storage": "3.556.0",
-    "@babel/runtime": "7.24.7",
+    "@babel/runtime": "8.0.0-alpha.17",
     "@elastic/ecs-pino-format": "1.5.0",
     "@hapi/boom": "10.0.1",
     "@hapi/hapi": "21.3.10",
@@ -71,7 +71,7 @@
     "qs": "6.12.1",
     "rfc2047": "4.0.1",
     "sqs-consumer": "9.1.0",
-    "undici": "6.19.2",
+    "undici": "7.5.0",
     "uuid": "9.0.1"
   },
   "devDependencies": {
