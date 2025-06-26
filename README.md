@@ -480,6 +480,10 @@ npm test
 To run end-to-end tests, you will need to have a few docker compose services running locally:
 
 ```bash
+export AWS_REGION=eu-west-2
+export AWS_ACCESS_KEY_ID=test
+export AWS_SECRET_ACCESS_KEY=test
+
 docker compose pull
 docker compose up -d localstack redis
 npm run test:e2e
@@ -530,6 +534,7 @@ end
 [localstack]
 aws_access_key_id = test
 aws_secret_access_key = test
+region=eu-west-2
 ```
 
 ## LocalStack

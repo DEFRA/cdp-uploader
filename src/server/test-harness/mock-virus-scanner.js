@@ -16,7 +16,7 @@ async function handleMockVirusScanner(message, queue, server) {
         if (key) {
           const virusRx = new RegExp(config.get('mockVirusRegex'))
           const metadata = await getObjectMetadata(server, key)
-          if (virusRx.test(metadata?.filename)) {
+          if (virusRx.test(metadata?.encodedfilename)) {
             server.logger.info(
               `mocking INFECTED scan response for uploader ${key}`
             )

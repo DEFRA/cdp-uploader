@@ -25,3 +25,9 @@ jobs:
       - run: npm run format:check
       - run: npm run lint
       - run: npm test
+
+#      - name: Run E2E tests
+#        run: |
+#          docker compose up -d localstack redis --wait-timeout 300 -d --quiet-pull
+#          npm run test:e2e
+
