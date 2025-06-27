@@ -26,12 +26,12 @@ services:
       LOCALSTACK_HOST: 127.0.0.1
     volumes:
       - '${TMPDIR:-/tmp}/localstack:/var/lib/localstack'
-      - ./compose/start-localstack.sh:/etc/localstack/init/ready.d/start-localstack.sh
+      - './compose:/etc/localstack/init/ready.d'
     healthcheck:
-      test: ['CMD', 'curl', 'localhost:4566']
-      interval: 5s
+      test: ["CMD", "stat", "/tmp/READY"]
+      interval: 3s
       start_period: 5s
-      retries: 3
+      retries: 20
     networks:
       - cdpuploader
 
