@@ -26,8 +26,15 @@ jobs:
       - run: npm run lint
       - run: npm test
 
-#      - name: Run E2E tests
-#        run: |
-#          docker compose up -d localstack redis --wait-timeout 300 -d --quiet-pull
-#          npm run test:e2e
+      - name: Start LocalStack
+        run: |
+          docker compose up -d localstack redis --wait-timeout 300 --quiet-pull
+          echo "⏳ Waiting for LocalStack to become ready..."
+          timeout 30 bash -c 'until curl -s http://localhost:4566/_localstack/health | grep "\"s3\": \"running\""; do sleep 1; done'
+
+      - name: Manually run init script as fallback
+        run: docker exec cdp-uploader-localstack-1 bash /etc/localstack/init/ready.d/01-start-localstack.sh
+
+      - name: Run E2E tests
+        run: npm run test:e2e
 

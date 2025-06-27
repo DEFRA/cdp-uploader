@@ -97,8 +97,8 @@ describe('#uploaderE2e', () => {
 
       // upload a file
       const formData = new FormData()
-      formData.append('foo', 'bar')
-      formData.append('id', '1234')
+      formData.append('foo', 'bar-clean')
+      formData.append('id', '1234-clean')
       formData.append(
         'file',
         fs.createReadStream('./src/__fixtures__/files/test.jpg')
@@ -117,8 +117,8 @@ describe('#uploaderE2e', () => {
       expect(status).toMatchObject({
         uploadStatus: 'ready',
         form: {
-          foo: 'bar',
-          id: '1234',
+          foo: 'bar-clean',
+          id: '1234-clean',
           file: {
             filename: 'test.jpg',
             contentType: 'image/jpeg',
