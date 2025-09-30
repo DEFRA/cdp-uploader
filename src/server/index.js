@@ -16,10 +16,13 @@ import { redis } from '~/src/server/common/helpers/redis/redis.js'
 import { s3Client } from '~/src/server/common/helpers/s3/s3-client.js'
 import { sqsClient } from '~/src/server/common/helpers/sqs/sqs-client.js'
 import { pulse } from '~/src/server/common/helpers/pulse.js'
+import { setupProxy } from '~/src/server/common/helpers/proxy.js'
 
 const isProduction = config.get('isProduction')
 
 export async function createServer() {
+  setupProxy()
+
   const server = hapi.server({
     port: config.get('port'),
     routes: {
