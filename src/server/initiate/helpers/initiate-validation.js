@@ -26,28 +26,38 @@ const custom = Joi.extend((joi) => {
   }
 })
 
-const redirectValidation = Joi.string()
-  .uri({ allowRelative: true, ...(isProduction && { relativeOnly: true }) })
-  .required()
+const redirectValidation = Joi.string().uri({
+  allowRelative: true,
+  ...(isProduction && { relativeOnly: true })
+})
 
 const callbackValidation = isProduction
   ? custom.url().cdpDomain()
   : Joi.string().uri().optional()
 
-const initiateValidation = custom.object({
-  redirect: redirectValidation,
-  s3Bucket: Joi.string()
-    .required()
-    .valid(...bucketsAllowlist)
-    .messages({
-      'any.only':
-        'No permission to write to bucket - Please contact CDP Portal Team'
-    }),
-  s3Path: Joi.string().optional(),
-  callback: callbackValidation,
-  metadata: Joi.object().unknown(true).default({}),
-  mimeTypes: Joi.array().items(Joi.string()).optional(),
-  maxFileSize: Joi.number().integer().positive().optional()
-})
+const schemes = isProduction ? ['https'] : ['http', 'https']
+
+const downloadUrlValidation = Joi.array()
+  .items(Joi.string().uri({ scheme: schemes }))
+  .optional()
+
+const initiateValidation = custom
+  .object({
+    redirect: redirectValidation,
+    downloadUrls: downloadUrlValidation,
+    s3Bucket: Joi.string()
+      .required()
+      .valid(...bucketsAllowlist)
+      .messages({
+        'any.only':
+          'No permission to write to bucket - Please contact CDP Portal Team'
+      }),
+    s3Path: Joi.string().optional(),
+    callback: callbackValidation,
+    metadata: Joi.object().unknown(true).default({}),
+    mimeTypes: Joi.array().items(Joi.string()).optional(),
+    maxFileSize: Joi.number().integer().positive().optional()
+  })
+  .xor('redirect', 'downloadUrls')
 
 export { initiateValidation }

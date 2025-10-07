@@ -110,7 +110,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     }
   }
 
-  await processScanComplete(server, uploadId, fileId)
+  await processScanComplete(uploadId, fileId, server)
 }
 
 function findUploadId(key) {

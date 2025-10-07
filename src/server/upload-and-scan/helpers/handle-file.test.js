@@ -1,4 +1,5 @@
 import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
+import { jest } from '@jest/globals'
 
 describe('#handleFile', () => {
   const mockUploadDetails = (uploadId) => ({
@@ -28,9 +29,12 @@ describe('#handleFile', () => {
   }
   const mockRequest = {
     redis: {
-      storeFileDetails: jest.fn().mockResolvedValue({})
+      storeFileDetails: jest.fn()
     },
-    logger: mockLogger
+    logger: mockLogger,
+    s3: {
+      send: jest.fn()
+    }
   }
 
   test('Should provide expected filePart', async () => {
@@ -55,7 +59,7 @@ describe('#handleFile', () => {
       await handleFile(
         uploadId,
         mockUploadDetails(uploadId),
-        { bytes: 0 },
+        { contentLength: 0 },
         mockRequest
       )
     ).toMatchObject({
@@ -74,7 +78,7 @@ describe('#handleFile', () => {
         ...mockUploadDetails(uploadId),
         request: { maxFileSize: 1000 * 1000 }
       },
-      { bytes: 1000 * 1000 + 1 },
+      { contentLength: 1000 * 1000 + 1 },
       mockRequest
     )
 
@@ -97,7 +101,7 @@ describe('#handleFile', () => {
         ...mockUploadDetails(uploadId),
         request: { maxFileSize: 256 * 1000 }
       },
-      { bytes: 2 * 1000 * 1000 },
+      { contentLength: 2 * 1000 * 1000 },
       mockRequest
     )
 

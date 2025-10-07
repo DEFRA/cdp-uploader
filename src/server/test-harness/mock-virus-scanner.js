@@ -6,7 +6,7 @@ import { config } from '~/src/config/index.js'
 
 async function handleMockVirusScanner(message, queue, server) {
   try {
-    server.logger.info('mocking response to', message)
+    server.logger.info(`mocking response to ${message.Body}`)
     const msg = JSON.parse(message.Body)
 
     if (msg.Records?.length) {

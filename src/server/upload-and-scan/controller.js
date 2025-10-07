@@ -50,9 +50,18 @@ const uploadController = {
       uploadLogger.info(`uploadId ${uploadId} does not exist - upload failed`)
       return h
         .response({
-          message: 'Failed to upload. UploadId does not exist'
+          message: 'Failed to upload - uploadId does not exist'
         })
         .code(404)
+    }
+
+    if (uploadDetails.isDownloadRequest) {
+      uploadLogger.info(`Attempted an multipart upload for a download request`)
+      return h
+        .response({
+          message: 'Failed to upload'
+        })
+        .code(403)
     }
 
     uploadLogger.debug({ uploadDetails }, `Upload request received`)
@@ -113,7 +122,7 @@ const uploadController = {
       // This will ensure the overall status gets updated.
       for (const s of fileStatuses) {
         if (s.status === fileStatus.rejected) {
-          await processScanComplete(request.server, uploadId, s.fileId)
+          await processScanComplete(uploadId, s.fileId, request.server)
         }
       }
 
@@ -129,7 +138,8 @@ const uploadController = {
         return h.redirect(
           relativeToAbsolute(
             request.headers.referer,
-            uploadDetails.request.redirect
+            uploadDetails.request.redirect,
+            uploadLogger
           )
         )
       }

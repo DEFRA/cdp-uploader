@@ -195,9 +195,9 @@ describe('#handleScanResult', () => {
     test('Should call process scan complete with expected values', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
-        mockServer,
         'mock-id-34543',
-        'mock-key-87678'
+        'mock-key-87678',
+        mockServer
       )
     })
 
@@ -279,9 +279,9 @@ describe('#handleScanResult', () => {
     test('Should call process scan complete with expected values', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
-        mockServer,
         'mock-id-895745',
-        'mock-key-2342353'
+        'mock-key-2342353',
+        mockServer
       )
     })
 
@@ -343,9 +343,9 @@ describe('#handleScanResult', () => {
     test('Should call process scan complete with expected values', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
-        mockServer,
         'mock-id-895745',
-        'mock-key-2342353'
+        'mock-key-2342353',
+        mockServer
       )
     })
 

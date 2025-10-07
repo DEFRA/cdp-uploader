@@ -1,25 +1,31 @@
-import { ChecksumAlgorithm, PutObjectCommand } from '@aws-sdk/client-s3'
+import { ChecksumAlgorithm } from '@aws-sdk/client-s3'
 import { findS3ContentLength } from '~/src/server/common/helpers/s3/find-s3-content-length.js'
-import { readFile } from 'node:fs/promises'
+import { Upload } from '@aws-sdk/lib-storage'
 
 async function uploadFile(
   s3Client,
   bucket,
   key,
-  filePath,
+  fileStream,
   metadata,
   fileLogger
 ) {
-  const command = new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    Metadata: { ...metadata },
-    Body: await readFile(filePath),
-    ContentType: metadata.contentType,
-    ChecksumAlgorithm: ChecksumAlgorithm.SHA256
+  const upload = new Upload({
+    client: s3Client,
+    params: {
+      Bucket: bucket,
+      Key: key,
+      Body: fileStream,
+      ContentType: metadata.contentType,
+      Metadata: metadata,
+      ChecksumAlgorithm: ChecksumAlgorithm.SHA256
+    },
+    queueSize: 2,
+    partSize: 10 * 1024 * 1024
   })
 
-  const uploadResult = await s3Client.send(command)
+  const uploadResult = await upload.done()
+
   const fileLength = await findS3ContentLength(
     s3Client,
     bucket,

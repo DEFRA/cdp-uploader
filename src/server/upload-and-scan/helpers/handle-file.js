@@ -5,95 +5,95 @@ import { counter } from '~/src/server/common/helpers/metrics/index.js'
 import { fileSize } from '~/src/server/common/helpers/metrics/counter.js'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
 import { filesize } from 'filesize'
-import { unlink } from 'node:fs/promises'
 import FileType from 'file-type'
 import crypto from 'node:crypto'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
 import mime from 'mime-types'
 import rfc2047 from 'rfc2047'
 
+import { PassThrough } from 'stream'
+
 const quarantineBucket = config.get('quarantineBucket')
 const uploaderMaxSize = config.get('maxFileSize')
 
-async function handleFile(uploadId, uploadDetails, file, request) {
+async function handleFile(
+  uploadId,
+  uploadDetails,
+  file,
+  { logger, s3, redis },
+  customRejection = {}
+) {
   const fileId = crypto.randomUUID()
-  const fileLogger = createFileLogger(request.logger, uploadDetails, fileId)
+  const fileLogger = createFileLogger(logger, uploadDetails, fileId)
+  const { filename, contentType, contentLength, fileStream } = file
+  const fileKey = `${uploadId}/${fileId}`
+  const mimeTypes = uploadDetails.request?.mimeTypes
+  const maxFileSize = uploadDetails.request?.maxFileSize || uploaderMaxSize
 
-  try {
-    const filename = file?.filename
-    const encodedFilename = rfc2047.encode(filename)
-    const contentType = file?.headers?.['content-type']
-    const fileKey = `${uploadId}/${fileId}`
+  const encodedFilename = rfc2047.encode(filename)
+  await counter('file-received')
 
-    await counter('file-received')
-    const maxFileSize = uploadDetails.request.maxFileSize || uploaderMaxSize
-    const mimeTypes = uploadDetails.request?.mimeTypes
+  const response = {
+    uploadId,
+    fileId,
+    fileStatus: fileStatus.pending,
+    pending: new Date().toISOString(),
+    contentLength,
+    ...(contentType && { contentType }),
+    ...(filename && { filename }),
+    ...rejectMissingFile(file),
+    ...rejectZeroLengthFile(file),
+    ...rejectTooBigFile(file, maxFileSize),
+    ...rejectWrongMimeType(contentType, mimeTypes),
+    ...(customRejection && { ...customRejection })
+  }
 
-    const response = {
+  const shouldUploadFile = !response.missing && !response.hasError && fileStream
+
+  if (shouldUploadFile) {
+    fileLogger.info({ uploadDetails }, `Uploading fileId ${fileId}`)
+    const metadata = {
       uploadId,
       fileId,
-      fileStatus: fileStatus.pending,
-      pending: new Date().toISOString(),
-      contentLength: file.bytes,
       ...(contentType && { contentType }),
-      ...(filename && { filename }),
-      ...rejectMissingFile(file),
-      ...rejectZeroLengthFile(file),
-      ...rejectTooBigFile(file, maxFileSize),
-      ...rejectWrongMimeType(file, contentType, mimeTypes)
+      ...(encodedFilename && { encodedFilename })
     }
 
-    const shouldUploadFile =
-      !response.missing && !response.hasError && file?.path
+    const { stream1, stream2 } = splitStream(fileStream)
+    const type = await FileType.fromStream(stream1)
 
-    if (shouldUploadFile) {
-      fileLogger.info({ uploadDetails }, `Uploading fileId ${fileId}`)
-      const metadata = {
-        uploadId,
-        fileId,
-        ...(contentType && { contentType }),
-        ...(encodedFilename && { encodedFilename })
-      }
+    // TODO: check result of upload and redirect on error
+    const uploadResult = await uploadFile(
+      s3,
+      quarantineBucket,
+      fileKey,
+      stream2,
+      metadata,
+      fileLogger
+    )
 
-      // TODO: check result of upload and redirect on error
-      const uploadResult = await uploadFile(
-        request.s3,
-        quarantineBucket,
-        fileKey,
-        file.path,
-        metadata,
-        fileLogger
-      )
-      const fileTypeResult = await FileType.fromFile(file.path)
-      fileLogger.debug({ uploadResult }, `Upload complete for fileId ${fileId}`)
+    fileLogger.debug({ uploadResult }, `Upload complete for fileId ${fileId}`)
 
-      response.detectedContentType = fileTypeResult?.mime
-      response.contentLength = uploadResult.fileLength
-      response.checksumSha256 = uploadResult.checksumSha256
-      await fileSize('file-size', uploadResult.fileLength)
-    }
-
-    if (!response.missing) {
-      await request.redis.storeFileDetails(fileId, response)
-    }
-    return response
-  } finally {
-    try {
-      await unlink(file.path)
-    } catch (error) {
-      fileLogger.error({ uploadDetails, error }, 'Error deleting file')
-    }
+    response.detectedContentType = type?.mime
+    response.contentLength = uploadResult.fileLength
+    response.checksumSha256 = uploadResult.checksumSha256
+    await fileSize('file-size', uploadResult.fileLength)
   }
+
+  if (!response.missing) {
+    await redis.storeFileDetails(fileId, response)
+  }
+  return response
 }
 
 function rejectMissingFile(file) {
   const missingFile =
-    file.bytes === 0 && (!file.filename || file.filename === '')
+    file.contentLength === 0 && (!file.filename || file.filename === '')
   return missingFile ? { missing: true } : {}
 }
 
 function rejectZeroLengthFile(file) {
-  const zeroLengthFile = file.bytes === 0 && file?.filename !== ''
+  const zeroLengthFile = file.contentLength === 0 && file.filename !== ''
   // Reject zero length response
   return zeroLengthFile
     ? {
@@ -106,7 +106,7 @@ function rejectZeroLengthFile(file) {
 
 function rejectTooBigFile(file, maxFileSize) {
   // Reject file if it's too big
-  return file.bytes > maxFileSize
+  return file.contentLength > maxFileSize
     ? {
         fileStatus: fileStatus.rejected,
         hasError: true,
@@ -118,7 +118,7 @@ function rejectTooBigFile(file, maxFileSize) {
     : {}
 }
 
-function rejectWrongMimeType(file, contentType, mimeTypes) {
+function rejectWrongMimeType(contentType, mimeTypes) {
   // Reject file if the mime types dont match
   // TODO: what do we do with the detected mime type
   const mimeTypeMismatch =
@@ -147,6 +147,16 @@ function rejectWrongMimeType(file, contentType, mimeTypes) {
         )
       }
     : {}
+}
+
+function splitStream(original) {
+  const stream1 = new PassThrough()
+  const stream2 = new PassThrough()
+
+  original.pipe(stream1)
+  original.pipe(stream2)
+
+  return { stream1, stream2 }
 }
 
 export { handleFile }
