@@ -5,13 +5,10 @@ import { counter } from '~/src/server/common/helpers/metrics/index.js'
 import { fileSize } from '~/src/server/common/helpers/metrics/counter.js'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
 import { filesize } from 'filesize'
-import FileType from 'file-type'
 import crypto from 'node:crypto'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
 import mime from 'mime-types'
 import rfc2047 from 'rfc2047'
-
-import { PassThrough } from 'stream'
 
 const quarantineBucket = config.get('quarantineBucket')
 const uploaderMaxSize = config.get('maxFileSize')
@@ -59,22 +56,19 @@ async function handleFile(
       ...(encodedFilename && { encodedFilename })
     }
 
-    const { stream1, stream2 } = splitStream(fileStream)
-    const type = await FileType.fromStream(stream1)
-
     // TODO: check result of upload and redirect on error
     const uploadResult = await uploadFile(
       s3,
       quarantineBucket,
       fileKey,
-      stream2,
+      fileStream,
       metadata,
       fileLogger
     )
 
     fileLogger.debug({ uploadResult }, `Upload complete for fileId ${fileId}`)
 
-    response.detectedContentType = type?.mime
+    response.detectedContentType = uploadResult.detectedType
     response.contentLength = uploadResult.fileLength
     response.checksumSha256 = uploadResult.checksumSha256
     await fileSize('file-size', uploadResult.fileLength)
@@ -147,16 +141,6 @@ function rejectWrongMimeType(contentType, mimeTypes) {
         )
       }
     : {}
-}
-
-function splitStream(original) {
-  const stream1 = new PassThrough()
-  const stream2 = new PassThrough()
-
-  original.pipe(stream1)
-  original.pipe(stream2)
-
-  return { stream1, stream2 }
 }
 
 export { handleFile }
