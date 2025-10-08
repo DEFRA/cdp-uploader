@@ -1,5 +1,5 @@
 import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
-import { createReadStream } from 'fs'
+import { createReadStream, promises as fsPromises } from 'fs'
 import { unlink } from 'node:fs/promises'
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
 
@@ -20,11 +20,15 @@ async function handleMultipart(
       ? createReadStream(multipartValue.path)
       : undefined
 
+    const stats = multipartValue.path
+      ? await fsPromises.stat(multipartValue.path)
+      : undefined
+
     try {
       const file = {
         filename: multipartValue.filename,
         contentType: multipartValue.headers?.['content-type'],
-        contentLength: multipartValue.bytes,
+        contentLength: stats?.size ?? multipartValue.bytes,
         fileStream
       }
       const { fileId, filename, contentType, fileStatus, missing } =

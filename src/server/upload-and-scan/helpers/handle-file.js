@@ -62,6 +62,7 @@ async function handleFile(
       quarantineBucket,
       fileKey,
       fileStream,
+      contentLength,
       metadata,
       fileLogger
     )

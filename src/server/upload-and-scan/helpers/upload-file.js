@@ -9,6 +9,7 @@ async function uploadFile(
   bucket,
   key,
   fileStream,
+  contentLength,
   metadata,
   fileLogger
 ) {
@@ -35,7 +36,8 @@ async function uploadFile(
       Body: pass,
       ContentType: metadata.contentType,
       Metadata: metadata,
-      ChecksumAlgorithm: ChecksumAlgorithm.SHA256
+      ChecksumAlgorithm: ChecksumAlgorithm.SHA256,
+      ContentLength: contentLength.toString()
     },
     queueSize: 2,
     partSize: 10 * 1024 * 1024
