@@ -97,6 +97,21 @@ Example `/initiate` request:
 }
 ```
 
+Example `/initiate` download request:
+
+```json
+{
+  "downloadUrls": ["https://myservice.com/file"],
+  "callback": "https://myservice.com/callback",
+  "s3Bucket": "myservice",
+  "s3Path": "scanned",
+  "metadata": {
+    "customerId": "1234",
+    "accountId": "1234"
+  }
+}
+```
+
 ### HTTP Headers:
 
 | Header name | Description                                       | Required |
@@ -106,8 +121,9 @@ Example `/initiate` request:
 ### Body parameters:
 
 | Parameter name | Description                                                           | Required |
-| -------------- | --------------------------------------------------------------------- | -------- |
-| redirect       | Url to redirect to after file has been successfully uploaded.         | yes      |
+| -------------- | --------------------------------------------------------------------- |----------|
+| redirect       | URL to redirect to after file has been successfully uploaded. Cannot be used together with downloadUrls.         | no       |
+| downloadUrls | List of URLs pointing to files that should be downloaded and scanned. Cannot be used together with redirect. | no |
 | s3Bucket       | S3 bucket that file will be moved to once the scanning is complete    | yes      |
 | s3Path         | 'Folder' in bucket where scanned files will be placed                 | no       |
 | callback       | Url that will be called once all files in upload have been scanned    | no       |
@@ -119,6 +135,10 @@ Example `/initiate` request:
 > We will generate an uploadId for the upload and fileIds for files in the upload request. Files (objects) will be moved
 > to destination bucket under the path uploadId/fileId which will be prefixed with the bucket path if it has been
 > provided.
+>
+> The /initiate endpoint now supports initiating uploads via download URLs.
+You can either specify a redirect or downloadUrls, but not both.
+When downloadUrls are provided, cdp-uploader downloads and scans the files asynchronously on behalf of the caller.
 
 ### Example response
 
@@ -130,11 +150,11 @@ Example `/initiate` request:
 }
 ```
 
-| Parameter name | Description                                      | Required |
-| -------------- | ------------------------------------------------ | -------- |
-| uploadId       | Identifier used for the upload                   | yes      |
-| uploadUrl      | Url which must be used for the upload            | yes      |
-| statusUrl      | Endpoint that can be polled for status of upload | yes      |
+| Parameter name | Description                                                                                                   | Required |
+| -------------- |---------------------------------------------------------------------------------------------------------------|----------|
+| uploadId       | Identifier used for the upload                                                                                | yes      |
+| uploadUrl      | Url which must be used for the upload. If the initiate was a download request, this field will not be present | no       |
+| statusUrl      | Endpoint that can be polled for status of upload                                                              | yes      |
 
 ## POST /upload-and-scan/{uploadId}
 
@@ -249,6 +269,85 @@ browser.
 }
 ```
 
+### Example response with downloadUrls
+
+If a single download URL was provided:
+```json
+{
+  "uploadStatus": "ready",
+  "metadata": {
+    "customerId": "1234",
+    "accountId": "1234"
+  },
+  "form": {
+    "file": {
+      "fileId": "16463a29-a040-4921-8c98-b1adf3ff09ec",
+      "filename": "example-document.pdf",
+      "contentType": "application/pdf",
+      "downloadUrl": "https://my-bucket.s3.eu-west-2.amazonaws.com/scanned/example-document.pdf",
+      "fileStatus": "complete",
+      "contentLength": 204800,
+      "checksumSha256": "czZ6B/jFbdYI+uhuGpnQ097MjOwdsW4s0kEYL6vwMMo=",
+      "detectedContentType": "application/pdf",
+      "s3Key": "2Fcb87c080-f5d0-49e5-9afe-712bab4f4ab4/16463a29-a040-4921-8c98-b1adf3ff09ec",
+      "s3Bucket": "my-bucket"
+    }
+  },
+  "numberOfRejectedFiles": 0
+}
+```
+
+If multiple download URLs were provided:
+
+```json
+{
+  "uploadStatus": "ready",
+  "metadata": {
+    "customerId": "1234",
+    "accountId": "1234",
+    "some-metadata": "example"
+  },
+  "form": {
+    "files": [
+      {
+        "fileId": "16463a29-a040-4921-8c98-b1adf3ff09ec",
+        "filename": "document-1.pdf",
+        "contentType": "application/pdf",
+        "downloadUrl": "https://my-bucket.s3.eu-west-2.amazonaws.com/scanned/document-1.pdf",
+        "fileStatus": "complete",
+        "contentLength": 204800,
+        "checksumSha256": "czZ6B/jFbdYI+uhuGpnQ097MjOwdsW4s0kEYL6vwMMo=",
+        "detectedContentType": "application/pdf",
+        "s3Key": "2Fcb87c080-f5d0-49e5-9afe-712bab4f4ab4/16463a29-a040-4921-8c98-b1adf3ff09ec",
+        "s3Bucket": "my-bucket"
+      },
+      {
+        "fileId": "4549f0dc-48d2-4bf3-955e-ae0fcef0ea41",
+        "filename": "document-2.pdf",
+        "contentType": "application/pdf",
+        "downloadUrl": "https://my-bucket.s3.eu-west-2.amazonaws.com/scanned/document-2.pdf",
+        "fileStatus": "complete",
+        "contentLength": 104800,
+        "checksumSha256": "bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=",
+        "detectedContentType": "application/pdf",
+        "s3Key": "2Fcb87c080-f5d0-49e5-9afe-712bab4f4ab4/4549f0dc-48d2-4bf3-955e-ae0fcef0ea41",
+        "s3Bucket": "my-bucket"
+      }
+    ]
+  },
+  "numberOfRejectedFiles": 0
+}
+```
+
+| Scenario                                    | Behaviour                                                                              |
+| ------------------------------------------- |----------------------------------------------------------------------------------------|
+| `redirect` provided                         | Uploader waits for browser uploads - scanned asynchronously                            |
+| `downloadUrls` provided                     | Files are downloaded and scanned **automatically and asynchronously** by cdp-uploader. |
+| Both `redirect` and `downloadUrls` provided | Request is rejected with an error message (mutually exclusive).                        |
+| Multiple `downloadUrls` provided            | Response includes an array under `form.files`.                                         |
+| Single `downloadUrl` provided               | Response includes a single `form.file` object.                                         |
+
+
 | Parameter Name        | Description                                                                                                                                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | uploaderStatus        | Have all scans completed, can be `initiated`, `pending` or `ready`                                                                                           |
@@ -285,14 +384,15 @@ A rejected file has the following data set:
 
 The `errorMessage` field is a test description of why the file was rejected.
 
-| Cause                                                                                       | errorMessage                                          |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| Virus detected                                                                              | `The selected file contains a virus`                  |
-| File is empty                                                                               | `The selected file is empty`                          |
-| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `The selected file must be smaller than $MAXSIZE`     |
-| File doesn't match the mime types set in the init call                                      | `The selected file must be a $MIMETYPES`              |
-| Any server side error in CDP-Uploader                                                       | `The selected file could not be uploaded – try again` |
-|                                                                                             |                                                       |
+| Cause                                                                                       | errorMessage                                            |
+|---------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| Virus detected                                                                              | `The selected file contains a virus`                    |
+| File is empty                                                                               | `The selected file is empty`                            |
+| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `The selected file must be smaller than $MAXSIZE`       |
+| File doesn't match the mime types set in the init call                                      | `The selected file must be a $MIMETYPES`                |
+| Any server side error in CDP-Uploader                                                       | `The selected file could not be uploaded – try again`   |
+| Failed download                                                                             | `The selected file could not be downloaded`             |
+
 
 The messages are based on the [GDS File Upload guidelines](https://design-system.service.gov.uk/components/file-upload/)
 
