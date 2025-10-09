@@ -56,7 +56,7 @@ const uploadController = {
     }
 
     if (uploadDetails.isDownloadRequest) {
-      uploadLogger.info(`Attempted an multipart upload for a download request`)
+      uploadLogger.info(`Attempted a multipart upload for a download request`)
       return h
         .response({
           message: 'Failed to upload'
