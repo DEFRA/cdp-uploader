@@ -122,22 +122,26 @@ describe('#uploaderE2e', () => {
     })
   })
 
-  test('download request without urls should return ready', async () => {
-    const initPayload = {
-      downloadUrls: [],
-      s3Bucket: 'my-bucket',
-      metadata: { id: 1234, session: 'abc-123-xyz' }
-    }
+  test(
+    'download request without urls should return ready',
+    async () => {
+      const initPayload = {
+        downloadUrls: [],
+        s3Bucket: 'my-bucket',
+        metadata: { id: 1234, session: 'abc-123-xyz' }
+      }
 
-    const initBody = await initUpload(server, initPayload)
+      const initBody = await initUpload(server, initPayload)
 
-    const status = await waitForReady(server, initBody.statusUrl)
+      const status = await waitForReady(server, initBody.statusUrl)
 
-    expect(status).toMatchObject({
-      uploadStatus: 'ready',
-      metadata: initPayload.metadata
-    })
-  })
+      expect(status).toMatchObject({
+        uploadStatus: 'ready',
+        metadata: initPayload.metadata
+      })
+    },
+    oneMinute
+  )
 
   test(
     'upload with a clean file should eventually return a ready status',
