@@ -1,8 +1,6 @@
 import { config } from '~/src/config/index.js'
 import { uploadFile } from '~/src/server/upload-and-scan/helpers/upload-file.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
-import { counter } from '~/src/server/common/helpers/metrics/index.js'
-import { fileSize } from '~/src/server/common/helpers/metrics/counter.js'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
 import { filesize } from 'filesize'
 import crypto from 'node:crypto'
@@ -17,7 +15,7 @@ async function handleFile(
   uploadId,
   uploadDetails,
   file,
-  { logger, s3, redis },
+  { logger, s3, redis, metrics },
   customRejection = {}
 ) {
   const fileId = crypto.randomUUID()
@@ -28,7 +26,7 @@ async function handleFile(
   const maxFileSize = uploadDetails.request?.maxFileSize || uploaderMaxSize
 
   const encodedFilename = rfc2047.encode(filename)
-  await counter('file-received')
+  await metrics().counter('file-received')
 
   const response = {
     uploadId,
@@ -72,7 +70,7 @@ async function handleFile(
     response.detectedContentType = uploadResult.detectedType
     response.contentLength = uploadResult.fileLength
     response.checksumSha256 = uploadResult.checksumSha256
-    await fileSize('file-size', uploadResult.fileLength)
+    await metrics().byteSize('file-size', response.contentLength)
   }
 
   if (!response.missing) {

@@ -6,7 +6,6 @@ import {
   uploadStatus
 } from '~/src/server/common/helpers/upload-status.js'
 import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject.js'
-import { counter } from '~/src/server/common/helpers/metrics/index.js'
 import { config } from '~/src/config/index.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
@@ -126,7 +125,7 @@ const uploadController = {
         }
       }
 
-      await counter('upload-received')
+      await request.metrics().counter('upload-received')
 
       if (config.get('isProduction')) {
         return h.redirect(uploadDetails.request.redirect)

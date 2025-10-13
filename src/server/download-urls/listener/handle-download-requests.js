@@ -6,13 +6,12 @@ import {
   uploadStatus
 } from '~/src/server/common/helpers/upload-status.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
-import { counter } from '~/src/server/common/helpers/metrics/index.js'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
 
 export async function handleDownloadRequests(message, queueUrl, server) {
-  const { logger, redis } = server
+  const { logger, redis, metrics } = server
   const receiptHandle = message.ReceiptHandle
   const payload = JSON.parse(message.Body)
   const uploadId = payload.uploadId
@@ -136,5 +135,5 @@ export async function handleDownloadRequests(message, queueUrl, server) {
   }
 
   await deleteSqsMessage(server.sqs, queueUrl, receiptHandle)
-  await counter('download-received')
+  await metrics().counter('download-received')
 }
