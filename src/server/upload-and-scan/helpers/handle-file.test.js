@@ -1,6 +1,13 @@
 import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
 import { jest } from '@jest/globals'
 
+class Metrics {
+  timer = jest.fn()
+  counter = jest.fn()
+  byteSize = jest.fn()
+  millis = jest.fn()
+}
+
 describe('#handleFile', () => {
   const mockUploadDetails = (uploadId) => ({
     uploadId,
@@ -34,7 +41,8 @@ describe('#handleFile', () => {
     logger: mockLogger,
     s3: {
       send: jest.fn()
-    }
+    },
+    metrics: () => new Metrics()
   }
 
   test('Should provide expected filePart', async () => {

@@ -1,5 +1,6 @@
 import path from 'node:path'
 import hapi from '@hapi/hapi'
+import { metrics } from '@defra/cdp-metrics'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/server/router.js'
@@ -59,6 +60,7 @@ export async function createServer() {
   }
 
   await server.register([
+    metrics,
     pulse,
     redis,
     s3Client,

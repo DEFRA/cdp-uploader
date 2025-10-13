@@ -7,11 +7,14 @@ import {
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { sendSqsMessageFifo } from '~/src/server/common/helpers/sqs/send-sqs-message.js'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
-import { millis } from '~/src/server/common/helpers/metrics/counter.js'
 
 const callbackQueueUrl = config.get('sqsScanResultsCallback.queueUrl')
 
-async function processScanComplete(uploadId, fileId, { redis, logger, sqs }) {
+async function processScanComplete(
+  uploadId,
+  fileId,
+  { redis, logger, sqs, metrics }
+) {
   const uploadAndFiles = await redis.findUploadAndFiles(uploadId)
   const files = uploadAndFiles?.files
   const uploadDetails = uploadAndFiles?.uploadDetails
@@ -25,7 +28,7 @@ async function processScanComplete(uploadId, fileId, { redis, logger, sqs }) {
     const pendingTimeMillis = new Date(uploadDetails.pending).getTime()
     const processingTime = readyDate.getTime() - pendingTimeMillis
 
-    await millis('upload-processing-time', processingTime)
+    await metrics().millis('upload-processing-time', processingTime)
 
     uploadDetails.ready = readyDate.toISOString()
     uploadDetails.numberOfRejectedFiles = numberOfRejectedFiles(files)

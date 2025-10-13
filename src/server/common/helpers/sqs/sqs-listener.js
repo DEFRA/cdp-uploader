@@ -91,9 +91,9 @@ const mockClamavListener = {
   options: {
     config: {
       queueUrl: 'mock-clamav',
-      visibilityTimeout: 5,
-      waitTimeSeconds: 20,
-      pollingWaitTimeMs: 10,
+      visibilityTimeout: 2,
+      waitTimeSeconds: 3,
+      pollingWaitTimeMs: 100,
       batchSize: 1
     },
     messageHandler: async (message, queueUrl, server) =>

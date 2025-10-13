@@ -3,7 +3,6 @@ import Wreck from '@hapi/wreck'
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
-import { counter } from '~/src/server/common/helpers/metrics/index.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
 import { handleDownloadRequests } from '~/src/server/download-urls/listener/handle-download-requests.js'
@@ -14,7 +13,6 @@ jest.mock('@hapi/wreck', () => ({
 }))
 jest.mock('~/src/server/common/helpers/logging/logger.js')
 jest.mock('~/src/server/common/helpers/sqs/delete-sqs-message.js')
-jest.mock('~/src/server/common/helpers/metrics/index.js')
 jest.mock('~/src/server/scan/listener/helpers/process-scan-complete.js')
 jest.mock('~/src/server/upload-and-scan/helpers/handle-file.js', () => ({
   handleFile: jest.fn()
@@ -23,6 +21,15 @@ jest.mock('~/src/server/upload-and-scan/helpers/handle-file.js', () => ({
 describe('#handleDownloadRequests', () => {
   const mockFindUploadDetails = jest.fn()
   const mockStoreUploadDetails = jest.fn()
+
+  class Metrics {
+    timer = jest.fn()
+    counter = jest.fn()
+    byteSize = jest.fn()
+    millis = jest.fn()
+  }
+
+  const metricsInstance = new Metrics()
 
   const mockServer = {
     sqs: { name: 'mock Sqs' },
@@ -35,7 +42,8 @@ describe('#handleDownloadRequests', () => {
       error: jest.fn(),
       warn: jest.fn(),
       debug: jest.fn()
-    }
+    },
+    metrics: () => metricsInstance
   }
 
   const mockUploadLogger = {
@@ -129,7 +137,9 @@ describe('#handleDownloadRequests', () => {
         'mock-queue-url',
         'mock-receipt-handle'
       )
-      expect(counter).toHaveBeenCalledWith('download-received')
+      expect(mockServer.metrics().counter).toHaveBeenCalledWith(
+        'download-received'
+      )
     })
   })
 
@@ -176,7 +186,9 @@ describe('#handleDownloadRequests', () => {
 
     test('Should delete SQS message and increment counter', () => {
       expect(deleteSqsMessage).toHaveBeenCalledTimes(1)
-      expect(counter).toHaveBeenCalledWith('download-received')
+      expect(mockServer.metrics().counter).toHaveBeenCalledWith(
+        'download-received'
+      )
     })
   })
 
@@ -228,7 +240,9 @@ describe('#handleDownloadRequests', () => {
         'mock-queue-url',
         'mock-receipt-handle'
       )
-      expect(counter).toHaveBeenCalledWith('download-received')
+      expect(mockServer.metrics().counter).toHaveBeenCalledWith(
+        'download-received'
+      )
     })
   })
 })
