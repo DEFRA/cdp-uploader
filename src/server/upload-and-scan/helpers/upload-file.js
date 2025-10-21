@@ -40,7 +40,7 @@ async function uploadFile(
       ContentLength: contentLength.toString()
     },
     queueSize: 2,
-    partSize: 10 * 1024 * 1024
+    partSize: Infinity
   })
   const uploadResult = await upload.done()
   const type = await FileType.fromBuffer(Buffer.concat(buffer))

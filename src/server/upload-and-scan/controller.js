@@ -10,6 +10,7 @@ import { config } from '~/src/config/index.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
 import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relative-to-absolute.js'
+import mimeDb from 'mime-db'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -21,14 +22,31 @@ const uploadController = {
       params: uploadPathValidation
     },
     payload: {
-      allow: 'multipart/form-data',
+      allow: Object.keys(mimeDb), // */*
       multipart: true,
       output: 'file',
       parse: true,
       maxBytes: config.get('maxMultipartUploadSize'),
       uploads: 'uploads',
       timeout: false
-    }
+    },
+    pre: [
+      {
+        assign: 'normalizedPayload',
+        method: (request, h) => {
+          if (request.mime !== 'multipart/form-data' && request.payload?.path) {
+            const filePath = request.payload.path
+            const filename =
+              request.payload.filename ||
+              request.payload.hapi?.filename ||
+              request.headers['x-filename']
+            const headers = request.payload.headers || request.headers
+            request.payload = { file: { path: filePath, filename, headers } }
+          }
+          return h.continue
+        }
+      }
+    ]
   },
   async handler(request, h) {
     const uploadId = request.params.uploadId
