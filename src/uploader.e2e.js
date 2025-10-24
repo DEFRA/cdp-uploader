@@ -192,6 +192,84 @@ describe('#uploaderE2e', () => {
   )
 
   test(
+    'post upload with a clean file should eventually return a ready status',
+    async () => {
+      const initBody = await initUpload(server, {
+        redirect: 'http://localhost/redirect',
+        s3Bucket: 'my-bucket'
+      })
+
+      // upload a file
+      const uploadResult = await fetch(initBody.uploadUrl, {
+        method: 'POST',
+        headers: {
+          'x-filename': 'test.jpg'
+        },
+        body: fs.createReadStream('./src/__fixtures__/files/test.jpg'),
+        redirect: 'manual'
+      })
+
+      expect(uploadResult.status).toBe(302)
+
+      const status = await waitForReady(server, initBody.statusUrl)
+
+      expect(status).toMatchObject({
+        uploadStatus: 'ready',
+        form: {
+          file: {
+            filename: 'test.jpg',
+            fileStatus: 'complete',
+            s3Bucket: 'my-bucket',
+            detectedContentType: 'image/jpeg'
+          }
+        }
+      })
+
+      expect(status.form.file.s3Key).toEqual(expect.any(String))
+      expect(status.form.file.fileId).toEqual(expect.any(String))
+      expect(status.form.file.contentLength).toBeGreaterThan(0)
+    },
+    oneMinute
+  )
+
+  test(
+    'post upload without filename header with a clean file should eventually return a ready status',
+    async () => {
+      const initBody = await initUpload(server, {
+        redirect: 'http://localhost/redirect',
+        s3Bucket: 'my-bucket'
+      })
+
+      // upload a file
+      const uploadResult = await fetch(initBody.uploadUrl, {
+        method: 'POST',
+        body: fs.createReadStream('./src/__fixtures__/files/test.jpg'),
+        redirect: 'manual'
+      })
+
+      expect(uploadResult.status).toBe(302)
+
+      const status = await waitForReady(server, initBody.statusUrl)
+
+      expect(status).toMatchObject({
+        uploadStatus: 'ready',
+        form: {
+          file: {
+            fileStatus: 'complete',
+            s3Bucket: 'my-bucket',
+            detectedContentType: 'image/jpeg'
+          }
+        }
+      })
+      expect(status.form.file.filename).toBeUndefined()
+      expect(status.form.file.s3Key).toEqual(expect.any(String))
+      expect(status.form.file.fileId).toEqual(expect.any(String))
+      expect(status.form.file.contentLength).toBeGreaterThan(0)
+    },
+    oneMinute
+  )
+
+  test(
     'download request with a clean file should eventually return a ready status',
     async () => {
       const initBody = await initUpload(server, {
@@ -272,6 +350,56 @@ describe('#uploaderE2e', () => {
   )
 
   test(
+    'post upload with a mock virus file should be rejected',
+    async () => {
+      const initBody = await initUpload(server, {
+        redirect: 'http://localhost/redirect',
+        s3Bucket: 'my-bucket'
+      })
+
+      // upload a file
+      const formData = new FormData()
+      formData.append('foo', 'bar')
+      formData.append('id', '1234')
+      formData.append(
+        'file',
+        fs.createReadStream('./src/__fixtures__/files/virus.jpg')
+      )
+
+      // upload a file
+      const uploadResult = await fetch(initBody.uploadUrl, {
+        method: 'POST',
+        headers: {
+          'x-filename': 'virus.jpg'
+        },
+        body: fs.createReadStream('./src/__fixtures__/files/virus.jpg'),
+        redirect: 'manual'
+      })
+
+      expect(uploadResult.status).toBe(302)
+
+      const status = await waitForReady(server, initBody.statusUrl)
+
+      expect(status).toMatchObject({
+        uploadStatus: 'ready',
+        form: {
+          file: {
+            filename: 'virus.jpg',
+            fileStatus: 'rejected',
+            hasError: true,
+            errorMessage: 'The selected file contains a virus'
+          }
+        }
+      })
+
+      expect(status.form.file.s3Key).toBeUndefined()
+      expect(status.form.file.fileId).toEqual(expect.any(String))
+      expect(status.form.file.contentLength).toBeGreaterThan(0)
+    },
+    oneMinute
+  )
+
+  test(
     'download request with a mock virus file should be rejected',
     async () => {
       const initBody = await initUpload(server, {
@@ -333,6 +461,48 @@ describe('#uploaderE2e', () => {
           file: {
             filename: 'test.jpg',
             contentType: 'image/jpeg',
+            fileStatus: 'rejected',
+            hasError: true,
+            errorMessage: 'The selected file must be smaller than 10 B'
+          }
+        }
+      })
+
+      expect(status.form.file.s3Key).toBeUndefined()
+      expect(status.form.file.fileId).toEqual(expect.any(String))
+      expect(status.form.file.contentLength).toBeGreaterThan(0)
+    },
+    oneMinute
+  )
+
+  test(
+    'post upload with a file that is too big should be rejected',
+    async () => {
+      const initBody = await initUpload(server, {
+        redirect: 'http://localhost/redirect',
+        s3Bucket: 'my-bucket',
+        maxFileSize: 10
+      })
+
+      // upload a file
+      const uploadResult = await fetch(initBody.uploadUrl, {
+        method: 'POST',
+        headers: {
+          'x-filename': 'test.jpg'
+        },
+        body: fs.createReadStream('./src/__fixtures__/files/test.jpg'),
+        redirect: 'manual'
+      })
+
+      expect(uploadResult.status).toBe(302)
+
+      const status = await waitForReady(server, initBody.statusUrl)
+
+      expect(status).toMatchObject({
+        uploadStatus: 'ready',
+        form: {
+          file: {
+            filename: 'test.jpg',
             fileStatus: 'rejected',
             hasError: true,
             errorMessage: 'The selected file must be smaller than 10 B'
@@ -425,6 +595,48 @@ describe('#uploaderE2e', () => {
   )
 
   test(
+    'post upload with a file that is the wrong mime type should be rejected',
+    async () => {
+      const initBody = await initUpload(server, {
+        redirect: 'http://localhost/redirect',
+        s3Bucket: 'my-bucket',
+        mimeTypes: ['text/plain', 'text/json']
+      })
+
+      // upload a file
+      const uploadResult = await fetch(initBody.uploadUrl, {
+        method: 'POST',
+        headers: {
+          'x-filename': 'test.jpg'
+        },
+        body: fs.createReadStream('./src/__fixtures__/files/test.jpg'),
+        redirect: 'manual'
+      })
+
+      expect(uploadResult.status).toBe(302)
+
+      const status = await waitForReady(server, initBody.statusUrl)
+
+      expect(status).toMatchObject({
+        uploadStatus: 'ready',
+        form: {
+          file: {
+            filename: 'test.jpg',
+            fileStatus: 'rejected',
+            hasError: true,
+            errorMessage: 'The selected file must be a TXT'
+          }
+        }
+      })
+
+      expect(status.form.file.s3Key).toBeUndefined()
+      expect(status.form.file.fileId).toEqual(expect.any(String))
+      expect(status.form.file.contentLength).toBeGreaterThan(0)
+    },
+    oneMinute
+  )
+
+  test(
     'download request with a file that is the wrong mime type should be rejected',
     async () => {
       const initBody = await initUpload(server, {
@@ -499,6 +711,48 @@ describe('#uploaderE2e', () => {
     },
     oneMinute
   )
+
+  test(
+    'post upload with a file that is zero length should be rejected',
+    async () => {
+      const initBody = await initUpload(server, {
+        redirect: 'http://localhost/redirect',
+        s3Bucket: 'my-bucket'
+      })
+
+      // upload a file
+      const uploadResult = await fetch(initBody.uploadUrl, {
+        method: 'POST',
+        headers: {
+          'x-filename': 'zero.txt'
+        },
+        body: fs.createReadStream('./src/__fixtures__/files/zero.txt'),
+        redirect: 'manual'
+      })
+
+      expect(uploadResult.status).toBe(302)
+
+      const status = await waitForReady(server, initBody.statusUrl)
+
+      expect(status).toMatchObject({
+        uploadStatus: 'ready',
+        form: {
+          file: {
+            filename: 'zero.txt',
+            fileStatus: 'rejected',
+            hasError: true,
+            errorMessage: 'The selected file is empty',
+            contentLength: 0
+          }
+        }
+      })
+
+      expect(status.form.file.s3Key).toBeUndefined()
+      expect(status.form.file.fileId).toEqual(expect.any(String))
+    },
+    oneMinute
+  )
+
   test(
     'download request with a file that is zero length should be rejected',
     async () => {

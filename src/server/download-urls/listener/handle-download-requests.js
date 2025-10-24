@@ -72,29 +72,35 @@ export async function handleDownloadRequests(message, queueUrl, server) {
         }
       }
 
-      const fileResponse = await handleFile(
-        uploadId,
-        uploadDetails,
-        file,
-        server,
-        customRejection
-      )
+      try {
+        const fileResponse = await handleFile(
+          uploadId,
+          uploadDetails,
+          file,
+          server,
+          customRejection
+        )
 
-      const { missing, fileId } = fileResponse
+        const { missing, fileId } = fileResponse
 
-      if (missing) {
-        return {}
+        if (missing) {
+          return {}
+        }
+
+        // This will update the uploadDetails - add file information to file stored in redis (not here)
+        const responseValue = {
+          fileId,
+          filename: fileResponse.filename,
+          contentType,
+          downloadUrl: url
+        }
+
+        return { responseValue, fileId, status: fileResponse.fileStatus }
+      } finally {
+        if (!res.complete && typeof res.destroy === 'function') {
+          res.destroy()
+        }
       }
-
-      // This will update the uploadDetails - add file information to file stored in redis (not here)
-      const responseValue = {
-        fileId,
-        filename: fileResponse.filename,
-        contentType,
-        downloadUrl: url
-      }
-
-      return { responseValue, fileId, status: fileResponse.fileStatus }
     })
   )
 
