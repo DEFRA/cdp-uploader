@@ -70,7 +70,9 @@ async function handleFile(
     response.detectedContentType = uploadResult.detectedType
     response.contentLength = uploadResult.fileLength
     response.checksumSha256 = uploadResult.checksumSha256
-    await metrics().byteSize('file-size', response.contentLength)
+    if (response.contentLength) {
+      await metrics().byteSize('file-size', response.contentLength)
+    }
   }
 
   if (!response.missing) {
