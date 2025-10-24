@@ -14,6 +14,13 @@ jest.mock('~/src/server/common/helpers/sqs/delete-sqs-message.js')
 jest.mock('~/src/server/scan/listener/helpers/process-scan-complete.js')
 jest.mock('~/src/server/common/helpers/s3/move-s3-object.js')
 
+class Metrics {
+  timer = jest.fn()
+  counter = jest.fn()
+  byteSize = jest.fn()
+  millis = jest.fn()
+}
+
 describe('#handleScanResult', () => {
   const logger = createLogger()
   const mockFindUploadDetails = jest.fn()
@@ -28,6 +35,7 @@ describe('#handleScanResult', () => {
       findUploadAndFiles: mockFindUploadAndFiles,
       storeFileDetails: mockStoreFileDetails
     },
+    metrics: () => new Metrics(),
     logger
   }
   const mockLogger = {
@@ -195,9 +203,9 @@ describe('#handleScanResult', () => {
     test('Should call process scan complete with expected values', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
-        mockServer,
         'mock-id-34543',
-        'mock-key-87678'
+        'mock-key-87678',
+        mockServer
       )
     })
 
@@ -279,9 +287,9 @@ describe('#handleScanResult', () => {
     test('Should call process scan complete with expected values', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
-        mockServer,
         'mock-id-895745',
-        'mock-key-2342353'
+        'mock-key-2342353',
+        mockServer
       )
     })
 
@@ -343,9 +351,9 @@ describe('#handleScanResult', () => {
     test('Should call process scan complete with expected values', () => {
       expect(processScanComplete).toHaveBeenCalledTimes(1)
       expect(processScanComplete).toHaveBeenCalledWith(
-        mockServer,
         'mock-id-895745',
-        'mock-key-2342353'
+        'mock-key-2342353',
+        mockServer
       )
     })
 

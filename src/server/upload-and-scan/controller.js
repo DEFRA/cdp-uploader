@@ -6,11 +6,11 @@ import {
   uploadStatus
 } from '~/src/server/common/helpers/upload-status.js'
 import { stringArrayToObject } from '~/src/server/common/helpers/stringArrayToObject.js'
-import { counter } from '~/src/server/common/helpers/metrics/index.js'
 import { config } from '~/src/config/index.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
 import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relative-to-absolute.js'
+import mimeDb from 'mime-db'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -22,14 +22,31 @@ const uploadController = {
       params: uploadPathValidation
     },
     payload: {
-      allow: 'multipart/form-data',
+      allow: Object.keys(mimeDb), // */*
       multipart: true,
       output: 'file',
       parse: true,
       maxBytes: config.get('maxMultipartUploadSize'),
       uploads: 'uploads',
       timeout: false
-    }
+    },
+    pre: [
+      {
+        assign: 'normalizedPayload',
+        method: (request, h) => {
+          if (request.mime !== 'multipart/form-data' && request.payload?.path) {
+            const filePath = request.payload.path
+            const filename =
+              request.payload.filename ||
+              request.payload.hapi?.filename ||
+              request.headers['x-filename']
+            const headers = request.payload.headers || request.headers
+            request.payload = { file: { path: filePath, filename, headers } }
+          }
+          return h.continue
+        }
+      }
+    ]
   },
   async handler(request, h) {
     const uploadId = request.params.uploadId
@@ -50,9 +67,18 @@ const uploadController = {
       uploadLogger.info(`uploadId ${uploadId} does not exist - upload failed`)
       return h
         .response({
-          message: 'Failed to upload. UploadId does not exist'
+          message: 'Failed to upload - uploadId does not exist'
         })
         .code(404)
+    }
+
+    if (uploadDetails.isDownloadRequest) {
+      uploadLogger.info(`Attempted a multipart upload for a download request`)
+      return h
+        .response({
+          message: 'Failed to upload'
+        })
+        .code(403)
     }
 
     uploadLogger.debug({ uploadDetails }, `Upload request received`)
@@ -113,11 +139,11 @@ const uploadController = {
       // This will ensure the overall status gets updated.
       for (const s of fileStatuses) {
         if (s.status === fileStatus.rejected) {
-          await processScanComplete(request.server, uploadId, s.fileId)
+          await processScanComplete(uploadId, s.fileId, request.server)
         }
       }
 
-      await counter('upload-received')
+      await request.metrics().counter('upload-received')
 
       if (config.get('isProduction')) {
         return h.redirect(uploadDetails.request.redirect)
@@ -129,7 +155,8 @@ const uploadController = {
         return h.redirect(
           relativeToAbsolute(
             request.headers.referer,
-            uploadDetails.request.redirect
+            uploadDetails.request.redirect,
+            uploadLogger
           )
         )
       }

@@ -13,7 +13,7 @@ import { SendMessageCommand } from '@aws-sdk/client-sqs'
  * @param {Record<string, MessageAttributeValue>} messageAttributes
  * @returns {Promise<*>}
  */
-async function sendSqsMessage(
+export async function sendSqsMessageFifo(
   sqs,
   queue,
   messageBody,
@@ -31,7 +31,27 @@ async function sendSqsMessage(
   )
 }
 
-export { sendSqsMessage }
+/**
+ * @param {SQSClient} sqs
+ * @param {string} queue
+ * @param {object} messageBody
+ * @param {Record<string, MessageAttributeValue>} messageAttributes
+ * @returns {Promise<*>}
+ */
+export async function sendSqsMessageStandard(
+  sqs,
+  queue,
+  messageBody,
+  messageAttributes = {}
+) {
+  return await sqs.send(
+    new SendMessageCommand({
+      QueueUrl: queue,
+      MessageAttributes: messageAttributes,
+      MessageBody: JSON.stringify(messageBody)
+    })
+  )
+}
 
 /**
  * @import { SQSClient, MessageAttributeValue } from '@aws-sdk/client-sqs'

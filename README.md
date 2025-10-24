@@ -2,67 +2,67 @@
 
 Core delivery platform Node.js Frontend Template.
 
-* [Requirements](#requirements)
-  * [Node.js](#nodejs)
-* [API](#api)
-  * [POST /initiate](#post-initiate)
-    * [HTTP Headers:](#http-headers)
-    * [Body parameters:](#body-parameters)
-    * [Example response](#example-response)
-  * [POST /upload-and-scan/{uploadId}](#post-upload-and-scanuploadid)
-    * [Path Parameters](#path-parameters)
-    * [Response](#response)
-  * [GET /status/{uploadId}](#get-statusuploadid)
-    * [Path Parameters](#path-parameters-1)
-    * [Query Parameters](#query-parameters)
-    * [Response Payload with Debug](#response-payload-with-debug)
-    * [Response Payload without Debug](#response-payload-without-debug)
-    * [File field in form](#file-field-in-form)
-    * [Error Handling](#error-handling)
-  * [Callback](#callback)
-    * [Intended use](#intended-use)
-* [S3](#s3)
-  * [Object metadata on S3 Objects](#object-metadata-on-s3-objects)
-* [Configuration](#configuration)
-  * [App config](#app-config)
-  * [Secrets](#secrets)
-  * [Docker compose](#docker-compose)
-  * [Local dev env var](#local-dev-env-var)
-  * [Configuration names](#configuration-names)
-* [Local development](#local-development)
-  * [Developing services that use the CDP-Uploader](#developing-services-that-use-the-cdp-uploader)
-    * [Docker Compose](#docker-compose-1)
-    * [Relative vs Absolute URLs](#relative-vs-absolute-urls)
-    * [Test Harness (mock scanning)](#test-harness-mock-scanning)
-    * [EICAR files and local development](#eicar-files-and-local-development)
-  * [Setup for developing CDP-Uploader](#setup-for-developing-cdp-uploader)
-  * [Development](#development)
-    * [Updating dependencies](#updating-dependencies)
-    * [Tests](#tests)
-      * [Unit tests](#unit-tests)
-      * [End-to-end tests](#end-to-end-tests)
-      * [Smoke tests](#smoke-tests)
-  * [AWS CLI](#aws-cli)
-  * [AWS Local](#aws-local)
-    * [AWS local alias](#aws-local-alias)
-  * [LocalStack](#localstack)
-    * [Docker](#docker)
-  * [Localstack CLI](#localstack-cli)
-    * [Setup local S3 buckets](#setup-local-s3-buckets)
-    * [List local buckets](#list-local-buckets)
-    * [View bucket contents](#view-bucket-contents)
-    * [Empty bucket contents](#empty-bucket-contents)
-    * [Setup local queues](#setup-local-queues)
-    * [Purge local queues](#purge-local-queues)
-    * [Setup local test harness](#setup-local-test-harness)
-  * [Local JSON API](#local-json-api)
-  * [Production](#production)
-  * [Npm scripts](#npm-scripts)
-* [Docker](#docker-1)
-  * [Development image](#development-image)
-  * [Production image](#production-image)
-* [Licence](#licence)
-  * [About the licence](#about-the-licence)
+- [Requirements](#requirements)
+  - [Node.js](#nodejs)
+- [API](#api)
+  - [POST /initiate](#post-initiate)
+    - [HTTP Headers:](#http-headers)
+    - [Body parameters:](#body-parameters)
+    - [Example response](#example-response)
+  - [POST /upload-and-scan/{uploadId}](#post-upload-and-scanuploadid)
+    - [Path Parameters](#path-parameters)
+    - [Response](#response)
+  - [GET /status/{uploadId}](#get-statusuploadid)
+    - [Path Parameters](#path-parameters-1)
+    - [Query Parameters](#query-parameters)
+    - [Response Payload with Debug](#response-payload-with-debug)
+    - [Response Payload without Debug](#response-payload-without-debug)
+    - [File field in form](#file-field-in-form)
+    - [Error Handling](#error-handling)
+  - [Callback](#callback)
+    - [Intended use](#intended-use)
+- [S3](#s3)
+  - [Object metadata on S3 Objects](#object-metadata-on-s3-objects)
+- [Configuration](#configuration)
+  - [App config](#app-config)
+  - [Secrets](#secrets)
+  - [Docker compose](#docker-compose)
+  - [Local dev env var](#local-dev-env-var)
+  - [Configuration names](#configuration-names)
+- [Local development](#local-development)
+  - [Developing services that use the CDP-Uploader](#developing-services-that-use-the-cdp-uploader)
+    - [Docker Compose](#docker-compose-1)
+    - [Relative vs Absolute URLs](#relative-vs-absolute-urls)
+    - [Test Harness (mock scanning)](#test-harness-mock-scanning)
+    - [EICAR files and local development](#eicar-files-and-local-development)
+  - [Setup for developing CDP-Uploader](#setup-for-developing-cdp-uploader)
+  - [Development](#development)
+    - [Updating dependencies](#updating-dependencies)
+    - [Tests](#tests)
+      - [Unit tests](#unit-tests)
+      - [End-to-end tests](#end-to-end-tests)
+      - [Smoke tests](#smoke-tests)
+  - [AWS CLI](#aws-cli)
+  - [AWS Local](#aws-local)
+    - [AWS local alias](#aws-local-alias)
+  - [LocalStack](#localstack)
+    - [Docker](#docker)
+  - [Localstack CLI](#localstack-cli)
+    - [Setup local S3 buckets](#setup-local-s3-buckets)
+    - [List local buckets](#list-local-buckets)
+    - [View bucket contents](#view-bucket-contents)
+    - [Empty bucket contents](#empty-bucket-contents)
+    - [Setup local queues](#setup-local-queues)
+    - [Purge local queues](#purge-local-queues)
+    - [Setup local test harness](#setup-local-test-harness)
+  - [Local JSON API](#local-json-api)
+  - [Production](#production)
+  - [Npm scripts](#npm-scripts)
+- [Docker](#docker-1)
+  - [Development image](#development-image)
+  - [Production image](#production-image)
+- [Licence](#licence)
+  - [About the licence](#about-the-licence)
 
 # Requirements
 
@@ -97,17 +97,33 @@ Example `/initiate` request:
 }
 ```
 
+Example `/initiate` download request:
+
+```json
+{
+  "downloadUrls": ["https://myservice.com/file"],
+  "callback": "https://myservice.com/callback",
+  "s3Bucket": "myservice",
+  "s3Path": "scanned",
+  "metadata": {
+    "customerId": "1234",
+    "accountId": "1234"
+  }
+}
+```
+
 ### HTTP Headers:
 
 | Header name | Description                                       | Required |
-|-------------|---------------------------------------------------|----------|
+| ----------- | ------------------------------------------------- | -------- |
 | User-Agent  | Identifier of the service that calls cdp-uploader | TBD      |
 
 ### Body parameters:
 
 | Parameter name | Description                                                           | Required |
-|----------------|-----------------------------------------------------------------------|----------|
-| redirect       | Url to redirect to after file has been successfully uploaded.         | yes      |
+| -------------- | --------------------------------------------------------------------- |----------|
+| redirect       | URL to redirect to after file has been successfully uploaded. Cannot be used together with downloadUrls.         | no       |
+| downloadUrls | List of URLs pointing to files that should be downloaded and scanned. Cannot be used together with redirect. | no |
 | s3Bucket       | S3 bucket that file will be moved to once the scanning is complete    | yes      |
 | s3Path         | 'Folder' in bucket where scanned files will be placed                 | no       |
 | callback       | Url that will be called once all files in upload have been scanned    | no       |
@@ -119,6 +135,10 @@ Example `/initiate` request:
 > We will generate an uploadId for the upload and fileIds for files in the upload request. Files (objects) will be moved
 > to destination bucket under the path uploadId/fileId which will be prefixed with the bucket path if it has been
 > provided.
+>
+> The /initiate endpoint now supports initiating uploads via download URLs.
+You can either specify a redirect or downloadUrls, but not both.
+When downloadUrls are provided, cdp-uploader downloads and scans the files asynchronously on behalf of the caller.
 
 ### Example response
 
@@ -130,18 +150,18 @@ Example `/initiate` request:
 }
 ```
 
-| Parameter name | Description                                      | Required |
-|----------------|--------------------------------------------------|----------|
-| uploadId       | Identifier used for the upload                   | yes      |
-| uploadUrl      | Url which must be used for the upload            | yes      |
-| statusUrl      | Endpoint that can be polled for status of upload | yes      |
+| Parameter name | Description                                                                                                   | Required |
+| -------------- |---------------------------------------------------------------------------------------------------------------|----------|
+| uploadId       | Identifier used for the upload                                                                                | yes      |
+| uploadUrl      | Url which must be used for the upload. If the initiate was a download request, this field will not be present | no       |
+| statusUrl      | Endpoint that can be polled for status of upload                                                              | yes      |
 
 ## POST /upload-and-scan/{uploadId}
 
 ### Path Parameters
 
 | Parameter Name | Description                                                              |
-|----------------|--------------------------------------------------------------------------|
+| -------------- | ------------------------------------------------------------------------ |
 | uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
 
 This will be a `multipart/form-data` request to the `uploadAndScanUrl` url provided in the initiate response. This
@@ -156,7 +176,7 @@ Example `/upload-and-scan/${uploadId}` request:
   enctype="multipart/form-data"
 >
   <label for="file">File</label>
-  <input id="file" name="file" type="file"/>
+  <input id="file" name="file" type="file" />
   <button>Upload</button>
 </form>
 ```
@@ -174,13 +194,13 @@ browser.
 ### Path Parameters
 
 | Parameter Name | Description                                                              |
-|----------------|--------------------------------------------------------------------------|
+| -------------- | ------------------------------------------------------------------------ |
 | uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
 
 ### Query Parameters
 
 | Parameter Name | Description                                                                     |
-|----------------|---------------------------------------------------------------------------------|
+| -------------- | ------------------------------------------------------------------------------- |
 | debug          | set to 'true' to debug information. Currently contains initiate request payload |
 
 > [!NOTE]
@@ -249,8 +269,87 @@ browser.
 }
 ```
 
+### Example response with downloadUrls
+
+If a single download URL was provided:
+```json
+{
+  "uploadStatus": "ready",
+  "metadata": {
+    "customerId": "1234",
+    "accountId": "1234"
+  },
+  "form": {
+    "file": {
+      "fileId": "16463a29-a040-4921-8c98-b1adf3ff09ec",
+      "filename": "example-document.pdf",
+      "contentType": "application/pdf",
+      "downloadUrl": "https://my-bucket.s3.eu-west-2.amazonaws.com/scanned/example-document.pdf",
+      "fileStatus": "complete",
+      "contentLength": 204800,
+      "checksumSha256": "czZ6B/jFbdYI+uhuGpnQ097MjOwdsW4s0kEYL6vwMMo=",
+      "detectedContentType": "application/pdf",
+      "s3Key": "2Fcb87c080-f5d0-49e5-9afe-712bab4f4ab4/16463a29-a040-4921-8c98-b1adf3ff09ec",
+      "s3Bucket": "my-bucket"
+    }
+  },
+  "numberOfRejectedFiles": 0
+}
+```
+
+If multiple download URLs were provided:
+
+```json
+{
+  "uploadStatus": "ready",
+  "metadata": {
+    "customerId": "1234",
+    "accountId": "1234",
+    "some-metadata": "example"
+  },
+  "form": {
+    "files": [
+      {
+        "fileId": "16463a29-a040-4921-8c98-b1adf3ff09ec",
+        "filename": "document-1.pdf",
+        "contentType": "application/pdf",
+        "downloadUrl": "https://my-bucket.s3.eu-west-2.amazonaws.com/scanned/document-1.pdf",
+        "fileStatus": "complete",
+        "contentLength": 204800,
+        "checksumSha256": "czZ6B/jFbdYI+uhuGpnQ097MjOwdsW4s0kEYL6vwMMo=",
+        "detectedContentType": "application/pdf",
+        "s3Key": "2Fcb87c080-f5d0-49e5-9afe-712bab4f4ab4/16463a29-a040-4921-8c98-b1adf3ff09ec",
+        "s3Bucket": "my-bucket"
+      },
+      {
+        "fileId": "4549f0dc-48d2-4bf3-955e-ae0fcef0ea41",
+        "filename": "document-2.pdf",
+        "contentType": "application/pdf",
+        "downloadUrl": "https://my-bucket.s3.eu-west-2.amazonaws.com/scanned/document-2.pdf",
+        "fileStatus": "complete",
+        "contentLength": 104800,
+        "checksumSha256": "bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=",
+        "detectedContentType": "application/pdf",
+        "s3Key": "2Fcb87c080-f5d0-49e5-9afe-712bab4f4ab4/4549f0dc-48d2-4bf3-955e-ae0fcef0ea41",
+        "s3Bucket": "my-bucket"
+      }
+    ]
+  },
+  "numberOfRejectedFiles": 0
+}
+```
+
+| Scenario                                    | Behaviour                                                                              |
+| ------------------------------------------- |----------------------------------------------------------------------------------------|
+| `redirect` provided                         | Uploader waits for browser uploads - scanned asynchronously                            |
+| `downloadUrls` provided                     | Files are downloaded and scanned **automatically and asynchronously** by cdp-uploader. |
+| Both `redirect` and `downloadUrls` provided | Request is rejected with an error message (mutually exclusive).                        |
+| Multiple `downloadUrls` provided            | Response includes an array under `form.files`.                                         |
+| Single `downloadUrl` provided               | Response includes a single `form.file` object.                                         |
+
+
 | Parameter Name        | Description                                                                                                                                                  |
-|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | uploaderStatus        | Have all scans completed, can be `initiated`, `pending` or `ready`                                                                                           |
 | metadata              | Extra data and identified set by the requesting service in the /initialize call. Returned exactly as they were presented                                     |
 | form                  | An object representing each field in the multipart request. Text fields are preserved exactly as they were sent, file fields contain details about the file. |
@@ -260,7 +359,7 @@ browser.
 ### File field in form
 
 | Parameter Name      | Description                                                                                                                        |
-|---------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | fileId              | uuid of the file.                                                                                                                  |
 | filename            | filename of file uploaded, if present                                                                                              |
 | contentType         | The mime type as declared in the multipart upload                                                                                  |
@@ -285,14 +384,15 @@ A rejected file has the following data set:
 
 The `errorMessage` field is a test description of why the file was rejected.
 
-| Cause                                                                                       | errorMessage                                          |
-|---------------------------------------------------------------------------------------------|-------------------------------------------------------|
-| Virus detected                                                                              | `The selected file contains a virus`                  |
-| File is empty                                                                               | `The selected file is empty`                          |
-| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `The selected file must be smaller than $MAXSIZE`     |
-| File doesn't match the mime types set in the init call                                      | `The selected file must be a $MIMETYPES`              |
-| Any server side error in CDP-Uploader                                                       | `The selected file could not be uploaded – try again` |
-|                                                                                             |                                                       |
+| Cause                                                                                       | errorMessage                                            |
+|---------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| Virus detected                                                                              | `The selected file contains a virus`                    |
+| File is empty                                                                               | `The selected file is empty`                            |
+| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `The selected file must be smaller than $MAXSIZE`       |
+| File doesn't match the mime types set in the init call                                      | `The selected file must be a $MIMETYPES`                |
+| Any server side error in CDP-Uploader                                                       | `The selected file could not be uploaded – try again`   |
+| Failed download                                                                             | `The selected file could not be downloaded`             |
+
 
 The messages are based on the [GDS File Upload guidelines](https://design-system.service.gov.uk/components/file-upload/)
 
@@ -318,17 +418,17 @@ Any files uploaded by a user will never be sent directly to the frontend service
 # S3
 
 ## Object metadata on S3 Objects
+
 The objects placed in your buckets contain the following metadata fields and will be returned by AWS as response headers
 
 | Parameter Name             | Description                                                                                                                                      |
-|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Content-Type               | AWS system defined metadata of what AWS deem the content type to be.                                                                             |
 | x-amz-meta-contenttype     | What cdp-uploader deemed the content-type to be from inspecting the file.                                                                        |
 | x-amz-meta-encodedfilename | Name of uploaded file when it contained non ascii characters. This is RFC-2047 encoded. Optional.                                                |
 | x-amz-meta-filename        | Name of uploaded file when it does not contain non ascii characters. x-amz-meta-encodedfilename will be returned instead when it does. Optional. |
 | x-amz-meta-fileid          | uuid of the file.                                                                                                                                |
 | x-amz-meta-uploadid        | Unique id for that upload. UploadId is provided via the `/initiate` call.                                                                        |
-
 
 # Configuration
 
@@ -360,10 +460,10 @@ E.g. as `export` commands if using **bash**, or `.envrc` if using [**direnv**](h
 
 ## Configuration names
 
-| Config name            | ENV_VAR                 | Default | Required | Purpose                                                                               |
-|------------------------|-------------------------|---------|----------|---------------------------------------------------------------------------------------|
+| Config name            | ENV_VAR                 | Default | Required | Purpose                                                                                               |
+| ---------------------- | ----------------------- | ------- | -------- | ----------------------------------------------------------------------------------------------------- |
 | `bucketsAllowlist`     | CONSUMER_BUCKETS        | []      | [x]      | A comma separated list of buckets uploader can write to. Can not be empty if not in development mode. |
-| `mockVirusScanEnabled` | MOCK_VIRUS_SCAN_ENABLED | false   |          | Boolean. Useful in local development                                                  |
+| `mockVirusScanEnabled` | MOCK_VIRUS_SCAN_ENABLED | false   |          | Boolean. Useful in local development                                                                  |
 
 There are several other configs, such as AWS details, SQS queue names, polling times etc.
 For more details and other service configuration look in `src/config/index.js`

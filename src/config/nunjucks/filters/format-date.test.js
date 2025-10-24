@@ -1,4 +1,5 @@
 import { formatDate } from '~/src/config/nunjucks/filters/format-date.js'
+import { jest } from '@jest/globals'
 
 describe('#formatDate', () => {
   beforeAll(() => {

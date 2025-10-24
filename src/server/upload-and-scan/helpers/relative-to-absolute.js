@@ -1,12 +1,12 @@
-function relativeToAbsolute(base, path) {
+function relativeToAbsolute(base, path, logger) {
   if (isAbsolute(path)) {
     return path
   }
-
   try {
     return new URL(path, base).toString()
   } catch (e) {
-    throw new Error('Failed to convert path to absolute url')
+    logger.error('Failed to convert path to absolute url')
+    return path
   }
 }
 

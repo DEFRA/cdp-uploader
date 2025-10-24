@@ -4,6 +4,7 @@ import { config } from '~/src/config/index.js'
 import { handleScanResult } from '~/src/server/scan/listener/handle-scan-result.js'
 import { handleScanResultsCallback } from '~/src/server/callback/listener/handle-scan-results-callback.js'
 import { handleMockVirusScanner } from '~/src/server/test-harness/mock-virus-scanner.js'
+import { handleDownloadRequests } from '~/src/server/download-urls/listener/handle-download-requests.js'
 
 /**
  * @typedef {StopOptions} StopOptions
@@ -76,14 +77,23 @@ const scanResultCallbackListener = {
   }
 }
 
+const downloadRequestsListener = {
+  plugin: sqsListener,
+  options: {
+    config: config.get('sqsDownloadRequests'),
+    messageHandler: async (message, queueUrl, server) =>
+      await handleDownloadRequests(message, queueUrl, server)
+  }
+}
+
 const mockClamavListener = {
   plugin: sqsListener,
   options: {
     config: {
       queueUrl: 'mock-clamav',
-      visibilityTimeout: 5,
-      waitTimeSeconds: 20,
-      pollingWaitTimeMs: 10,
+      visibilityTimeout: 2,
+      waitTimeSeconds: 3,
+      pollingWaitTimeMs: 100,
       batchSize: 1
     },
     messageHandler: async (message, queueUrl, server) =>
@@ -91,7 +101,12 @@ const mockClamavListener = {
   }
 }
 
-export { scanResultListener, scanResultCallbackListener, mockClamavListener }
+export {
+  scanResultListener,
+  scanResultCallbackListener,
+  downloadRequestsListener,
+  mockClamavListener
+}
 /**
  * @import {StopOptions} from 'sqs-consumer'
  */

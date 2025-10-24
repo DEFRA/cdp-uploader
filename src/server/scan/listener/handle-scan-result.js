@@ -8,7 +8,6 @@ import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
-import { counter } from '~/src/server/common/helpers/metrics/index.js'
 
 const quarantineBucket = config.get('quarantineBucket')
 
@@ -71,7 +70,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
       await server.redis.storeFileDetails(fileId, fileDetails)
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
 
-      await counter('file-infected')
+      await server.metrics().counter('file-infected')
 
       fileLogger.info(`Virus found. Message: ${payload.message}`)
     }
@@ -86,7 +85,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
         destinationKey,
         fileLogger
       )
-      await counter('file-clean')
+      await server.metrics().counter('file-clean')
 
       if (delivered) {
         fileDetails.delivered = new Date().toISOString()
@@ -110,7 +109,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     }
   }
 
-  await processScanComplete(server, uploadId, fileId)
+  await processScanComplete(uploadId, fileId, server)
 }
 
 function findUploadId(key) {

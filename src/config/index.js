@@ -1,8 +1,5 @@
 import convict from 'convict'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-const dirname = path.dirname(fileURLToPath(import.meta.url))
+import { cwd } from 'node:process'
 
 const oneWeekMillis = 7 * 24 * 60 * 60 * 1000
 
@@ -53,7 +50,7 @@ export const config = convict({
   root: {
     doc: 'Project root',
     format: String,
-    default: path.resolve(dirname, '../..')
+    default: cwd()
   },
   assetPath: {
     doc: 'Asset path',
@@ -105,14 +102,14 @@ export const config = convict({
     format: String,
     nullable: true,
     default: null,
-    env: 'CDP_HTTP_PROXY'
+    env: 'HTTP_PROXY'
   }),
   httpsProxy: /** @type {SchemaObj<string | null>} */ ({
     doc: 'HTTPS Proxy',
     format: String,
     nullable: true,
     default: null,
-    env: 'CDP_HTTPS_PROXY'
+    env: 'HTTP_PROXY'
   }),
   redis: /** @type {Schema<RedisConfig>} */ ({
     host: {
@@ -210,6 +207,32 @@ export const config = convict({
       format: Number,
       default: 10,
       env: 'SQS_SCAN_RESULTS_CALLBACK_BATCH_SIZE'
+    }
+  },
+  sqsDownloadRequests: {
+    queueUrl: {
+      doc: 'Queue for upload ready results',
+      format: String,
+      default: 'cdp-uploader-download-requests',
+      env: 'SQS_DOWNLOAD_REQUESTS'
+    },
+    waitTimeSeconds: {
+      doc: 'The duration for which the call will wait for a message to arrive in the queue before returning',
+      format: Number,
+      default: 20,
+      env: 'SQS_DOWNLOAD_REQUESTS_WAIT_TIME_SECONDS'
+    },
+    pollingWaitTimeMs: {
+      doc: 'The duration to wait before repolling the queue',
+      format: Number,
+      default: 0,
+      env: 'SQS_DOWNLOAD_REQUESTS_POLLING_WAIT_TIME_MS'
+    },
+    batchSize: {
+      doc: 'The number of messages to request from SQS when polling (max 10)',
+      format: Number,
+      default: 10,
+      env: 'SQS_DOWNLOAD_REQUESTS_BATCH_SIZE'
     }
   },
   mockVirusRegex: {

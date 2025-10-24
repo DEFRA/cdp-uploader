@@ -1,11 +1,13 @@
 import path from 'node:path'
 import hapi from '@hapi/hapi'
+import { metrics } from '@defra/cdp-metrics'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/server/router.js'
 import { catchAll } from '~/src/server/common/helpers/errors.js'
 import { failAction } from '~/src/server/common/helpers/fail-action.js'
 import {
+  downloadRequestsListener,
   mockClamavListener,
   scanResultCallbackListener,
   scanResultListener
@@ -16,10 +18,13 @@ import { redis } from '~/src/server/common/helpers/redis/redis.js'
 import { s3Client } from '~/src/server/common/helpers/s3/s3-client.js'
 import { sqsClient } from '~/src/server/common/helpers/sqs/sqs-client.js'
 import { pulse } from '~/src/server/common/helpers/pulse.js'
+import { setupProxy } from '~/src/server/common/helpers/proxy.js'
 
 const isProduction = config.get('isProduction')
 
 export async function createServer() {
+  setupProxy()
+
   const server = hapi.server({
     port: config.get('port'),
     routes: {
@@ -55,13 +60,15 @@ export async function createServer() {
   }
 
   await server.register([
+    metrics,
     pulse,
     redis,
     s3Client,
     sqsClient,
     router,
     scanResultListener,
-    scanResultCallbackListener
+    scanResultCallbackListener,
+    downloadRequestsListener
   ])
 
   // Local development & testing only
