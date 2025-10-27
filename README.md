@@ -160,16 +160,28 @@ When downloadUrls are provided, cdp-uploader downloads and scans the files async
 
 ### Path Parameters
 
-| Parameter Name | Description                                                              |
+| Parameter Name | Description |
 | -------------- | ------------------------------------------------------------------------ |
-| uploadId       | Unique id for that upload. UploadId is provided via the `/initiate` call |
+| `uploadId` | Unique ID for the upload. The `uploadId` is provided via the `/initiate` call. |
 
-This will be a `multipart/form-data` request to the `uploadAndScanUrl` url provided in the initiate response. This
-request should happen directly from the users browser to the cdp-uploader.
+### Description
 
-Example `/upload-and-scan/${uploadId}` request:
+The `/upload-and-scan/{uploadId}` endpoint supports two types of POST requests:
 
-```javascript
+1. **Browser uploads (multipart/form-data):** For public-facing forms or user-facing applications where a file is
+submitted directly from the browser.
+
+2. **API uploads (binary or JSON body):** For integrations from other government departments or data centres that need
+to programmatically upload files. These can use a direct `POST` request with an appropriate `Content-Type` header
+(e.g. `application/octet-stream`) and an optional `x-filename` header for metadata.
+
+This flexibility allows simple integration with automated or API-based workflows as well as traditional web forms.
+
+---
+
+### Example: Browser (multipart/form-data)
+
+```html
 <form
   action="/upload-and-scan/b18ceadb-afb1-4955-a70b-256bf94444d5"
   method="post"
@@ -181,9 +193,28 @@ Example `/upload-and-scan/${uploadId}` request:
 </form>
 ```
 
+---
+
+### Example: API (binary upload)
+
+```bash
+curl -X POST "https://example.gov.uk/upload-and-scan/b18ceadb-afb1-4955-a70b-256bf94444d5"   -H "Content-Type: application/octet-stream"   -H "x-filename: report.pdf"   --data-binary "@report.pdf"
+```
+
+---
+
 ### Response
 
-Once the upload has been successful, the user will be redirected to the `redirect` url provided in the initiate request.
+Once the upload is accepted, the user (or API client) will be redirected to the redirect URL provided in the `/initiate`
+response.
+The CDP Uploader will then asynchronously perform a **virus scan** on the uploaded file.
+
+For **API integrations**, this redirect can be ignored — frontend clients should prevent automatic redirect following
+(for example, by using fetch with redirect: 'manual' or an equivalent mechanism).
+
+Instead, the integration can rely on one of the following approaches:
+- Callback (optional): If a callback URL is configured, the CDP Uploader will send a callback once the virus scan is complete, including the scan result and file metadata.
+- Polling: If no callback URL is configured, the tenant or API client can poll the status endpoint to check the progress and outcome of the upload.
 
 ## GET /status/{uploadId}
 
