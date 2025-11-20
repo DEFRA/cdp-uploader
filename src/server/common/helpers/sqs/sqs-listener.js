@@ -17,15 +17,24 @@ const sqsListener = {
     version: '0.1.0',
     register(server, options) {
       const queueUrl = options.config.queueUrl
+      const { events, sqs, logger } = server
 
       const batchMessageHandler = async function (messages) {
-        const messageHandlerPromises = messages.map((message) =>
-          options.messageHandler(message, queueUrl, server)
+        await Promise.all(
+          messages.map(async (message) => {
+            try {
+              await options.messageHandler(message, queueUrl, server)
+            } catch (err) {
+              logger.error(
+                { err },
+                `Error processing message from ${queueUrl}: ${err.message}`
+              )
+            }
+          })
         )
-        await Promise.all(messageHandlerPromises)
       }
 
-      server.logger.info(`Listening for scan result events on ${queueUrl}`)
+      logger.info(`Listening for scan result events on ${queueUrl}`)
 
       const listener = Consumer.create({
         queueUrl,
@@ -34,23 +43,23 @@ const sqsListener = {
         shouldDeleteMessages: false,
         batchSize: options.config.batchSize,
         handleMessageBatch: (messages) => batchMessageHandler(messages),
-        sqs: server.sqs
+        sqs
       })
 
       listener.on('error', (error) => {
-        server.logger.error(`error ${queueUrl} : ${error.message}`)
+        logger.error(`error ${queueUrl} : ${error.message}`)
       })
 
       listener.on('processing_error', (error) => {
-        server.logger.error(`processing error ${queueUrl} : ${error.message}`)
+        logger.error(`processing error ${queueUrl} : ${error.message}`)
       })
 
       listener.on('timeout_error', (error) => {
-        server.logger.error(`timeout error ${queueUrl} : ${error.message}`)
+        logger.error(`timeout error ${queueUrl} : ${error.message}`)
       })
 
-      server.events.on('closing', (/** @type {StopOptions} */ options) => {
-        server.logger.info(`Closing sqs listener for ${queueUrl}`)
+      events.on('closing', (/** @type {StopOptions} */ options) => {
+        logger.info(`Closing sqs listener for ${queueUrl}`)
         listener.stop(options)
       })
 
