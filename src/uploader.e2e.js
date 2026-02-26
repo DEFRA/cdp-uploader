@@ -300,6 +300,34 @@ describe('#uploaderE2e', () => {
     oneMinute
   )
 
+  test('upload with "invalid" cookie should not return a 4xx', async () => {
+    const initPayload = {
+      redirect: 'http://localhost/redirect',
+      callback: 'http://localhost/callback',
+      s3Bucket: 'my-bucket',
+      s3Path: 'path',
+      mimeTypes: ['image/gif', 'image/jpeg'],
+      maxFileSize: 1024 * 100000,
+      metadata: { id: 1234, session: 'abc-123-xyz' }
+    }
+
+    const initBody = await initUpload(server, initPayload)
+
+    // upload a file
+    const formData = new FormData()
+    formData.append('foo', 'bar')
+    formData.append('id', '1234')
+
+    const uploadResult = await fetch(initBody.uploadUrl, {
+      method: 'POST',
+      body: formData,
+      redirect: 'manual',
+      headers: { cookie: 'bad_cookie=with spaces' }
+    })
+
+    expect(uploadResult.status).toBe(302)
+  })
+
   test(
     'upload with a mock virus file should be rejected',
     async () => {

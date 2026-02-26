@@ -59,6 +59,15 @@ export async function createServer() {
     await server.register(secureContext)
   }
 
+  server.ext('onRequest', (request, h) => {
+    if (request.headers?.cookie) {
+      // spaces in cookies can cause invalid cookie issues so ignoring on all endpoints instead of looking
+      // at request.path
+      delete request.headers.cookie
+    }
+    return h.continue
+  })
+
   await server.register([
     metrics,
     pulse,
