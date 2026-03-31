@@ -20,6 +20,11 @@ Core delivery platform Node.js Frontend Template.
     - [File field in form](#file-field-in-form)
     - [Error Handling](#error-handling)
   - [Callback](#callback)
+    - [Callback payload](#callback-payload)
+    - [File fields in callback](#file-fields-in-callback)
+    - [Example: successful upload callback](#example-successful-upload-callback)
+    - [Example: rejected file (virus) callback](#example-rejected-file-virus-callback)
+    - [Callback delivery and retries](#callback-delivery-and-retries)
     - [Intended use](#intended-use)
 - [S3](#s3)
   - [Object metadata on S3 Objects](#object-metadata-on-s3-objects)
@@ -431,13 +436,102 @@ The intention of the `errorMessage` field is that the content can be displayed d
 
 ## Callback
 
-If a callback url has been provided in the initiate request, we will POST a callback to your service once scanning is
-complete and files have been moved to your services bucket. The payload is exactly the same as the response from
-the [Status](#get-statusuploadid) endpoint (without debug enabled).
+If a `callback` URL was provided in the `/initiate` request, cdp-uploader will `POST` a JSON payload to that URL once
+all files in the upload have been scanned (and delivered or rejected). The payload is the same as the
+[Status](#get-statusuploadid) response (without debug).
+
+The request is sent with `Content-Type: application/json`.
+
+### Callback payload
+
+| Field                 | Type     | Description                                                                                                            |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `uploadStatus`        | `string` | Always `"ready"` when the callback fires. All scans have completed.                                                    |
+| `metadata`            | `object` | The metadata object supplied in the `/initiate` request, returned exactly as provided. `undefined` if none was set.     |
+| `form`                | `object` | An object representing each field in the multipart request (or download). See [File fields in callback](#file-fields-in-callback) below. |
+| `numberOfRejectedFiles` | `number` | Count of files that were rejected (virus, empty, too large, wrong mime type, download failure, or server error).      |
+
+### File fields in callback
+
+Text form fields are preserved as-is. File fields are objects with the following properties:
+
+| Field                 | Type               | Nullable | Description                                                                                                                                                      |
+| --------------------- | ------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fileId`              | `string`           | no       | UUID of the file, assigned by cdp-uploader.                                                                                                                      |
+| `filename`            | `string`           | yes      | Original filename from the multipart upload or derived from the download URL. Absent when no filename was provided.                                              |
+| `contentType`         | `string`           | yes      | The MIME type as declared in the multipart upload (or from the `Content-Type` header for download URLs). Absent when not provided.                               |
+| `detectedContentType` | `string`           | yes      | The MIME type detected by cdp-uploader from the file's magic bytes. `undefined` for file types that cannot be detected (e.g. plain text, CSV, JSON) or when the file was rejected before upload. |
+| `contentLength`       | `number`           | yes      | Size of the file in bytes as measured after upload to S3. `undefined` if the file was rejected before upload completed.                                          |
+| `checksumSha256`      | `string`           | yes      | Base64-encoded SHA-256 checksum of the file. `undefined` if the file was rejected before upload completed.                                                       |
+| `fileStatus`          | `string`           | no       | `"complete"` if the file passed the virus scan and was delivered, `"rejected"` if the file was rejected for any reason.                                          |
+| `s3Bucket`            | `string`           | yes      | Destination S3 bucket. Only set when `fileStatus` is `"complete"`.                                                                                               |
+| `s3Key`               | `string`           | yes      | S3 object key (includes `s3Path` prefix if one was set in `/initiate`). Only set when `fileStatus` is `"complete"`.                                              |
+| `hasError`            | `boolean`          | yes      | `true` when the file has been rejected. `undefined` otherwise.                                                                                                   |
+| `errorMessage`        | `string`           | yes      | Human-readable reason for rejection, suitable for displaying to end users (follows [GDS File Upload guidelines](https://design-system.service.gov.uk/components/file-upload/)). Only present when `hasError` is `true`. |
+| `downloadUrl`         | `string`           | yes      | The original download URL. Only present for uploads initiated via `downloadUrls`.                                                                                |
+
+### Example: successful upload callback
+
+```json
+{
+  "uploadStatus": "ready",
+  "metadata": {
+    "customerId": "1234"
+  },
+  "form": {
+    "button": "upload",
+    "file": {
+      "fileId": "9fcaabe5-77ec-44db-8356-3a6e8dc51b13",
+      "filename": "photo.jpeg",
+      "contentType": "image/jpeg",
+      "detectedContentType": "image/jpeg",
+      "contentLength": 11264,
+      "checksumSha256": "bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=",
+      "fileStatus": "complete",
+      "s3Key": "scanned/3b0b2a02-a669-44ba-9b78-bd5cb8460253/9fcaabe5-77ec-44db-8356-3a6e8dc51b13",
+      "s3Bucket": "cdp-example-node-frontend"
+    }
+  },
+  "numberOfRejectedFiles": 0
+}
+```
+
+### Example: rejected file (virus) callback
+
+```json
+{
+  "uploadStatus": "ready",
+  "metadata": {
+    "customerId": "1234"
+  },
+  "form": {
+    "button": "upload",
+    "file": {
+      "fileId": "f45d0dd4-dd3f-4235-9c45-da2edd5c89fd",
+      "filename": "malicious.jpeg",
+      "contentType": "image/jpeg",
+      "detectedContentType": "image/jpeg",
+      "contentLength": 10503,
+      "checksumSha256": "bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=",
+      "fileStatus": "rejected",
+      "hasError": true,
+      "errorMessage": "The selected file contains a virus"
+    }
+  },
+  "numberOfRejectedFiles": 1
+}
+```
+
+### Callback delivery and retries
+
+- cdp-uploader expects the callback endpoint to return an HTTP `2xx` status to acknowledge receipt.
+- If the callback fails (non-`2xx` response or network error), the message is **not** removed from the internal queue
+  and will be retried automatically after the SQS visibility timeout.
+- Once acknowledged, duplicate deliveries are suppressed — the same callback will not be sent again.
 
 ### Intended use
 
-Frontend services will poll the /status endpoint after a user has uploaded a file.
+Frontend services will poll the `/status` endpoint after a user has uploaded a file.
 
 The payload contains all of the fields submitted in the HTML form with the values preserved with the exception of any
 fields that contained files. These fields are replaced with an object showing if they passed the scan and where in S3
