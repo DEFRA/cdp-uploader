@@ -235,6 +235,32 @@ export const config = convict({
       env: 'SQS_DOWNLOAD_REQUESTS_BATCH_SIZE'
     }
   },
+  sqsMockClamav: {
+    queueUrl: {
+      doc: 'Queue used by the mock virus scanner test harness',
+      format: String,
+      default: 'mock-clamav',
+      env: 'SQS_MOCK_CLAMAV'
+    },
+    waitTimeSeconds: {
+      doc: 'The duration for which the call will wait for a message to arrive in the queue before returning',
+      format: Number,
+      default: 3,
+      env: 'SQS_MOCK_CLAMAV_WAIT_TIME_SECONDS'
+    },
+    pollingWaitTimeMs: {
+      doc: 'The duration to wait before re-polling the queue',
+      format: Number,
+      default: 100,
+      env: 'SQS_MOCK_CLAMAV_POLLING_WAIT_TIME_MS'
+    },
+    batchSize: {
+      doc: 'The number of messages to request from SQS when polling (max 10)',
+      format: Number,
+      default: 1,
+      env: 'SQS_MOCK_CLAMAV_BATCH_SIZE'
+    }
+  },
   mockVirusRegex: {
     doc: 'Filename pattern used by test harness to simulate viruses',
     format: String,
