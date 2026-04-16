@@ -98,13 +98,7 @@ const downloadRequestsListener = {
 const mockClamavListener = {
   plugin: sqsListener,
   options: {
-    config: {
-      queueUrl: 'mock-clamav',
-      visibilityTimeout: 2,
-      waitTimeSeconds: 3,
-      pollingWaitTimeMs: 100,
-      batchSize: 1
-    },
+    config: config.get('sqsMockClamav'),
     messageHandler: async (message, queueUrl, server) =>
       await handleMockVirusScanner(message, queueUrl, server)
   }
