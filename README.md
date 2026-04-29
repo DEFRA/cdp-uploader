@@ -2,6 +2,7 @@
 
 Core delivery platform Node.js Frontend Template.
 
+- [Requesting access](#requesting-access)
 - [Requirements](#requirements)
   - [Node.js](#nodejs)
 - [API](#api)
@@ -68,6 +69,21 @@ Core delivery platform Node.js Frontend Template.
   - [Production image](#production-image)
 - [Licence](#licence)
   - [About the licence](#about-the-licence)
+
+# Requesting access
+
+> [!NOTE]
+> An S3 bucket must have been created by the CDP Platform team prior to requesting cdp-uploader integration. Read the [bucket documentation here on how to do this](https://github.com/DEFRA/cdp-documentation/edit/main/how-to/buckets.md)
+
+To enable the cdp-uploader for your bucket, head to [#cdp-support](https://defra-digital-team.slack.com/archives/C05UJ3SE5C6/) on Slack and copy, paste and update the following:
+
+> Hello CDP Support :wave:
+> Please can I enable the cdp-uploader for my service:
+>
+> - bucket_name - The name of the bucket.
+> - owning_service - The name of the service that owns this S3 bucket.
+>
+> Thank you
 
 # Requirements
 
