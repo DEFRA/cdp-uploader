@@ -19,6 +19,8 @@ import { s3Client } from '~/src/server/common/helpers/s3/s3-client.js'
 import { sqsClient } from '~/src/server/common/helpers/sqs/sqs-client.js'
 import { pulse } from '~/src/server/common/helpers/pulse.js'
 import { setupProxy } from '~/src/server/common/helpers/proxy.js'
+import HapiSwagger from 'hapi-swagger'
+import Vision from '@hapi/vision'
 
 const isProduction = config.get('isProduction')
 
@@ -68,7 +70,21 @@ export async function createServer() {
     return h.continue
   })
 
+  const swaggerOptions = {
+    info: {
+      title: 'CDP Uploader API Documentation',
+      version: '1.0.0',
+      description: 'API documentation for the CDP Uploader'
+    },
+    documentationPage: false
+  }
+
   await server.register([
+    Vision,
+    {
+      plugin: HapiSwagger,
+      options: swaggerOptions
+    },
     metrics,
     pulse,
     redis,
