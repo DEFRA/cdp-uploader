@@ -1,10 +1,6 @@
 import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response.js'
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
 import Joi from 'joi'
-import {
-  internalServerErrorResponseSchema,
-  notFoundResponseSchema
-} from '~/src/server/common/helpers/error-response-schema.js'
 
 const statusController = {
   options: {
@@ -61,11 +57,7 @@ const statusController = {
             .unknown(true)
             .optional()
             .description('Only returned when debug=true.')
-        }).label('UploadStatusResponse'),
-        404: notFoundResponseSchema,
-        500: internalServerErrorResponseSchema.example({
-          message: 'The selected file could not be uploaded – try again'
-        })
+        }).label('UploadStatusResponse')
       }
     }
   },

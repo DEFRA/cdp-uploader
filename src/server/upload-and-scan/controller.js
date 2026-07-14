@@ -12,12 +12,6 @@ import { processScanComplete } from '~/src/server/scan/listener/helpers/process-
 import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relative-to-absolute.js'
 import mimeDb from 'mime-db'
 import Joi from 'joi'
-import {
-  badRequestResponseSchema,
-  internalServerErrorResponseSchema,
-  notFoundResponseSchema,
-  payloadTooLargeResponseSchema
-} from '~/src/server/common/helpers/error-response-schema.js'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -77,11 +71,7 @@ const uploadController = {
           .description(
             'Redirects to the redirect URL provided during the /initiate request'
           )
-          .example('/upload-complete'),
-        400: badRequestResponseSchema,
-        404: notFoundResponseSchema,
-        413: payloadTooLargeResponseSchema,
-        500: internalServerErrorResponseSchema
+          .example('/upload-complete')
       }
     }
   },
