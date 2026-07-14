@@ -43,21 +43,67 @@ const downloadUrlValidation = Joi.array()
 
 const initiateValidation = custom
   .object({
-    redirect: redirectValidation,
-    downloadUrls: downloadUrlValidation,
+    redirect: redirectValidation
+      .description(
+        'URL to redirect to after file has been successfully uploaded. Cannot be used together with downloadUrls.'
+      )
+      .example('/health'),
+
+    downloadUrls: downloadUrlValidation
+      .description(
+        'List of URLs pointing to files that should be downloaded and scanned. Cannot be used together with redirect.'
+      )
+      .example(['https://myservice.com/file']),
+
     s3Bucket: Joi.string()
       .required()
+      .description(
+        'S3 bucket the file will be moved to once the scanning is complete'
+      )
+      .example('example-test-bucket')
       .valid(...bucketsAllowlist)
       .messages({
         'any.only':
           'No permission to write to bucket - Please contact CDP Portal Team'
       }),
-    s3Path: Joi.string().optional(),
-    callback: callbackValidation,
-    metadata: Joi.object().unknown(true).default({}),
-    mimeTypes: Joi.array().items(Joi.string()).optional(),
-    maxFileSize: Joi.number().integer().positive().optional()
+
+    s3Path: Joi.string()
+      .optional()
+      .description("'Folder' in bucket where scanned files will be placed")
+      .example('scanned'),
+
+    callback: callbackValidation
+      .description(
+        'Url that will be called once all files in upload have been scanned.'
+      )
+      .example('https://myservice.com/callback'),
+
+    metadata: Joi.object()
+      .unknown(true)
+      .default({})
+      .description(
+        'Arbitrary key-value metadata to associate with this upload session. This metadata will be returned in subsequent Status responses.'
+      )
+      .example({
+        test: '1234'
+      }),
+
+    mimeTypes: Joi.array()
+      .items(Joi.string())
+      .optional()
+      .description('List of accepted mimeTypes')
+      .example(['application/pdf']),
+
+    maxFileSize: Joi.number()
+      .integer()
+      .positive()
+      .optional()
+      .description(
+        'Maximum size in bytes that a file can be (10MB is 10 * 1000 * 1000)'
+      )
+      .example(10000000)
   })
+  .label('InitiateUploadRequest')
   .xor('redirect', 'downloadUrls')
 
 export { initiateValidation }

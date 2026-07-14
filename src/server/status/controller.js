@@ -1,9 +1,68 @@
 import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response.js'
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
+import Joi from 'joi'
 
 const statusController = {
+  options: {
+    tags: ['api', 'Status'],
+    description: 'Get upload status',
+    notes:
+      'Retrieves the current status of an upload session, including the upload status, metadata and details of uploaded files. The uploadId is provided via the /initiate call.',
+    validate: {
+      params: Joi.object({
+        uploadId: Joi.string()
+          .required()
+          .example('7f3c9b12-4d8e-4a6f-b512-9a6d3f8c1e25')
+      }),
+      query: Joi.object({
+        debug: Joi.boolean()
+          .optional()
+          .description(
+            'Set to true to include debug information (the original initiate request payload).'
+          )
+          .example(false)
+      })
+    },
+    response: {
+      status: {
+        200: Joi.object({
+          uploadStatus: Joi.string()
+            .valid('pending', 'processing', 'ready', 'failed')
+            .example('ready'),
+
+          metadata: Joi.object().unknown(true).example({
+            customerId: '1234',
+            accountId: '5678'
+          }),
+
+          form: Joi.object()
+            .unknown(true)
+            .example({
+              file: {
+                fileId: '9fcaabe5-77ec-44db-8356-3a6e8dc51b13',
+                filename: 'document.pdf',
+                contentType: 'application/pdf',
+                fileStatus: 'complete',
+                contentLength: 204800,
+                checksumSha256: 'bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=',
+                detectedContentType: 'application/pdf',
+                s3Key: 'scanned/9fcaabe5-77ec-44db-8356-3a6e8dc51b13',
+                s3Bucket: 'my-service'
+              }
+            }),
+
+          numberOfRejectedFiles: Joi.number().integer().example(0),
+
+          debug: Joi.object()
+            .unknown(true)
+            .optional()
+            .description('Only returned when debug=true.')
+        }).label('UploadStatusResponse')
+      }
+    }
+  },
   async handler(request, h) {
-    const uploadId = request.params.id
+    const uploadId = request.params.uploadId
 
     const debug = request.query.debug?.toLowerCase() === 'true'
 

@@ -5,6 +5,7 @@ import { initiateValidation } from '~/src/server/initiate/helpers/initiate-valid
 import { uploadStatus } from '~/src/server/common/helpers/upload-status.js'
 import { createUploadLogger } from '~/src/server/common/helpers/logging/logger.js'
 import { sendSqsMessageStandard } from '~/src/server/common/helpers/sqs/send-sqs-message.js'
+import Joi from 'joi'
 
 const appBaseUrl = config.get('appBaseUrl')
 const isDevelopment = config.get('isDevelopment')
@@ -20,6 +21,25 @@ const initiateController = {
       output: 'data',
       parse: true,
       allow: 'application/json'
+    },
+    tags: ['api', 'Initiate'],
+    description: 'Initiate an upload request',
+    notes:
+      'Initiates a new upload request. Returns URLs and an upload ID required for subsequent upload and status requests.',
+    response: {
+      status: {
+        201: Joi.object({
+          uploadId: Joi.string().example(
+            '7f3c9b12-4d8e-4a6f-9c21-8b5e3d7a2f10'
+          ),
+          uploadUrl: Joi.string().example(
+            '/upload-and-scan/7f3c9b12-4d8e-4a6f-9c21-8b5e3d7a2f10'
+          ),
+          statusUrl: Joi.string().example(
+            'https://cdp-uploader..example.com/status/7f3c9b12-4d8e-4a6f-9c21-8b5e3d7a2f10'
+          )
+        }).label('InitiateUploadSuccessResponse')
+      }
     }
   },
   async handler(request, h) {

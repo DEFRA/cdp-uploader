@@ -7,7 +7,7 @@ const status = {
       server.route([
         {
           method: 'GET',
-          path: '/status/{id}',
+          path: '/status/{uploadId}',
           ...statusController
         }
       ])

@@ -11,6 +11,7 @@ import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
 import { relativeToAbsolute } from '~/src/server/upload-and-scan/helpers/relative-to-absolute.js'
 import mimeDb from 'mime-db'
+import Joi from 'joi'
 
 // Todo return a nice error message for http://localhost:7337/upload-and-scan (uuid missing)
 const uploadController = {
@@ -19,7 +20,20 @@ const uploadController = {
       socket: false
     },
     validate: {
-      params: uploadPathValidation
+      params: uploadPathValidation,
+      payload: Joi.any().description(
+        'File upload content. Supports multipart/form-data browser uploads or application/octet-stream binary uploads.'
+      ),
+      headers: Joi.object({
+        'content-type': Joi.string()
+          .example('multipart/form-data')
+          .description(
+            'Use multipart/form-data for browser uploads or application/octet-stream for API uploads'
+          ),
+        'x-filename': Joi.string()
+          .example('report.pdf')
+          .description('Optional original filename for binary API uploads')
+      }).unknown()
     },
     payload: {
       allow: Object.keys(mimeDb), // */*
@@ -46,7 +60,20 @@ const uploadController = {
           return h.continue
         }
       }
-    ]
+    ],
+    tags: ['api', 'Upload'],
+    description: 'Upload and scan a file',
+    notes:
+      'Uploads a file to a previously initiated upload session. Supports browser uploads using multipart/form-data and API uploads using binary content. The uploadId is provided via the /initiate call. Once accepted, the file is scanned asynchronously.',
+    response: {
+      status: {
+        302: Joi.any()
+          .description(
+            'Redirects to the redirect URL provided during the /initiate request'
+          )
+          .example('/upload-complete')
+      }
+    }
   },
   async handler(request, h) {
     const uploadId = request.params.uploadId
