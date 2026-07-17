@@ -27,7 +27,7 @@ const statusController = {
       status: {
         200: Joi.object({
           uploadStatus: Joi.string()
-            .valid('pending', 'processing', 'ready', 'failed')
+            .valid('initiated', 'pending', 'ready')
             .example('ready'),
 
           metadata: Joi.object().unknown(true).example({
@@ -64,7 +64,7 @@ const statusController = {
   async handler(request, h) {
     const uploadId = request.params.uploadId
 
-    const debug = request.query.debug?.toLowerCase() === 'true'
+    const debug = request.query.debug === true
 
     const uploadAndFiles = await request.redis.findUploadAndFiles(uploadId)
     const files = uploadAndFiles?.files
