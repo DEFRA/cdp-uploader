@@ -1,4 +1,5 @@
 import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
+import { fileErrorCodes } from '~/src/server/common/constants/file-error-codes.js'
 import { jest } from '@jest/globals'
 
 class Metrics {
@@ -95,6 +96,10 @@ describe('#handleFile', () => {
       expect.objectContaining({
         hasError: true,
         errorMessage: 'The selected file must be smaller than 1 MB',
+        errorCode: fileErrorCodes.tooBig,
+        errorParams: {
+          maxFileSize: 1000 * 1000
+        },
         fileStatus: 'rejected'
       })
     )
@@ -118,6 +123,10 @@ describe('#handleFile', () => {
       expect.objectContaining({
         hasError: true,
         errorMessage: 'The selected file must be smaller than 256 kB',
+        errorCode: fileErrorCodes.tooBig,
+        errorParams: {
+          maxFileSize: 256 * 1000
+        },
         fileStatus: 'rejected'
       })
     )
@@ -155,6 +164,21 @@ describe('#handleFile', () => {
         hasError: true,
         errorMessage:
           'The selected file must be a DOC, DOCX, CSV, ODT, XLSX, XLS, RTF, TXT, PDF or PNG',
+        errorCode: fileErrorCodes.wrongType,
+        errorParams: {
+          mimeTypes: [
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/csv',
+            'application/vnd.oasis.opendocument.text',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-excel',
+            'application/rtf',
+            'text/plain',
+            'application/pdf',
+            'image/png'
+          ]
+        },
         fileStatus: 'rejected'
       })
     )

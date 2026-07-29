@@ -2,6 +2,7 @@ import { config } from '~/src/config/index.js'
 import { uploadFile } from '~/src/server/upload-and-scan/helpers/upload-file.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
+import { fileErrorCodes } from '~/src/server/common/constants/file-error-codes.js'
 import { filesize } from 'filesize'
 import crypto from 'node:crypto'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
@@ -94,7 +95,8 @@ function rejectZeroLengthFile(file) {
     ? {
         fileStatus: fileStatus.rejected,
         hasError: true,
-        errorMessage: fileErrorMessages.empty
+        errorMessage: fileErrorMessages.empty,
+        errorCode: fileErrorCodes.empty
       }
     : {}
 }
@@ -108,7 +110,11 @@ function rejectTooBigFile(file, maxFileSize) {
         errorMessage: fileErrorMessages.tooBig.replace(
           '$MAXSIZE',
           filesize(maxFileSize, { standard: 'si' })
-        )
+        ),
+        errorCode: fileErrorCodes.tooBig,
+        errorParams: {
+          maxFileSize
+        }
       }
     : {}
 }
@@ -139,7 +145,11 @@ function rejectWrongMimeType(contentType, mimeTypes) {
         errorMessage: fileErrorMessages.wrongType.replace(
           '$MIMETYPES',
           createMessage()
-        )
+        ),
+        errorCode: fileErrorCodes.wrongType,
+        errorParams: {
+          mimeTypes
+        }
       }
     : {}
 }

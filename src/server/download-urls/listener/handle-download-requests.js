@@ -9,6 +9,7 @@ import { processScanComplete } from '~/src/server/scan/listener/helpers/process-
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
+import { fileErrorCodes } from '~/src/server/common/constants/file-error-codes.js'
 
 export async function handleDownloadRequests(message, queueUrl, server) {
   const { logger, redis, metrics } = server
@@ -68,7 +69,8 @@ export async function handleDownloadRequests(message, queueUrl, server) {
         customRejection = {
           fileStatus: fileStatus.rejected,
           hasError: true,
-          errorMessage: fileErrorMessages.downloadFailed
+          errorMessage: fileErrorMessages.downloadFailed,
+          errorCode: fileErrorCodes.downloadFailed
         }
       }
 

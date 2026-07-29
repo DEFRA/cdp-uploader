@@ -7,6 +7,7 @@ import { moveS3Object } from '~/src/server/common/helpers/s3/move-s3-object.js'
 import { createFileLogger } from '~/src/server/common/helpers/logging/logger.js'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
+import { fileErrorCodes } from '~/src/server/common/constants/file-error-codes.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
 
 const quarantineBucket = config.get('quarantineBucket')
@@ -65,6 +66,7 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
     if (virusStatus === scanStatus.infected) {
       fileDetails.hasError = true
       fileDetails.errorMessage = fileErrorMessages.virus
+      fileDetails.errorCode = fileErrorCodes.virus
       fileDetails.fileStatus = fileStatus.rejected
 
       await server.redis.storeFileDetails(fileId, fileDetails)

@@ -422,6 +422,8 @@ If multiple download URLs were provided:
 | s3Bucket            | S3 bucket where scanned file is moved. Only set if file status is `complete`                                                       |
 | s3Key               | S3 Path where scanned file is moved. Includes path prefix if set. Only set when fileStatus is `complete`                           |
 | hasError            | `true/false` Only set to true if the file has been rejected or could not be delivered. Reason is supplied in `errorMessage` field. |
+| errorCode           | Stable error identifier for localisation/integration logic. Only present when `hasError` is `true`.                                 |
+| errorParams         | Optional parameters used by some `errorCode` values (for example max file size). Only present when applicable.                      |
 | errorMessage        | Reason why file was rejected. Error message is based on GDS design guidelines and can be show directly to the end-user.            |
 
 ### Error Handling
@@ -432,23 +434,44 @@ A rejected file has the following data set:
 
 - fileStatus: rejected
 - hasError: true
+- errorCode: string
 - errorMessage: string
 
-The `errorMessage` field is a test description of why the file was rejected.
+The `errorMessage` field is a text description of why the file was rejected.
 
-| Cause                                                                                       | errorMessage                                            |
-|---------------------------------------------------------------------------------------------|---------------------------------------------------------|
-| Virus detected                                                                              | `The selected file contains a virus`                    |
-| File is empty                                                                               | `The selected file is empty`                            |
-| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `The selected file must be smaller than $MAXSIZE`       |
-| File doesn't match the mime types set in the init call                                      | `The selected file must be a $MIMETYPES`                |
-| Any server side error in CDP-Uploader                                                       | `The selected file could not be uploaded – try again`   |
-| Failed download                                                                             | `The selected file could not be downloaded`             |
+| Cause                                                                                       | errorCode              | errorParams                   | errorMessage                                            |
+|---------------------------------------------------------------------------------------------|------------------------|-------------------------------|---------------------------------------------------------|
+| Virus detected                                                                              | `FILE_VIRUS`           | —                             | `The selected file contains a virus`                    |
+| File is empty                                                                               | `FILE_EMPTY`           | —                             | `The selected file is empty`                            |
+| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `FILE_TOO_LARGE`       | `{ "maxFileSize": <bytes> }`  | `The selected file must be smaller than $MAXSIZE`       |
+| File doesn't match the mime types set in the init call                                      | `FILE_INVALID_TYPE`    | `{ "mimeTypes": [...] }`      | `The selected file must be a $MIMETYPES`                |
+| Any server side error in CDP-Uploader                                                       | `FILE_UPLOAD_FAILED`   | —                             | `The selected file could not be uploaded – try again`   |
+| Failed download                                                                             | `FILE_DOWNLOAD_FAILED` | —                             | `The selected file could not be downloaded`             |
 
 
 The messages are based on the [GDS File Upload guidelines](https://design-system.service.gov.uk/components/file-upload/)
 
 The intention of the `errorMessage` field is that the content can be displayed directly to the end user.
+The `errorCode`/`errorParams` fields are intended for services that localise messages themselves.
+
+Example localisation pattern:
+
+```js
+const messages = {
+  en: {
+    FILE_VIRUS: () => 'The selected file contains a virus',
+    FILE_EMPTY: () => 'The selected file is empty',
+    FILE_TOO_LARGE: ({ maxFileSize }) =>
+      `The selected file must be smaller than ${maxFileSize} bytes`,
+    FILE_INVALID_TYPE: ({ mimeTypes }) =>
+      `The selected file must be a ${mimeTypes.join(', ')}`,
+    FILE_UPLOAD_FAILED: () => 'The selected file could not be uploaded – try again',
+    FILE_DOWNLOAD_FAILED: () => 'The selected file could not be downloaded'
+  }
+}
+
+const text = messages[locale][file.errorCode](file.errorParams ?? {})
+```
 
 ## Callback
 
@@ -483,6 +506,8 @@ Text form fields are preserved as-is. File fields are objects with the following
 | `s3Bucket`            | `string`           | yes      | Destination S3 bucket. Only set when `fileStatus` is `"complete"`.                                                                                               |
 | `s3Key`               | `string`           | yes      | S3 object key (includes `s3Path` prefix if one was set in `/initiate`). Only set when `fileStatus` is `"complete"`.                                              |
 | `hasError`            | `boolean`          | yes      | `true` when the file has been rejected. `undefined` otherwise.                                                                                                   |
+| `errorCode`           | `string`           | yes      | Stable identifier for the rejection reason. Only present when `hasError` is `true`.                                                                              |
+| `errorParams`         | `object`           | yes      | Optional parameters for the error code (for example `{ "maxFileSize": 10000000 }`).                                                                              |
 | `errorMessage`        | `string`           | yes      | Human-readable reason for rejection, suitable for displaying to end users (follows [GDS File Upload guidelines](https://design-system.service.gov.uk/components/file-upload/)). Only present when `hasError` is `true`. |
 | `downloadUrl`         | `string`           | yes      | The original download URL. Only present for uploads initiated via `downloadUrls`.                                                                                |
 
@@ -531,6 +556,7 @@ Text form fields are preserved as-is. File fields are objects with the following
       "checksumSha256": "bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=",
       "fileStatus": "rejected",
       "hasError": true,
+      "errorCode": "FILE_VIRUS",
       "errorMessage": "The selected file contains a virus"
     }
   },

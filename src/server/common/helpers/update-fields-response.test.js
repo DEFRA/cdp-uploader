@@ -1,5 +1,6 @@
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
+import { fileErrorCodes } from '~/src/server/common/constants/file-error-codes.js'
 import { updateFormsResponse } from '~/src/server/common/helpers/update-forms-response.js'
 
 describe('#updateFieldsResponse', () => {
@@ -85,7 +86,8 @@ describe('#updateFieldsResponse', () => {
           contentType: 'image/png',
           contentLength: 67567,
           hasError: true,
-          errorMessage: fileErrorMessages.virus
+          errorMessage: fileErrorMessages.virus,
+          errorCode: fileErrorCodes.virus
         }
       ])
     ).toEqual({
@@ -103,6 +105,7 @@ describe('#updateFieldsResponse', () => {
         {
           contentLength: 67567,
           errorMessage: 'The selected file contains a virus',
+          errorCode: 'FILE_VIRUS',
           fileId: '333-333',
           fileStatus: fileStatus.complete,
           filename: 'succulent.jpg',

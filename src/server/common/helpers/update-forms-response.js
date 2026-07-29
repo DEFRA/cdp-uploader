@@ -19,6 +19,12 @@ function updateFormsResponse(formData, files) {
     hasError: file.hasError,
     ...(file?.errorMessage && {
       errorMessage: file.errorMessage
+    }),
+    ...(file?.errorCode && {
+      errorCode: file.errorCode
+    }),
+    ...(file?.errorParams && {
+      errorParams: file.errorParams
     })
   })
 
