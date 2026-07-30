@@ -1,6 +1,5 @@
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
-import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
-import { fileErrorCodes } from '~/src/server/common/constants/file-error-codes.js'
+import { fileErrors } from '~/src/server/common/constants/file-errors.js'
 import { updateFormsResponse } from '~/src/server/common/helpers/update-forms-response.js'
 
 describe('#updateFieldsResponse', () => {
@@ -86,8 +85,8 @@ describe('#updateFieldsResponse', () => {
           contentType: 'image/png',
           contentLength: 67567,
           hasError: true,
-          errorMessage: fileErrorMessages.virus,
-          errorCode: fileErrorCodes.virus
+          errorMessage: fileErrors.virus.message,
+          errorCode: fileErrors.virus.code
         }
       ])
     ).toEqual({
@@ -128,7 +127,7 @@ describe('#updateFieldsResponse', () => {
           contentType: 'image/png',
           contentLength: 91245,
           hasError: true,
-          errorMessage: fileErrorMessages.virus
+          errorMessage: fileErrors.virus.message
         }
       ])
     ).toEqual({
