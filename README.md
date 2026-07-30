@@ -401,11 +401,11 @@ If multiple download URLs were provided:
 
 
 | Parameter Name        | Description                                                                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| --------------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | uploaderStatus        | Have all scans completed, can be `initiated`, `pending` or `ready`                                                                                           |
 | metadata              | Extra data and identified set by the requesting service in the /initialize call. Returned exactly as they were presented                                     |
 | form                  | An object representing each field in the multipart request. Text fields are preserved exactly as they were sent, file fields contain details about the file. |
-| numberOfRejectedFiles | Total number of files that have been rejected by the uploader                                                                                                |
+| numberOfRejectedFiles | Total number of files rejected by the uploader. Present when `uploadStatus` is `ready`; absent for `initiated` and `pending`.                                |
 | debug.request         | When set to true, the initiate request payload received by cdp-uploader                                                                                      |
 
 ### File field in form
@@ -488,7 +488,7 @@ The request is sent with `Content-Type: application/json`.
 | `uploadStatus`        | `string` | Always `"ready"` when the callback fires. All scans have completed.                                                    |
 | `metadata`            | `object` | The metadata object supplied in the `/initiate` request, returned exactly as provided. `undefined` if none was set.     |
 | `form`                | `object` | An object representing each field in the multipart request (or download). See [File fields in callback](#file-fields-in-callback) below. |
-| `numberOfRejectedFiles` | `number` | Count of files that were rejected (virus, empty, too large, wrong mime type, download failure, or server error).      |
+| `numberOfRejectedFiles` | `number` | Count of files rejected (virus, empty, too large, wrong mime type, download failure, or server error). Always present in callbacks. |
 
 ### File fields in callback
 
