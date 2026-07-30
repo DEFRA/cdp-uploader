@@ -6,7 +6,7 @@ import {
   uploadStatus
 } from '~/src/server/common/helpers/upload-status.js'
 import { processScanComplete } from '~/src/server/scan/listener/helpers/process-scan-complete.js'
-import { fileErrorMessages } from '~/src/server/common/constants/file-error-messages.js'
+import { fileErrors } from '~/src/server/common/constants/file-errors.js'
 import { fileStatus } from '~/src/server/common/constants/file-status.js'
 import { deleteSqsMessage } from '~/src/server/common/helpers/sqs/delete-sqs-message.js'
 
@@ -68,7 +68,8 @@ export async function handleDownloadRequests(message, queueUrl, server) {
         customRejection = {
           fileStatus: fileStatus.rejected,
           hasError: true,
-          errorMessage: fileErrorMessages.downloadFailed
+          errorMessage: fileErrors.downloadFailed.message,
+          errorCode: fileErrors.downloadFailed.code
         }
       }
 

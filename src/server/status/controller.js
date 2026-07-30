@@ -38,7 +38,7 @@ const statusController = {
           form: Joi.object()
             .unknown(true)
             .example({
-              file: {
+              successfulFile: {
                 fileId: '9fcaabe5-77ec-44db-8356-3a6e8dc51b13',
                 filename: 'document.pdf',
                 contentType: 'application/pdf',
@@ -48,6 +48,19 @@ const statusController = {
                 detectedContentType: 'application/pdf',
                 s3Key: 'scanned/9fcaabe5-77ec-44db-8356-3a6e8dc51b13',
                 s3Bucket: 'my-service'
+              },
+              rejectedFile: {
+                fileId: 'f45d0dd4-dd3f-4235-9c45-da2edd5c89fd',
+                filename: 'large-document.pdf',
+                contentType: 'application/pdf',
+                fileStatus: 'rejected',
+                contentLength: 20480000,
+                hasError: true,
+                errorMessage: 'The selected file must be smaller than 10 MB',
+                errorCode: 'FILE_TOO_LARGE',
+                errorParams: {
+                  maxFileSize: 10000000
+                }
               }
             }),
 

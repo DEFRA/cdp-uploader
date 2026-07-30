@@ -10,6 +10,7 @@ const fileDetailsRejectedVirusFixture = {
   filename: 'succulant.jpeg',
   scanned: '2024-04-29T09:43:31.373Z',
   hasError: true,
+  errorCode: 'FILE_VIRUS',
   errorMessage: 'The selected file contains a virus'
 }
 

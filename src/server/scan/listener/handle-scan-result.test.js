@@ -173,6 +173,7 @@ describe('#handleScanResult', () => {
         contentLength: 25624,
         contentType: 'image/jpeg',
         errorMessage: 'The selected file contains a virus',
+        errorCode: 'FILE_VIRUS',
         fileId: 'd3e1ccfa-3f58-435d-af9a-dad7b20ab11b',
         fileStatus: 'rejected',
         filename: 'shoot.jpg',
