@@ -64,7 +64,14 @@ const statusController = {
               }
             }),
 
-          numberOfRejectedFiles: Joi.number().integer().example(0),
+          numberOfRejectedFiles: Joi.number()
+            .integer()
+            .example(0)
+            .when('uploadStatus', {
+              is: 'ready',
+              then: Joi.required(),
+              otherwise: Joi.optional()
+            }),
 
           debug: Joi.object()
             .unknown(true)

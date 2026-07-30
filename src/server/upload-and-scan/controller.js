@@ -158,6 +158,7 @@ const uploadController = {
       // If no files are submitted jump straight to 'ready'.
       if (fileStatuses.length === 0) {
         uploadDetails.uploadStatus = uploadStatus.ready.description
+        uploadDetails.numberOfRejectedFiles = 0
       }
 
       await request.redis.storeUploadDetails(uploadId, uploadDetails)

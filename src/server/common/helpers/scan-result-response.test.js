@@ -1,6 +1,8 @@
 import { toScanResultResponse } from '~/src/server/common/helpers/scan-result-response.js'
 import { uploadDetailsSuccessFixture } from '~/src/__fixtures__/upload-details-success.js'
 import { uploadDetailsRejectedVirusFixture } from '~/src/__fixtures__/upload-details-rejected-virus.js'
+import { uploadDetailsReadyFixture } from '~/src/__fixtures__/upload-details-ready.js'
+import { uploadDetailsPendingFixture } from '~/src/__fixtures__/upload-details-pending.js'
 import { fileDetailsRejectedVirusFixture } from '~/src/__fixtures__/file-details-rejected-virus.js'
 import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete.js'
 
@@ -151,6 +153,58 @@ describe('#toScanResultResponse', () => {
       },
       numberOfRejectedFiles: 1,
       uploadStatus: 'ready'
+    })
+  })
+
+  test('Should default numberOfRejectedFiles to 0 when uploadStatus is ready and count is missing', () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omit field for test
+    const { numberOfRejectedFiles, ...uploadDetails } =
+      uploadDetailsReadyFixture
+
+    expect(
+      toScanResultResponse(uploadDetails.uploadId, uploadDetails, [], false)
+    ).toEqual({
+      uploadStatus: 'ready',
+      metadata: {
+        plantId: '94f8a562-630c-4569-b3a3-2503408c4129'
+      },
+      form: {
+        button: 'upload',
+        file: {
+          fileId: '7507f65a-acb5-41f2-815f-719fbbd47ee5',
+          filename: 'shoot.jpg',
+          contentType: 'image/jpeg'
+        }
+      },
+      numberOfRejectedFiles: 0
+    })
+  })
+
+  test('Should omit numberOfRejectedFiles when uploadStatus is pending and count is missing', () => {
+    const serialised = JSON.parse(
+      JSON.stringify(
+        toScanResultResponse(
+          uploadDetailsPendingFixture.uploadId,
+          uploadDetailsPendingFixture,
+          [],
+          false
+        )
+      )
+    )
+
+    expect(serialised).toEqual({
+      uploadStatus: 'pending',
+      metadata: {
+        plantId: 'c316e7ae-3c58-49f8-96a9-cb9058c9ea31'
+      },
+      form: {
+        button: 'upload',
+        file: {
+          fileId: 'd3e1ccfa-3f58-435d-af9a-dad7b20ab11b',
+          filename: 'shoot.jpg',
+          contentType: 'image/jpeg'
+        }
+      }
     })
   })
 })
