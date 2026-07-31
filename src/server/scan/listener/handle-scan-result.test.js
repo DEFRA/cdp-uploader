@@ -15,14 +15,24 @@ jest.mock('~/src/server/scan/listener/helpers/process-scan-complete.js')
 jest.mock('~/src/server/common/helpers/s3/move-s3-object.js')
 
 class Metrics {
-  timer = jest.fn()
   counter = jest.fn()
   byteSize = jest.fn()
   millis = jest.fn()
 }
 
+const virusCheckMessageScanLimitExceededFixture = {
+  ...virusCheckMessageInfectedFixture,
+  Body: JSON.stringify({
+    ...JSON.parse(virusCheckMessageInfectedFixture.Body),
+    message: `cleanfile.txt: Heuristics.Limits.Exceeded.MaxScanTime FOUND
+----------- SCAN SUMMARY -----------
+Infected files: 1`
+  })
+}
+
 describe('#handleScanResult', () => {
   const logger = createLogger()
+  const mockMetrics = new Metrics()
   const mockFindUploadDetails = jest.fn()
   const mockFindFileDetails = jest.fn()
   const mockFindUploadAndFiles = jest.fn()
@@ -35,7 +45,7 @@ describe('#handleScanResult', () => {
       findUploadAndFiles: mockFindUploadAndFiles,
       storeFileDetails: mockStoreFileDetails
     },
-    metrics: () => new Metrics(),
+    metrics: () => mockMetrics,
     logger
   }
   const mockLogger = {
@@ -49,7 +59,11 @@ describe('#handleScanResult', () => {
 
   beforeAll(() => {
     jest.useFakeTimers()
-    jest.setSystemTime(new Date('2024-04-29T14:10:00'))
+    jest.setSystemTime(new Date('2024-04-29T14:10:00.000Z'))
+  })
+
+  beforeEach(() => {
+    jest.clearAllMocks()
   })
 
   afterAll(() => {
@@ -192,6 +206,14 @@ describe('#handleScanResult', () => {
       )
     })
 
+    test('Should increment infected metric', () => {
+      const counterCalls = mockMetrics.counter.mock.calls.map(
+        ([metricName]) => metricName
+      )
+      expect(counterCalls).toContain('file-infected')
+      expect(counterCalls).not.toContain('file-scan-limit-exceeded')
+    })
+
     test('Should delete Sqs message', () => {
       expect(deleteSqsMessage).toHaveBeenCalledTimes(1)
       expect(deleteSqsMessage).toHaveBeenCalledWith(
@@ -199,6 +221,78 @@ describe('#handleScanResult', () => {
         'mock-virus-scan-queue-url',
         '123456-78910'
       )
+    })
+
+    test('Should call process scan complete with expected values', () => {
+      expect(processScanComplete).toHaveBeenCalledTimes(1)
+      expect(processScanComplete).toHaveBeenCalledWith(
+        'mock-id-34543',
+        'mock-key-87678',
+        mockServer
+      )
+    })
+
+    test('Should return "undefined"', () => {
+      expect(result).toBeUndefined()
+    })
+  })
+
+  describe('When file scan exceeds ClamAV limits', () => {
+    let result
+
+    beforeEach(async () => {
+      // Copies needed due to mutations within the file being tested
+      const uploadDetailsPendingFixtureCopy = { ...uploadDetailsPendingFixture }
+      const fileDetailsPendingFixtureCopy = { ...fileDetailsPendingFixture }
+
+      mockFindUploadDetails.mockResolvedValue(uploadDetailsPendingFixtureCopy)
+      mockFindFileDetails.mockResolvedValue(fileDetailsPendingFixtureCopy)
+      mockFindUploadAndFiles.mockResolvedValue({
+        files: [fileDetailsPendingFixture],
+        uploadDetails: uploadDetailsPendingFixture
+      })
+
+      result = await handleScanResult(
+        virusCheckMessageScanLimitExceededFixture,
+        'mock-virus-scan-queue-url',
+        mockServer
+      )
+    })
+
+    test('Should mark file as upload failed and rejected', () => {
+      expect(mockStoreFileDetails).toHaveBeenCalledTimes(1)
+      expect(mockStoreFileDetails).toHaveBeenCalledWith('mock-key-87678', {
+        detectedContentType: 'image/webp',
+        contentLength: 25624,
+        contentType: 'image/jpeg',
+        errorMessage: 'The selected file could not be uploaded – try again',
+        errorCode: 'FILE_UPLOAD_FAILED',
+        fileId: 'd3e1ccfa-3f58-435d-af9a-dad7b20ab11b',
+        fileStatus: 'rejected',
+        filename: 'shoot.jpg',
+        hasError: true,
+        pending: '2024-04-29T13:41:47.466Z',
+        scanned: '2024-04-29T14:10:00.000Z',
+        uploadId: 'ba0a64c7-8b1c-4237-9256-b9c4a3c8fe68',
+        checksumSha256: 'bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c='
+      })
+    })
+
+    test('Should log expected scan limit exceeded info', () => {
+      expect(mockLogger.info).toHaveBeenCalledTimes(1)
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        `Scan limit exceeded. Message: cleanfile.txt: Heuristics.Limits.Exceeded.MaxScanTime FOUND
+----------- SCAN SUMMARY -----------
+Infected files: 1`
+      )
+    })
+
+    test('Should increment scan-limit-exceeded metric', () => {
+      const counterCalls = mockMetrics.counter.mock.calls.map(
+        ([metricName]) => metricName
+      )
+      expect(counterCalls).toContain('file-scan-limit-exceeded')
+      expect(counterCalls).not.toContain('file-infected')
     })
 
     test('Should call process scan complete with expected values', () => {

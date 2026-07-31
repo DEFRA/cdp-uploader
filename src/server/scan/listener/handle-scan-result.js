@@ -59,21 +59,34 @@ async function handleScanResult(message, scanResultQueueUrl, server) {
 
   if (fileDetails.fileStatus === fileStatus.pending) {
     const virusStatus = payload.status?.toLowerCase()
+    const scanLimitExceeded = (payload.message ?? '').includes(
+      'Heuristics.Limits.Exceeded'
+    )
 
     fileDetails.scanned = new Date().toISOString()
 
     if (virusStatus === scanStatus.infected) {
       fileDetails.hasError = true
-      fileDetails.errorMessage = fileErrors.virus.message
-      fileDetails.errorCode = fileErrors.virus.code
+      fileDetails.errorMessage = scanLimitExceeded
+        ? fileErrors.uploadFailed.message
+        : fileErrors.virus.message
+      fileDetails.errorCode = scanLimitExceeded
+        ? fileErrors.uploadFailed.code
+        : fileErrors.virus.code
       fileDetails.fileStatus = fileStatus.rejected
 
       await server.redis.storeFileDetails(fileId, fileDetails)
       await deleteSqsMessage(server.sqs, scanResultQueueUrl, receiptHandle)
 
-      await server.metrics().counter('file-infected')
+      await server
+        .metrics()
+        .counter(
+          scanLimitExceeded ? 'file-scan-limit-exceeded' : 'file-infected'
+        )
 
-      fileLogger.info(`Virus found. Message: ${payload.message}`)
+      fileLogger.info(
+        `${scanLimitExceeded ? 'Scan limit exceeded' : 'Virus found'}. Message: ${payload.message}`
+      )
     }
 
     if (virusStatus === scanStatus.clean) {

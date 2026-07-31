@@ -445,7 +445,7 @@ The `errorMessage` field is a text description of why the file was rejected.
 | File is empty                                                                               | `FILE_EMPTY`           | —                             | `The selected file is empty`                            |
 | File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `FILE_TOO_LARGE`       | `{ "maxFileSize": <bytes> }`  | `The selected file must be smaller than $MAXSIZE`       |
 | File doesn't match the mime types set in the init call                                      | `FILE_INVALID_TYPE`    | `{ "mimeTypes": [...] }`      | `The selected file must be a $MIMETYPES`                |
-| Any server side error in CDP-Uploader                                                       | `FILE_UPLOAD_FAILED`   | —                             | `The selected file could not be uploaded – try again`   |
+| Server-side upload/scan failure (including virus scan limit exceeded)                       | `FILE_UPLOAD_FAILED`   | —                             | `The selected file could not be uploaded – try again`   |
 | Failed download                                                                             | `FILE_DOWNLOAD_FAILED` | —                             | `The selected file could not be downloaded`             |
 
 
@@ -473,6 +473,23 @@ const messages = {
 const text = messages[locale][file.errorCode](file.errorParams ?? {})
 ```
 
+#### Virus scan limit exceeded
+
+When ClamAV's `AlertExceedsMax` option is enabled, files that exceed a scan limit (size, recursion depth, scan time,
+etc.) are reported with a `FOUND` status and a virus name prefixed `Heuristics.Limits.Exceeded`. This does **not** mean
+the file is infected, only that scanning could not complete within the configured limits.
+
+`cdp-uploader` detects this prefix and returns the existing `FILE_UPLOAD_FAILED` error instead of `FILE_VIRUS`, so
+tenants that already handle known error codes do not need a new code.
+
+References:
+
+- [clamd.conf man page - `AlertExceedsMax`](https://github.com/Cisco-Talos/clamav/blob/main/docs/man/clamd.conf.5.in)
+- [clamdscan man page - tooling should handle this case](https://manpages.opensuse.org/Tumbleweed/clamav/clamdscan.1.en.html)
+- [clamav-users mailing list - known
+  `Heuristics.Limits.Exceeded.*` suffixes](https://www.mail-archive.com/clamav-users@lists.clamav.net/msg52438.html)
+- [ClamAV 0.103.4/0.104.1 release notes - naming convention details](https://lists.clamav.net/pipermail/clamav-announce/2021/000058.html)
+
 ## Callback
 
 If a `callback` URL was provided in the `/initiate` request, cdp-uploader will `POST` a JSON payload to that URL once
@@ -488,7 +505,7 @@ The request is sent with `Content-Type: application/json`.
 | `uploadStatus`        | `string` | Always `"ready"` when the callback fires. All scans have completed.                                                    |
 | `metadata`            | `object` | The metadata object supplied in the `/initiate` request, returned exactly as provided. `undefined` if none was set.     |
 | `form`                | `object` | An object representing each field in the multipart request (or download). See [File fields in callback](#file-fields-in-callback) below. |
-| `numberOfRejectedFiles` | `number` | Count of files rejected (virus, empty, too large, wrong mime type, download failure, or server error). Always present in callbacks. |
+| `numberOfRejectedFiles` | `number` | Count of files rejected (virus, scan failure, empty, too large, wrong mime type, download failure, or server error). Always present in callbacks. |
 
 ### File fields in callback
 

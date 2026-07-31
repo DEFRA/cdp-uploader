@@ -4,6 +4,7 @@ import { uploadDetailsRejectedVirusFixture } from '~/src/__fixtures__/upload-det
 import { uploadDetailsReadyFixture } from '~/src/__fixtures__/upload-details-ready.js'
 import { uploadDetailsPendingFixture } from '~/src/__fixtures__/upload-details-pending.js'
 import { fileDetailsRejectedVirusFixture } from '~/src/__fixtures__/file-details-rejected-virus.js'
+import { fileDetailsRejectedScanFailedFixture } from '~/src/__fixtures__/file-details-rejected-scan-failed.js'
 import { fileDetailsCompleteFixture } from '~/src/__fixtures__/file-details-complete.js'
 
 describe('#toScanResultResponse', () => {
@@ -142,6 +143,38 @@ describe('#toScanResultResponse', () => {
           contentType: 'image/jpeg',
           errorMessage: 'The selected file contains a virus',
           errorCode: 'FILE_VIRUS',
+          fileStatus: 'rejected',
+          filename: 'succulant.jpeg',
+          checksumSha256: 'bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=',
+          hasError: true
+        }
+      },
+      metadata: {
+        plantId: '94f8a562-630c-4569-b3a3-2503408c4129'
+      },
+      numberOfRejectedFiles: 1,
+      uploadStatus: 'ready'
+    })
+  })
+
+  test('Should provide expected response for rejected scan-limit-exceeded upload', () => {
+    expect(
+      toScanResultResponse(
+        uploadDetailsRejectedVirusFixture.uploadId,
+        uploadDetailsRejectedVirusFixture,
+        [fileDetailsRejectedScanFailedFixture],
+        false
+      )
+    ).toEqual({
+      form: {
+        button: 'upload',
+        file: {
+          fileId: 'f45d0dd4-dd3f-4235-9c45-da2edd5c89fd',
+          detectedContentType: 'image/jpeg',
+          contentLength: 10503,
+          contentType: 'image/jpeg',
+          errorMessage: 'The selected file could not be uploaded – try again',
+          errorCode: 'FILE_UPLOAD_FAILED',
           fileStatus: 'rejected',
           filename: 'succulant.jpeg',
           checksumSha256: 'bng5jOVC6TxEgwTUlX4DikFtDEYEc8vQTsOP0ZAv21c=',
