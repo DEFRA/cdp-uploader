@@ -443,8 +443,8 @@ The `errorMessage` field is a text description of why the file was rejected.
 |---------------------------------------------------------------------------------------------|------------------------|-------------------------------|---------------------------------------------------------|
 | Virus detected                                                                              | `FILE_VIRUS`           | —                             | `The selected file contains a virus`                    |
 | File is empty                                                                               | `FILE_EMPTY`           | —                             | `The selected file is empty`                            |
-| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `FILE_TOO_LARGE`       | `{ "maxFileSize": <bytes> }`  | `The selected file must be smaller than $MAXSIZE`       |
-| File doesn't match the mime types set in the init call                                      | `FILE_INVALID_TYPE`    | `{ "mimeTypes": [...] }`      | `The selected file must be a $MIMETYPES`                |
+| File size exceeds max size (either set in the /init call or the uploaders max default 100M) | `FILE_TOO_LARGE`       | `{ "maxFileSize": <bytes>, "maxFileSizeFormatted": "<size>" }`  | `The selected file must be smaller than $MAXSIZE`       |
+| File doesn't match the mime types set in the init call                                      | `FILE_INVALID_TYPE`    | `{ "mimeTypes": [...], "fileExtensions": [...] }`      | `The selected file must be a $MIMETYPES`                |
 | Server-side upload/scan failure (including virus scan limit exceeded)                       | `FILE_UPLOAD_FAILED`   | —                             | `The selected file could not be uploaded – try again`   |
 | Failed download                                                                             | `FILE_DOWNLOAD_FAILED` | —                             | `The selected file could not be downloaded`             |
 
@@ -461,10 +461,10 @@ const messages = {
   en: {
     FILE_VIRUS: () => 'The selected file contains a virus',
     FILE_EMPTY: () => 'The selected file is empty',
-    FILE_TOO_LARGE: ({ maxFileSize }) =>
-      `The selected file must be smaller than ${maxFileSize} bytes`,
-    FILE_INVALID_TYPE: ({ mimeTypes }) =>
-      `The selected file must be a ${mimeTypes.join(', ')}`,
+    FILE_TOO_LARGE: ({ maxFileSize, maxFileSizeFormatted }) =>
+      `The selected file must be smaller than ${maxFileSizeFormatted ?? `${maxFileSize} bytes`}`,
+    FILE_INVALID_TYPE: ({ mimeTypes, fileExtensions }) =>
+      `The selected file must be a ${(fileExtensions ?? mimeTypes ?? []).join(', ')}`,
     FILE_UPLOAD_FAILED: () => 'The selected file could not be uploaded – try again',
     FILE_DOWNLOAD_FAILED: () => 'The selected file could not be downloaded'
   }
@@ -524,7 +524,7 @@ Text form fields are preserved as-is. File fields are objects with the following
 | `s3Key`               | `string`           | yes      | S3 object key (includes `s3Path` prefix if one was set in `/initiate`). Only set when `fileStatus` is `"complete"`.                                              |
 | `hasError`            | `boolean`          | yes      | `true` when the file has been rejected. `undefined` otherwise.                                                                                                   |
 | `errorCode`           | `string`           | yes      | Stable identifier for the rejection reason. Only present when `hasError` is `true`.                                                                              |
-| `errorParams`         | `object`           | yes      | Optional parameters for the error code (for example `{ "maxFileSize": 10000000 }`).                                                                              |
+| `errorParams`         | `object`           | yes      | Optional parameters for the error code (for example `{ "maxFileSize": 10000000, "maxFileSizeFormatted": "10 MB" }`).                                                                              |
 | `errorMessage`        | `string`           | yes      | Human-readable reason for rejection, suitable for displaying to end users (follows [GDS File Upload guidelines](https://design-system.service.gov.uk/components/file-upload/)). Only present when `hasError` is `true`. |
 | `downloadUrl`         | `string`           | yes      | The original download URL. Only present for uploads initiated via `downloadUrls`.                                                                                |
 

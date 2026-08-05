@@ -98,7 +98,8 @@ describe('#handleFile', () => {
         errorMessage: 'The selected file must be smaller than 1 MB',
         errorCode: fileErrors.tooBig.code,
         errorParams: {
-          maxFileSize: 1000 * 1000
+          maxFileSize: 1000 * 1000,
+          maxFileSizeFormatted: '1 MB'
         },
         fileStatus: 'rejected'
       })
@@ -125,7 +126,8 @@ describe('#handleFile', () => {
         errorMessage: 'The selected file must be smaller than 256 kB',
         errorCode: fileErrors.tooBig.code,
         errorParams: {
-          maxFileSize: 256 * 1000
+          maxFileSize: 256 * 1000,
+          maxFileSizeFormatted: '256 kB'
         },
         fileStatus: 'rejected'
       })
@@ -177,6 +179,18 @@ describe('#handleFile', () => {
             'text/plain',
             'application/pdf',
             'image/png'
+          ],
+          fileExtensions: [
+            'DOC',
+            'DOCX',
+            'CSV',
+            'ODT',
+            'XLSX',
+            'XLS',
+            'RTF',
+            'TXT',
+            'PDF',
+            'PNG'
           ]
         },
         fileStatus: 'rejected'

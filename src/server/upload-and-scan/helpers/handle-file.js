@@ -102,17 +102,20 @@ function rejectZeroLengthFile(file) {
 
 function rejectTooBigFile(file, maxFileSize) {
   // Reject file if it's too big
+  const maxFileSizeFormatted = filesize(maxFileSize, { standard: 'si' })
+
   return file.contentLength > maxFileSize
     ? {
         fileStatus: fileStatus.rejected,
         hasError: true,
         errorMessage: fileErrors.tooBig.message.replace(
           '$MAXSIZE',
-          filesize(maxFileSize, { standard: 'si' })
+          maxFileSizeFormatted
         ),
         errorCode: fileErrors.tooBig.code,
         errorParams: {
-          maxFileSize
+          maxFileSize,
+          maxFileSizeFormatted
         }
       }
     : {}
@@ -124,33 +127,39 @@ function rejectWrongMimeType(contentType, mimeTypes) {
   const mimeTypeMismatch =
     mimeTypes && !mimeTypes.some((m) => m === contentType)
 
-  const createMessage = () => {
-    const extensions = mimeTypes
-      .map((mimeType) => mime.extension(mimeType))
-      .filter(Boolean)
-      .map((mimeType) => mimeType.toUpperCase())
-    const uniqueExtensions = Array.from(new Set(extensions))
-
-    const last = uniqueExtensions.pop()
-    return uniqueExtensions.length
-      ? uniqueExtensions.join(', ') + ' or ' + last
-      : last
+  if (!mimeTypeMismatch) {
+    return {}
   }
 
-  return mimeTypeMismatch
-    ? {
-        fileStatus: fileStatus.rejected,
-        hasError: true,
-        errorMessage: fileErrors.wrongType.message.replace(
-          '$MIMETYPES',
-          createMessage()
-        ),
-        errorCode: fileErrors.wrongType.code,
-        errorParams: {
-          mimeTypes
-        }
-      }
-    : {}
+  const fileExtensions = Array.from(
+    new Set(
+      mimeTypes
+        .map((mimeType) => mime.extension(mimeType))
+        .filter(Boolean)
+        .map((extension) => extension.toUpperCase())
+    )
+  )
+
+  const createMessage = () => {
+    const extensions = [...fileExtensions]
+    const last = extensions.pop()
+
+    return extensions.length ? `${extensions.join(', ')} or ${last}` : last
+  }
+
+  return {
+    fileStatus: fileStatus.rejected,
+    hasError: true,
+    errorMessage: fileErrors.wrongType.message.replace(
+      '$MIMETYPES',
+      createMessage()
+    ),
+    errorCode: fileErrors.wrongType.code,
+    errorParams: {
+      mimeTypes,
+      fileExtensions
+    }
+  }
 }
 
 export { handleFile }
