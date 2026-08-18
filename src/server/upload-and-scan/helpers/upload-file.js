@@ -16,6 +16,15 @@ async function uploadFile(
   const pass = new PassThrough()
   const buffer = []
 
+  pass.on('error', (err) => {
+    fileLogger.error({ err }, `Error piping upload stream for ${key}`)
+  })
+
+  fileStream.on('error', (err) => {
+    fileLogger.error({ err }, `Error reading source stream for ${key}`)
+    pass.destroy(err)
+  })
+
   let bytesCollected = 0
   fileStream.on('data', (chunk) => {
     if (buffer.length < 4100) {
@@ -37,7 +46,9 @@ async function uploadFile(
       ContentType: metadata.contentType,
       Metadata: metadata,
       ChecksumAlgorithm: ChecksumAlgorithm.SHA256,
-      ContentLength: contentLength.toString()
+      // Content-Length is only a SHOULD in RFC 9110 8.6 (https://www.rfc-editor.org/rfc/rfc9110.html#name-content-length),
+      // so it's fine to omit it here if unknown - the S3 SDK computes and sets the real one per part anyway.
+      ...(Number.isFinite(contentLength) && { ContentLength: contentLength })
     },
     queueSize: 2,
     partSize: Infinity
