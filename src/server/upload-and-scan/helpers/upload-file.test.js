@@ -133,8 +133,6 @@ describe('#uploadFile', () => {
     fileStream.emit('end')
 
     await expect(promise).resolves.toMatchObject({ fileLength: 12345 })
-    // findS3ContentLength already warns/errors on the failed HeadObject attempts,
-    // so uploadFile shouldn't log a second warning for the same failure.
     expect(fileLogger.warn).not.toHaveBeenCalled()
   })
 
