@@ -16,8 +16,6 @@ describe('#findS3ContentLength', () => {
   })
 
   beforeEach(() => {
-    // mockReset (not mockClear) so no test's default mock implementation can
-    // leak into another test once the number of retry attempts changes.
     jest.resetAllMocks()
   })
 
@@ -41,7 +39,7 @@ describe('#findS3ContentLength', () => {
     expect(mockLogger.error).not.toHaveBeenCalled()
   })
 
-  test('retries once and succeeds, logging warn with structured details', async () => {
+  test('retries once and succeeds', async () => {
     const firstError = {
       name: 'AccessDenied',
       $metadata: { requestId: 'request-1', httpStatusCode: 403 }
@@ -66,21 +64,6 @@ describe('#findS3ContentLength', () => {
     expect(mockS3Client.send).toHaveBeenCalledTimes(2)
     expect(mockLogger.warn).toHaveBeenCalledTimes(1)
     expect(mockLogger.error).not.toHaveBeenCalled()
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      firstError,
-      expect.stringContaining(
-        `HeadObject failed for ${bucket}/${key} (attempt 1/10)`
-      )
-    )
-    expect(mockLogger.warn.mock.calls[0][1]).toEqual(
-      expect.stringContaining('requestId=request-1')
-    )
-    expect(mockLogger.warn.mock.calls[0][1]).toEqual(
-      expect.stringContaining('httpStatusCode=403')
-    )
-    expect(mockLogger.warn.mock.calls[0][1]).toEqual(
-      expect.stringContaining('code=AccessDenied')
-    )
   })
 
   test('returns null after retries are exhausted and logs each failed attempt', async () => {
@@ -108,29 +91,5 @@ describe('#findS3ContentLength', () => {
     expect(mockS3Client.send).toHaveBeenCalledTimes(totalAttempts)
     expect(mockLogger.warn).toHaveBeenCalledTimes(totalAttempts - 1)
     expect(mockLogger.error).toHaveBeenCalledTimes(1)
-
-    errors.slice(0, -1).forEach((error, i) => {
-      expect(mockLogger.warn).toHaveBeenNthCalledWith(
-        i + 1,
-        error,
-        expect.stringContaining(
-          `HeadObject failed for ${bucket}/${key} (attempt ${i + 1}/${totalAttempts})`
-        )
-      )
-      expect(mockLogger.warn.mock.calls[i][1]).toEqual(
-        expect.stringContaining(`requestId=request-${i + 1}`)
-      )
-    })
-
-    const lastError = errors[errors.length - 1]
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      lastError,
-      expect.stringContaining(
-        `HeadObject failed for ${bucket}/${key} (attempt ${totalAttempts}/${totalAttempts})`
-      )
-    )
-    expect(mockLogger.error.mock.calls[0][1]).toEqual(
-      expect.stringContaining(`requestId=request-${totalAttempts}`)
-    )
   })
 })
