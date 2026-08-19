@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals'
 import { Upload } from '@aws-sdk/lib-storage'
 import { uploadFile } from '~/src/server/upload-and-scan/helpers/upload-file.js'
+import { findS3ContentLength } from '~/src/server/common/helpers/s3/find-s3-content-length.js'
 
 jest.mock('@aws-sdk/lib-storage', () => ({
   Upload: jest.fn().mockImplementation((options) => {
@@ -51,10 +52,15 @@ describe('#uploadFile', () => {
   const fileLogger = {
     error: jest.fn(),
     info: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
+    warn: jest.fn()
   }
 
   const mockUpload = jest.mocked(Upload)
+
+  beforeEach(() => {
+    fileLogger.warn.mockClear()
+  })
 
   test('does not throw when contentLength is missing (null)', async () => {
     const fileStream = createFakeFileStream()
@@ -109,5 +115,85 @@ describe('#uploadFile', () => {
     fileStream.emit('error', new Error('boom'))
 
     await expect(promise).rejects.toThrow('boom')
+  })
+
+  test('falls back to the reported content length when HeadObject cannot verify it, without an extra warning', async () => {
+    jest.mocked(findS3ContentLength).mockResolvedValueOnce(null)
+    const fileStream = createFakeFileStream()
+
+    const promise = uploadFile(
+      mockS3Client,
+      'bucket',
+      'key',
+      fileStream,
+      12345,
+      metadata,
+      fileLogger
+    )
+    fileStream.emit('end')
+
+    await expect(promise).resolves.toMatchObject({ fileLength: 12345 })
+    expect(fileLogger.warn).not.toHaveBeenCalled()
+  })
+
+  test('warns when neither HeadObject nor the upload-time value has a content length', async () => {
+    jest.mocked(findS3ContentLength).mockResolvedValueOnce(null)
+    const fileStream = createFakeFileStream()
+
+    const promise = uploadFile(
+      mockS3Client,
+      'bucket',
+      'key',
+      fileStream,
+      null,
+      metadata,
+      fileLogger
+    )
+    fileStream.emit('end')
+
+    await expect(promise).resolves.toMatchObject({ fileLength: null })
+    expect(fileLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Unable to determine content length')
+    )
+  })
+
+  test('warns but trusts the S3-verified length when it disagrees with the reported length', async () => {
+    jest.mocked(findS3ContentLength).mockResolvedValueOnce(999)
+    const fileStream = createFakeFileStream()
+
+    const promise = uploadFile(
+      mockS3Client,
+      'bucket',
+      'key',
+      fileStream,
+      12345,
+      metadata,
+      fileLogger
+    )
+    fileStream.emit('end')
+
+    await expect(promise).resolves.toMatchObject({ fileLength: 999 })
+    expect(fileLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Content length mismatch')
+    )
+  })
+
+  test('does not warn when the S3-verified length matches the reported length', async () => {
+    jest.mocked(findS3ContentLength).mockResolvedValueOnce(12345)
+    const fileStream = createFakeFileStream()
+
+    const promise = uploadFile(
+      mockS3Client,
+      'bucket',
+      'key',
+      fileStream,
+      12345,
+      metadata,
+      fileLogger
+    )
+    fileStream.emit('end')
+
+    await expect(promise).resolves.toMatchObject({ fileLength: 12345 })
+    expect(fileLogger.warn).not.toHaveBeenCalled()
   })
 })

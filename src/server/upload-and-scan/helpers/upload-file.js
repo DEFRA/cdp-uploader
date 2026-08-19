@@ -55,16 +55,36 @@ async function uploadFile(
   })
   const uploadResult = await upload.done()
   const type = await FileType.fromBuffer(Buffer.concat(buffer))
+  const checksumSha256 = uploadResult.ChecksumSHA256
 
-  const fileLength = await findS3ContentLength(
+  const verifiedLength = await findS3ContentLength(
     s3Client,
     bucket,
     key,
     fileLogger
   )
-  const checksumSha256 = uploadResult.ChecksumSHA256
+  const fileLength = verifiedLength ?? contentLength
 
-  return { fileLength, checksumSha256, detectedType: type?.mime }
+  if (fileLength == null) {
+    fileLogger.warn(
+      `Unable to determine content length for ${bucket}/${key}: HeadObject failed and no content length was provided at upload time`
+    )
+  } else if (
+    verifiedLength != null &&
+    contentLength != null &&
+    verifiedLength !== contentLength
+  ) {
+    fileLogger.warn(
+      `Content length mismatch for ${bucket}/${key}: HeadObject reported ` +
+        `${verifiedLength} bytes (used), but ${contentLength} bytes were reported at upload time (ignored)`
+    )
+  }
+
+  return {
+    fileLength,
+    checksumSha256,
+    detectedType: type?.mime
+  }
 }
 
 export { uploadFile }

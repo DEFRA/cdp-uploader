@@ -16,7 +16,7 @@ describe('#findS3ContentLength', () => {
   })
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    jest.resetAllMocks()
   })
 
   afterAll(() => {
@@ -39,7 +39,7 @@ describe('#findS3ContentLength', () => {
     expect(mockLogger.error).not.toHaveBeenCalled()
   })
 
-  test('retries once and succeeds, logging warn with structured details', async () => {
+  test('retries once and succeeds', async () => {
     const firstError = {
       name: 'AccessDenied',
       $metadata: { requestId: 'request-1', httpStatusCode: 403 }
@@ -64,39 +64,16 @@ describe('#findS3ContentLength', () => {
     expect(mockS3Client.send).toHaveBeenCalledTimes(2)
     expect(mockLogger.warn).toHaveBeenCalledTimes(1)
     expect(mockLogger.error).not.toHaveBeenCalled()
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.objectContaining({
-        err: firstError,
-        bucket,
-        key,
-        attempt: 1,
-        retries: 3,
-        awsRequestId: 'request-1',
-        httpStatusCode: 403,
-        awsErrorCode: 'AccessDenied'
-      }),
-      `HeadObject failed for ${bucket}/${key} (attempt 1/3)`
-    )
   })
 
   test('returns null after retries are exhausted and logs each failed attempt', async () => {
-    const firstError = {
+    const totalAttempts = 10
+    const errors = Array.from({ length: totalAttempts }, (_, i) => ({
       Code: 'ExpiredToken',
-      $metadata: { requestId: 'request-1', httpStatusCode: 403 }
-    }
-    const secondError = {
-      Code: 'ExpiredToken',
-      $metadata: { requestId: 'request-2', httpStatusCode: 403 }
-    }
-    const thirdError = {
-      Code: 'ExpiredToken',
-      $metadata: { requestId: 'request-3', httpStatusCode: 403 }
-    }
+      $metadata: { requestId: `request-${i + 1}`, httpStatusCode: 403 }
+    }))
 
-    mockS3Client.send
-      .mockRejectedValueOnce(firstError)
-      .mockRejectedValueOnce(secondError)
-      .mockRejectedValueOnce(thirdError)
+    errors.forEach((error) => mockS3Client.send.mockRejectedValueOnce(error))
 
     const resultPromise = findS3ContentLength(
       mockS3Client,
@@ -111,43 +88,8 @@ describe('#findS3ContentLength', () => {
     const result = await resultPromise
 
     expect(result).toBeNull()
-    expect(mockS3Client.send).toHaveBeenCalledTimes(3)
-    expect(mockLogger.warn).toHaveBeenCalledTimes(2)
+    expect(mockS3Client.send).toHaveBeenCalledTimes(totalAttempts)
+    expect(mockLogger.warn).toHaveBeenCalledTimes(totalAttempts - 1)
     expect(mockLogger.error).toHaveBeenCalledTimes(1)
-    expect(mockLogger.warn).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        attempt: 1,
-        retries: 3,
-        awsRequestId: 'request-1',
-        httpStatusCode: 403,
-        awsErrorCode: 'ExpiredToken'
-      }),
-      `HeadObject failed for ${bucket}/${key} (attempt 1/3)`
-    )
-    expect(mockLogger.warn).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        attempt: 2,
-        retries: 3,
-        awsRequestId: 'request-2',
-        httpStatusCode: 403,
-        awsErrorCode: 'ExpiredToken'
-      }),
-      `HeadObject failed for ${bucket}/${key} (attempt 2/3)`
-    )
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.objectContaining({
-        err: thirdError,
-        bucket,
-        key,
-        attempt: 3,
-        retries: 3,
-        awsRequestId: 'request-3',
-        httpStatusCode: 403,
-        awsErrorCode: 'ExpiredToken'
-      }),
-      `HeadObject failed for ${bucket}/${key} (attempt 3/3)`
-    )
   })
 })

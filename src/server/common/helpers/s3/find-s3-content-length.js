@@ -20,17 +20,11 @@ function logS3Error(
   { bucket, key, attempt, retries }
 ) {
   fileLogger[level](
-    {
-      err: error,
-      bucket,
-      key,
-      attempt,
-      retries,
-      awsRequestId: error?.$metadata?.requestId,
-      httpStatusCode: error?.$metadata?.httpStatusCode,
-      awsErrorCode: error?.Code ?? error?.name
-    },
-    `HeadObject failed for ${bucket}/${key} (attempt ${attempt}/${retries})`
+    error,
+    `HeadObject failed for ${bucket}/${key} (attempt ${attempt}/${retries}). ` +
+      `Error: ${error} [requestId=${error?.$metadata?.requestId}, ` +
+      `httpStatusCode=${error?.$metadata?.httpStatusCode}, ` +
+      `code=${error?.Code ?? error?.name}]`
   )
 }
 
@@ -39,7 +33,7 @@ async function findS3ContentLength(s3Client, bucket, key, fileLogger) {
     Bucket: bucket,
     Key: key
   })
-  const retries = 3
+  const retries = 10
 
   try {
     const headObjectResult = await retryWithBackoff(
