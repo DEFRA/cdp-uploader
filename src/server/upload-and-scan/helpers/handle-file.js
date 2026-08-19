@@ -67,8 +67,30 @@ async function handleFile(
 
     fileLogger.debug({ uploadResult }, `Upload complete for fileId ${fileId}`)
 
+    if (uploadResult.fileLength == null && contentLength != null) {
+      fileLogger.warn(
+        `Could not verify content length via HeadObject for fileId ${fileId}, ` +
+          `falling back to the length reported at upload time (${contentLength})`
+      )
+    } else if (
+      uploadResult.fileLength != null &&
+      contentLength != null &&
+      uploadResult.fileLength !== contentLength
+    ) {
+      // Both values are known but disagree - shouldn't happen since contentLength is
+      // measured from the exact bytes we uploaded, but log it if it ever does so we
+      // can confirm (or disprove) that assumption.
+      fileLogger.warn(
+        `Content length mismatch for fileId ${fileId}: HeadObject reported ` +
+          `${uploadResult.fileLength} bytes, but ${contentLength} bytes were reported at upload time`
+      )
+    }
+
     response.detectedContentType = uploadResult.detectedType
-    response.contentLength = uploadResult.fileLength
+    // Prefer the length verified via HeadObject, but fall back to the length we already
+    // knew before upload if that check fails - HeadObject can intermittently fail under
+    // load, and previously left contentLength as null, which tenants' schemas may reject.
+    response.contentLength = uploadResult.fileLength ?? contentLength
     response.checksumSha256 = uploadResult.checksumSha256
     if (response.contentLength) {
       await metrics().byteSize('file-size', response.contentLength)

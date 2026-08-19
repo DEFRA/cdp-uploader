@@ -1,6 +1,11 @@
-import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
-import { fileErrors } from '~/src/server/common/constants/file-errors.js'
 import { jest } from '@jest/globals'
+import { handleFile } from '~/src/server/upload-and-scan/helpers/handle-file.js'
+import { uploadFile } from '~/src/server/upload-and-scan/helpers/upload-file.js'
+import { fileErrors } from '~/src/server/common/constants/file-errors.js'
+
+jest.mock('~/src/server/upload-and-scan/helpers/upload-file.js', () => ({
+  uploadFile: jest.fn()
+}))
 
 class Metrics {
   timer = jest.fn()
@@ -25,15 +30,17 @@ describe('#handleFile', () => {
     },
     fileIds: []
   })
+  const mockFileLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn()
+  }
   const mockLogger = {
     debug: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
-    child: jest.fn(() => {
-      return {
-        error: jest.fn()
-      }
-    })
+    child: jest.fn(() => mockFileLogger)
   }
   const mockRequest = {
     redis: {
@@ -45,6 +52,11 @@ describe('#handleFile', () => {
     },
     metrics: () => new Metrics()
   }
+
+  beforeEach(() => {
+    jest.mocked(uploadFile).mockReset()
+    mockFileLogger.warn.mockClear()
+  })
 
   test('Should provide expected filePart', async () => {
     const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
@@ -196,5 +208,91 @@ describe('#handleFile', () => {
         fileStatus: 'rejected'
       })
     )
+  })
+
+  test('uses the S3-verified content length when HeadObject succeeds and matches', async () => {
+    const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
+    jest.mocked(uploadFile).mockResolvedValue({
+      fileLength: 1234,
+      detectedType: 'application/pdf',
+      checksumSha256: 'fake-checksum'
+    })
+
+    const response = await handleFile(
+      uploadId,
+      mockUploadDetails(uploadId),
+      { contentLength: 1234, fileStream: {} },
+      mockRequest
+    )
+
+    expect(response.contentLength).toBe(1234)
+    expect(mockFileLogger.warn).not.toHaveBeenCalled()
+  })
+
+  test('warns when HeadObject and the pre-upload content length disagree', async () => {
+    const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
+    jest.mocked(uploadFile).mockResolvedValue({
+      fileLength: 999,
+      detectedType: 'application/pdf',
+      checksumSha256: 'fake-checksum'
+    })
+
+    const response = await handleFile(
+      uploadId,
+      mockUploadDetails(uploadId),
+      { contentLength: 1234, fileStream: {} },
+      mockRequest
+    )
+
+    expect(response.contentLength).toBe(999)
+    expect(mockFileLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Content length mismatch for fileId')
+    )
+    expect(mockFileLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('HeadObject reported 999 bytes')
+    )
+    expect(mockFileLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('1234 bytes were reported at upload time')
+    )
+  })
+
+  test('falls back to the pre-upload content length when HeadObject verification fails', async () => {
+    const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
+    jest.mocked(uploadFile).mockResolvedValue({
+      fileLength: null,
+      detectedType: 'application/pdf',
+      checksumSha256: 'fake-checksum'
+    })
+
+    const response = await handleFile(
+      uploadId,
+      mockUploadDetails(uploadId),
+      { contentLength: 1234, fileStream: {} },
+      mockRequest
+    )
+
+    expect(response.contentLength).toBe(1234)
+    expect(mockFileLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('falling back to the length reported')
+    )
+  })
+
+  test('leaves content length undefined when neither S3 nor the pre-upload value is known', async () => {
+    const uploadId = 'upload-id-6a38-4350-b0e1-b571b839d902'
+    jest.mocked(uploadFile).mockResolvedValue({
+      fileLength: null,
+      detectedType: 'application/pdf',
+      checksumSha256: 'fake-checksum'
+    })
+
+    const response = await handleFile(
+      uploadId,
+      mockUploadDetails(uploadId),
+      { fileStream: {} },
+      mockRequest
+    )
+
+    expect(response.contentLength).toBeUndefined()
+    expect(mockFileLogger.warn).not.toHaveBeenCalled()
   })
 })
