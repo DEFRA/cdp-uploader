@@ -1,6 +1,6 @@
 import { HeadObjectCommand } from '@aws-sdk/client-s3'
 
-async function retryWithBackoff(fn, { retries = 3, baseDelayMs = 200 } = {}) {
+async function retryWithDelay(fn, { retries = 3, delayMs = 200 } = {}) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       return await fn(attempt)
@@ -8,7 +8,7 @@ async function retryWithBackoff(fn, { retries = 3, baseDelayMs = 200 } = {}) {
       if (attempt >= retries) {
         throw error
       }
-      await new Promise((resolve) => setTimeout(resolve, baseDelayMs * attempt))
+      await new Promise((resolve) => setTimeout(resolve, delayMs))
     }
   }
 }
@@ -36,7 +36,7 @@ async function findS3ContentLength(s3Client, bucket, key, fileLogger) {
   const retries = 10
 
   try {
-    const headObjectResult = await retryWithBackoff(
+    const headObjectResult = await retryWithDelay(
       async (attempt) => {
         try {
           return await s3Client.send(headObjectCommand)
