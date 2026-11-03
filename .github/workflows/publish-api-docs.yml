@@ -100,22 +100,16 @@ jobs:
           DOCS_BASE_URL=/api/cdp-uploader/latest/ npx docusaurus build --out-dir build-latest
           DOCS_BASE_URL="/api/cdp-uploader/$VERSION/" npx docusaurus build --out-dir build-versioned
 
-      # Order matters: the action always writes /<version>/ too, so this call
-      # leaves the /latest/ build there and the next call replaces it.
-      # Once publish-api-docs can skip the versioned copy, skip it here and the order stops mattering.
       - name: Publish API docs (latest)
         if: steps.changes.outputs.changed == 'true'
         uses: DEFRA/cdp-build-action/publish-api-docs@main
         with:
           path: ./docs/build-latest
-          version: ${{ steps.version.outputs.version }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          target: latest
 
       - name: Publish API docs (versioned)
         if: steps.changes.outputs.changed == 'true'
         uses: DEFRA/cdp-build-action/publish-api-docs@main
         with:
           path: ./docs/build-versioned
-          version: ${{ steps.version.outputs.version }}
-          update-latest: false
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          target: ${{ steps.version.outputs.version }}
