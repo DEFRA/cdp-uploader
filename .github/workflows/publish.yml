@@ -31,16 +31,14 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
   # Builds the static API docs site and publishes it to the CDP API hub bucket.
-  # Building (steps 4 to 6) and publishing (the last step) are kept separate.
+  # Building and publishing (the last two steps) are kept separate.
   publish-api-docs:
     name: Publish API docs
     needs: build
-    # Runs after a successful image build, or on its own when started by hand
-    if: ${{ always() && (needs.build.result == 'success' || github.event_name == 'workflow_dispatch') }}
+    # Runs after a successful image build, or on its own when started by hand.
+    # main only: a manual run from another branch would overwrite the released docs
+    if: ${{ always() && github.ref == 'refs/heads/main' && (needs.build.result == 'success' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
-    env:
-      # Docs are served from /api/<service>/latest/ by cdp-api-docs
-      DOCS_BASE_URL: /api/cdp-uploader/latest/
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -62,22 +60,19 @@ jobs:
           changed=true
           if [ "$EVENT_NAME" != "workflow_dispatch" ] \
              && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null \
-             && git diff --quiet "$BEFORE" "$SHA" -- docs/ src/server/ scripts/generate-openapi.js; then
+             && git diff --quiet "$BEFORE" "$SHA" -- docs/ src/ scripts/generate-openapi.js package.json package-lock.json .github/workflows/publish.yml; then
             changed=false
-            echo "No API docs were published, docs/, src/server/ and the spec script are unchanged." >> "$GITHUB_STEP_SUMMARY"
+            echo "No API docs were published, nothing that shapes them has changed." >> "$GITHUB_STEP_SUMMARY"
           fi
           echo "changed=$changed" | tee -a "$GITHUB_OUTPUT"
 
-      # The build job has already tagged this commit, so describe returns its version
+      # The build job has already tagged this commit. Require that exact tag: an older
+      # one would overwrite that release's docs (a manual run on an untagged commit fails)
       - name: Resolve version
         if: steps.changes.outputs.changed == 'true'
         id: version
         run: |
-          VERSION="$(git describe --tags --abbrev=0)"
-          if [ -z "$VERSION" ]; then
-            echo "No version tag found." >&2
-            exit 1
-          fi
+          VERSION="$(git describe --tags --exact-match HEAD)"
           echo "Publishing API docs as version $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -102,17 +97,35 @@ jobs:
           npm ci
           npm run docs:openapi
 
+      # The site's links and assets are absolute, so build it once per path it is
+      # served from by cdp-api-docs: /api/<service>/latest/ and /api/<service>/<version>/
       - name: Build API docs site
         if: steps.changes.outputs.changed == 'true'
         working-directory: docs
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           npm ci
-          npm run build
+          npm run gen:api
+          DOCS_BASE_URL=/api/cdp-uploader/latest/ npx docusaurus build --out-dir build-latest
+          DOCS_BASE_URL="/api/cdp-uploader/$VERSION/" npx docusaurus build --out-dir build-versioned
 
-      - name: Publish API docs
+      # Order matters: the action always writes /<version>/ too, so this call
+      # leaves the /latest/ build there and the next call replaces it.
+      # Once publish-api-docs can skip the versioned copy, skip it here and the order stops mattering.
+      - name: Publish API docs (latest)
         if: steps.changes.outputs.changed == 'true'
         uses: DEFRA/cdp-build-action/publish-api-docs@main
         with:
-          path: ./docs/build
+          path: ./docs/build-latest
           version: ${{ steps.version.outputs.version }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish API docs (versioned)
+        if: steps.changes.outputs.changed == 'true'
+        uses: DEFRA/cdp-build-action/publish-api-docs@main
+        with:
+          path: ./docs/build-versioned
+          version: ${{ steps.version.outputs.version }}
+          update-latest: false
           github-token: ${{ secrets.GITHUB_TOKEN }}

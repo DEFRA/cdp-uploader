@@ -21,7 +21,7 @@ The uploader is intended for backend or frontend services that need anti-virus s
 
 ## API endpoints
 
-- [Initiate upload](./initiate/)
-- [Upload and scan](./upload-and-scan/)
-- [Status polling](./status/)
-- [Callback model](./callback/)
+- [Initiate upload](./initiate.md)
+- [Upload and scan](./upload-and-scan.md)
+- [Status polling](./status.md)
+- [Callback model](./callback.md)

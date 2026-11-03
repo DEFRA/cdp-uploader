@@ -4,6 +4,44 @@ const baseUrl = baseUrlFromEnv.startsWith('/')
   : `/${baseUrlFromEnv}`
 const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
 
+const fs = require('node:fs')
+const path = require('node:path')
+
+const specPath = path.join(__dirname, 'openapi/swagger.json')
+
+// The same kebabCase the OpenAPI plugin uses to name each operation's page, so
+// these links always match the generated pages.
+const kebabCase = require(
+  require.resolve('lodash/kebabCase', {
+    paths: [require.resolve('docusaurus-plugin-openapi-docs')]
+  })
+)
+
+// Integration order. Operations not listed here follow in spec order.
+const operationOrder = [
+  'POST /initiate',
+  'POST /upload-and-scan/{uploadId}',
+  'GET /status/{uploadId}'
+]
+
+// One nav link per operation in the spec, so a new or renamed route shows up
+// without editing this file. Empty until `npm run docs:openapi` has run.
+function apiReferenceLinks() {
+  if (!fs.existsSync(specPath)) return []
+  const { paths } = JSON.parse(fs.readFileSync(specPath, 'utf8'))
+  const operations = Object.entries(paths).flatMap(([route, methods]) =>
+    Object.entries(methods).map(([method, { operationId }]) => ({
+      text: `${method.toUpperCase()} ${route}`,
+      href: `/api/uploader/${kebabCase(operationId)}/`
+    }))
+  )
+  const rank = ({ text }) => {
+    const index = operationOrder.indexOf(text)
+    return index === -1 ? operationOrder.length : index
+  }
+  return operations.sort((a, b) => rank(a) - rank(b))
+}
+
 /** @type {import('@docusaurus/types').Config} */
 module.exports = {
   title: 'CDP Uploader API Docs',
@@ -131,21 +169,13 @@ module.exports = {
           href: '/api/uploader/',
           sidebar: [
             { text: 'Overview', href: '/api/uploader/' },
-            { text: 'POST /initiate', href: '/api/uploader/post-initiate/' },
-            {
-              text: 'POST /upload-and-scan/{uploadId}',
-              href: '/api/uploader/post-uploadandscan-uploadid/'
-            },
-            {
-              text: 'GET /status/{uploadId}',
-              href: '/api/uploader/get-status-uploadid/'
-            }
+            ...apiReferenceLinks()
           ]
         }
       ],
       phaseBanner: {
         phase: 'beta',
-        text: 'This documentation pattern is being tested in CORE-4357 and CORE-4362.',
+        text: 'This documentation is new. Your feedback will help us improve it.',
         feedbackHref: 'https://github.com/DEFRA/cdp-uploader/issues'
       },
       footer: {

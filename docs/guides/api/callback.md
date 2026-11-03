@@ -12,6 +12,6 @@ If `callback` is provided at initiate time, uploader sends an asynchronous callb
 
 ## Suggested handling
 
-1. Verify callback authenticity in your service boundary.
-2. Persist callback payload with `uploadId` as correlation key.
-3. Reconcile with status endpoint if callback fields are incomplete.
+1. Treat the callback as a notification only: it is not signed, so fetch `GET /status/{uploadId}` before acting on it.
+2. Persist the result with `uploadId` as the correlation key.
+3. Respond with a 2xx status. Any other response, or none, means the callback is retried.
