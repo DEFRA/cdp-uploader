@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # Re-run the API docs publish by hand (the image build is skipped)
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -16,7 +18,7 @@ env:
 
 jobs:
   build:
-    if: github.run_number != 1
+    if: github.run_number != 1 && github.event_name != 'workflow_dispatch'
     name: CDP-build-workflow
     runs-on: ubuntu-latest
     steps:
@@ -26,4 +28,91 @@ jobs:
       - name: Build and Publish
         uses: DEFRA/cdp-build-action/build@main
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Builds the static API docs site and publishes it to the CDP API hub bucket.
+  # Building (steps 4 to 6) and publishing (the last step) are kept separate.
+  publish-api-docs:
+    name: Publish API docs
+    needs: build
+    # Runs after a successful image build, or on its own when started by hand
+    if: ${{ always() && (needs.build.result == 'success' || github.event_name == 'workflow_dispatch') }}
+    runs-on: ubuntu-latest
+    env:
+      # Docs are served from /api/<service>/latest/ by cdp-api-docs
+      DOCS_BASE_URL: /api/cdp-uploader/latest/
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          # Full history and tags: needed for the diff below and the version
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      # Cheap check first, so unrelated pushes skip the npm installs and the build
+      - name: Check for API docs changes
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          # Publish by default. Skip only when we can compare and nothing relevant changed
+          # (a manual run, no previous commit or a missing one all fall through to publish)
+          changed=true
+          if [ "$EVENT_NAME" != "workflow_dispatch" ] \
+             && git cat-file -e "${BEFORE}^{commit}" 2>/dev/null \
+             && git diff --quiet "$BEFORE" "$SHA" -- docs/ src/server/ scripts/generate-openapi.js; then
+            changed=false
+            echo "No API docs were published, docs/, src/server/ and the spec script are unchanged." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "changed=$changed" | tee -a "$GITHUB_OUTPUT"
+
+      # The build job has already tagged this commit, so describe returns its version
+      - name: Resolve version
+        if: steps.changes.outputs.changed == 'true'
+        id: version
+        run: |
+          VERSION="$(git describe --tags --abbrev=0)"
+          if [ -z "$VERSION" ]; then
+            echo "No version tag found." >&2
+            exit 1
+          fi
+          echo "Publishing API docs as version $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node.js
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            docs/package-lock.json
+
+      # The docs theme is locked as an ssh git URL and the runner has no ssh key, so fetch it over https
+      - name: Use https for GitHub dependencies
+        if: steps.changes.outputs.changed == 'true'
+        run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+
+      - name: Generate OpenAPI spec
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          npm ci
+          npm run docs:openapi
+
+      - name: Build API docs site
+        if: steps.changes.outputs.changed == 'true'
+        working-directory: docs
+        run: |
+          npm ci
+          npm run build
+
+      - name: Publish API docs
+        if: steps.changes.outputs.changed == 'true'
+        uses: DEFRA/cdp-build-action/publish-api-docs@main
+        with:
+          path: ./docs/build
+          version: ${{ steps.version.outputs.version }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
