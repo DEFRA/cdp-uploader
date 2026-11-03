@@ -14,6 +14,7 @@
     "docker:dev": "NODE_ENV=development run-p frontend:watch server:watch",
     "predev": "npm run build:frontend",
     "dev": "AWS_EMF_ENVIRONMENT=Local run-p frontend:watch server:watch",
+    "docs:openapi": "tsx scripts/generate-openapi.js",
     "dev:debug": "AWS_EMF_ENVIRONMENT=Local run-p frontend:watch server:debug",
     "format": "prettier --write \"src/**/*.js\" \"**/*.{js,cjs,md,json,config.js,test.js}\"",
     "format:check": "prettier --check \"src/**/*.js\" \"**/*.{js,cjs,json,config.js,test.js}\"",
