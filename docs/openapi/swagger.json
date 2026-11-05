@@ -1,0 +1,274 @@
+{
+  "info": {
+    "title": "CDP Uploader API Documentation",
+    "version": "1.0.0",
+    "description": "API documentation for the CDP Uploader"
+  },
+  "swagger": "2.0",
+  "tags": [],
+  "paths": {
+    "/status/{uploadId}": {
+      "get": {
+        "summary": "Get upload status",
+        "operationId": "getStatusUploadid",
+        "description": "Retrieves the current status of an upload session, including the upload status, metadata and details of uploaded files. The uploadId is provided via the /initiate call.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "uploadId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "boolean",
+            "description": "Set to true to include debug information (the original initiate request payload).",
+            "name": "debug",
+            "in": "query",
+            "required": false
+          }
+        ],
+        "tags": [
+          "status"
+        ],
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/UploadStatusResponse"
+            },
+            "description": "Successful"
+          }
+        }
+      }
+    },
+    "/initiate": {
+      "post": {
+        "summary": "Initiate an upload request",
+        "operationId": "postInitiate",
+        "description": "Initiates a new upload request. Returns URLs and an upload ID required for subsequent upload and status requests.",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/InitiateUploadRequest"
+            }
+          }
+        ],
+        "tags": [
+          "initiate"
+        ],
+        "responses": {
+          "201": {
+            "schema": {
+              "$ref": "#/definitions/InitiateUploadSuccessResponse"
+            },
+            "description": "Created"
+          }
+        }
+      }
+    },
+    "/upload-and-scan/{uploadId}": {
+      "post": {
+        "summary": "Upload and scan a file",
+        "operationId": "postUploadandscanUploadid",
+        "description": "Uploads a file to a previously initiated upload session. Supports browser uploads using multipart/form-data and API uploads using binary content. The uploadId is provided via the /initiate call. Once accepted, the file is scanned asynchronously.",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Use multipart/form-data for browser uploads or application/octet-stream for API uploads",
+            "name": "content-type",
+            "in": "header"
+          },
+          {
+            "type": "string",
+            "description": "Optional original filename for binary API uploads",
+            "name": "x-filename",
+            "in": "header"
+          },
+          {
+            "type": "string",
+            "description": "uploadId from the InitiateUploadSuccessResponse",
+            "x-format": {
+              "guid": true
+            },
+            "name": "uploadId",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "File upload content. Supports multipart/form-data browser uploads or application/octet-stream binary uploads.",
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "tags": [
+          "upload-and-scan"
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects to the redirect URL provided during the /initiate request",
+            "schema": {
+              "type": "string",
+              "description": "Redirects to the redirect URL provided during the /initiate request",
+              "example": "/upload-complete"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "uploadStatus": {
+      "type": "string",
+      "example": "ready",
+      "enum": [
+        "initiated",
+        "pending",
+        "ready"
+      ]
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "form": {
+      "type": "object"
+    },
+    "debug": {
+      "type": "object",
+      "description": "Only returned when debug=true."
+    },
+    "UploadStatusResponse": {
+      "type": "object",
+      "properties": {
+        "uploadStatus": {
+          "$ref": "#/definitions/uploadStatus"
+        },
+        "metadata": {
+          "$ref": "#/definitions/metadata"
+        },
+        "form": {
+          "$ref": "#/definitions/form"
+        },
+        "numberOfRejectedFiles": {
+          "type": "integer",
+          "example": 0
+        },
+        "debug": {
+          "$ref": "#/definitions/debug"
+        }
+      },
+      "required": [
+        "numberOfRejectedFiles"
+      ]
+    },
+    "downloadUrls": {
+      "type": "array",
+      "description": "List of URLs pointing to files that should be downloaded and scanned. Cannot be used together with redirect.",
+      "example": [
+        "https://myservice.com/file"
+      ],
+      "items": {
+        "type": "string",
+        "x-format": {
+          "uri": {
+            "scheme": [
+              "http",
+              "https"
+            ]
+          }
+        }
+      }
+    },
+    "Model1": {
+      "type": "object",
+      "description": "Arbitrary key-value metadata to associate with this upload session. This metadata will be returned in subsequent Status responses.",
+      "example": {
+        "test": "1234"
+      },
+      "default": {}
+    },
+    "mimeTypes": {
+      "type": "array",
+      "description": "List of accepted mimeTypes",
+      "example": [
+        "application/pdf"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "InitiateUploadRequest": {
+      "type": "object",
+      "properties": {
+        "redirect": {
+          "type": "string",
+          "description": "URL to redirect to after file has been successfully uploaded. Cannot be used together with downloadUrls.",
+          "example": "/health",
+          "x-format": {
+            "uri": {
+              "allowRelative": true
+            }
+          }
+        },
+        "downloadUrls": {
+          "$ref": "#/definitions/downloadUrls"
+        },
+        "s3Bucket": {
+          "type": "string",
+          "description": "S3 bucket the file will be moved to once the scanning is complete",
+          "example": "example-test-bucket"
+        },
+        "s3Path": {
+          "type": "string",
+          "description": "'Folder' in bucket where scanned files will be placed",
+          "example": "scanned"
+        },
+        "callback": {
+          "type": "string",
+          "description": "Url that will be called once all files in upload have been scanned.",
+          "example": "https://myservice.com/callback",
+          "x-format": {
+            "uri": true
+          }
+        },
+        "metadata": {
+          "$ref": "#/definitions/Model1"
+        },
+        "mimeTypes": {
+          "$ref": "#/definitions/mimeTypes"
+        },
+        "maxFileSize": {
+          "type": "integer",
+          "description": "Maximum size in bytes that a file can be (10MB is 10 * 1000 * 1000)",
+          "example": 10000000,
+          "x-constraint": {
+            "sign": "positive"
+          }
+        }
+      },
+      "required": [
+        "s3Bucket"
+      ]
+    },
+    "InitiateUploadSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "uploadId": {
+          "type": "string",
+          "example": "7f3c9b12-4d8e-4a6f-9c21-8b5e3d7a2f10"
+        },
+        "uploadUrl": {
+          "type": "string",
+          "example": "/upload-and-scan/7f3c9b12-4d8e-4a6f-9c21-8b5e3d7a2f10"
+        },
+        "statusUrl": {
+          "type": "string",
+          "example": "https://cdp-uploader..example.com/status/7f3c9b12-4d8e-4a6f-9c21-8b5e3d7a2f10"
+        }
+      }
+    }
+  }
+}

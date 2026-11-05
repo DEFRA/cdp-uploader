@@ -11,7 +11,3 @@ apiDocs:
   # Phase tag on the GOV.UK banner under the header, e.g. alpha or beta.
   # Default: beta. Any text works; it is shown as the tag.
   phase: live
-
-  # Command run in the repo root before the build, to produce docs/openapi/swagger.json.
-  # Leave it out for a guides-only site (no API Reference menu).
-  generate: npm run docs:openapi
