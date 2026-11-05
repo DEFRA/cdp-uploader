@@ -1,6 +1,8 @@
 ---
 slug: /
 title: CDP Uploader API docs
+sidebar_label: Overview
+sidebar_position: 1
 description: Overview of the uploader flow and links to API reference pages.
 ---
 
@@ -26,6 +28,6 @@ CDP Uploader provides an upload-and-scan flow for services that need virus scann
 ## Next steps
 
 - Start with [API overview](./api/overview.md).
-- Use <Link to="/api/uploader/">OpenAPI reference</Link> for schema and parameter details.
+- Use <Link to="/api/reference/">OpenAPI reference</Link> for schema and parameter details.
 
 </div>

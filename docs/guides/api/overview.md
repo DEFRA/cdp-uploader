@@ -1,5 +1,6 @@
 ---
 title: API overview
+sidebar_position: 2
 description: End-to-end view of the CDP Uploader integration model.
 ---
 

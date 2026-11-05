@@ -1,5 +1,3 @@
-node_modules/
 .docusaurus/
-build/
+openapi/
 build-*/
-docs/api/uploader/

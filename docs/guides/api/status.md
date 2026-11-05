@@ -1,5 +1,6 @@
 ---
 title: Status polling
+sidebar_position: 5
 ---
 
 Use `GET /status/{uploadId}` to fetch upload and scan state.

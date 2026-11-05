@@ -1,5 +1,6 @@
 ---
 title: Initiate upload
+sidebar_position: 3
 ---
 
 Use `POST /initiate` to create a new upload session.
