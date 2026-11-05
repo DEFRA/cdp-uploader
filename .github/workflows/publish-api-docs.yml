@@ -36,80 +36,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
         with:
-          # Full history and tags: needed for the version and the diff below
+          # Full history and tags: needed by api-docs-version.
           fetch-depth: 0
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      # Publish has already tagged this commit. Require that exact tag: an older
-      # one would overwrite that release's docs (a manual run on an untagged commit fails)
-      - name: Resolve version
-        id: version
-        run: |
-          VERSION="$(git describe --tags --exact-match HEAD)"
-          echo "Publishing API docs as version $VERSION"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      # Cheap check first, so releases that don't touch the docs skip the installs and the build
-      - name: Check for API docs changes
-        id: changes
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-        run: |
-          # Publish by default. Skip only when there is a previous release to compare
-          # with and nothing that shapes the docs changed since it
-          changed=true
-          if [ "$EVENT_NAME" != "workflow_dispatch" ] \
-             && PREVIOUS="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null)" \
-             && git diff --quiet "$PREVIOUS" HEAD -- docs/ src/ scripts/generate-openapi.js package.json package-lock.json .github/workflows/publish-api-docs.yml; then
-            changed=false
-            echo "No API docs were published, nothing that shapes them has changed since $PREVIOUS." >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "changed=$changed" | tee -a "$GITHUB_OUTPUT"
-
-      - name: Setup Node.js
-        if: steps.changes.outputs.changed == 'true'
-        uses: actions/setup-node@v4
+      - name: Build and publish API docs
+        uses: DEFRA/cdp-build-action/api-docs@main
         with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            docs/package-lock.json
-
-      # The docs theme is locked as an ssh git URL and the runner has no ssh key, so fetch it over https
-      - name: Use https for GitHub dependencies
-        if: steps.changes.outputs.changed == 'true'
-        run: git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-
-      - name: Generate OpenAPI spec
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          npm ci
-          npm run docs:openapi
-
-      # The site's links and assets are absolute, so build it once per path it is
-      # served from by cdp-api-docs: /api/<service>/latest/ and /api/<service>/<version>/
-      - name: Build API docs site
-        if: steps.changes.outputs.changed == 'true'
-        working-directory: docs
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          npm ci
-          npm run gen:api
-          DOCS_BASE_URL=/api/cdp-uploader/latest/ npx docusaurus build --out-dir build-latest
-          DOCS_BASE_URL="/api/cdp-uploader/$VERSION/" npx docusaurus build --out-dir build-versioned
-
-      - name: Publish API docs (latest)
-        if: steps.changes.outputs.changed == 'true'
-        uses: DEFRA/cdp-build-action/publish-api-docs@main
-        with:
-          path: ./docs/build-latest
-          target: latest
-
-      - name: Publish API docs (versioned)
-        if: steps.changes.outputs.changed == 'true'
-        uses: DEFRA/cdp-build-action/publish-api-docs@main
-        with:
-          path: ./docs/build-versioned
-          target: ${{ steps.version.outputs.version }}
+          builder-version: latest

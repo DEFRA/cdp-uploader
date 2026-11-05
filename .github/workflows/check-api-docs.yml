@@ -1,0 +1,29 @@
+name: Check API docs
+
+# Only docs PRs. A route change in src/ still lands here, because Check Pull Request
+# fails unless the regenerated docs/openapi/swagger.json is committed with it
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths:
+      - 'docs/**'
+      - '.github/workflows/check-api-docs.yml'
+
+jobs:
+  check-api-docs:
+    name: Dry-run API docs build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dry-run API docs build
+        uses: DEFRA/cdp-build-action/api-docs-build@main
+        with:
+          dry-run: true
