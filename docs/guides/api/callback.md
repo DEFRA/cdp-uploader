@@ -1,6 +1,8 @@
 ---
 title: Callback model
 sidebar_position: 6
+tags:
+  - integration
 ---
 
 If `callback` is provided at initiate time, uploader sends an asynchronous callback when scan results are ready.

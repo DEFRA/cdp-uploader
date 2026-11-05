@@ -4,6 +4,9 @@ title: CDP Uploader API docs
 sidebar_label: Overview
 sidebar_position: 1
 description: Overview of the uploader flow and links to API reference pages.
+site_title: CDP Uploader API Docs
+site_tagline: Upload and virus scan files for CDP services
+phase: live
 ---
 
 import Link from '@docusaurus/Link'
