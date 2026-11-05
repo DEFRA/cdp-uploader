@@ -1,4 +1,10 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npm run docs:openapi && git add docs/openapi/swagger.json && npm test && npm run test:e2e && npm run lint && npm run format:check
+npm run docs:openapi
+if ! git diff --exit-code docs/openapi/swagger.json; then
+  echo "docs/openapi/swagger.json is out of date. Stage it (git add docs/openapi/swagger.json) and commit again."
+  exit 1
+fi
+
+npm test && npm run test:e2e && npm run lint && npm run format:check

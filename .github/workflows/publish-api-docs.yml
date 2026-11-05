@@ -42,5 +42,3 @@ jobs:
 
       - name: Build and publish API docs
         uses: DEFRA/cdp-build-action/api-docs@main
-        with:
-          builder-version: latest

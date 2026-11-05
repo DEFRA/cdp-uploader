@@ -10,4 +10,4 @@ coverage
 .cache
 .envrc
 .eslintcache
-build-*/
+/build-*/

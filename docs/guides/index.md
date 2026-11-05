@@ -7,6 +7,8 @@ description: Overview of the uploader flow and links to API reference pages.
 site_title: CDP Uploader API Docs
 site_tagline: Upload and virus scan files for CDP services
 phase: live
+# The API reference used to live at /api/uploader/
+api_reference_redirect_from: /api/uploader/
 ---
 
 import Link from '@docusaurus/Link'
