@@ -1,6 +1,9 @@
 ---
 title: API overview
+sidebar_position: 2
 description: End-to-end view of the CDP Uploader integration model.
+tags:
+  - integration
 ---
 
 The uploader is intended for backend or frontend services that need anti-virus scanning before accepting uploads as complete.

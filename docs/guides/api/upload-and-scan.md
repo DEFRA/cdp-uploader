@@ -1,5 +1,8 @@
 ---
 title: Upload and scan
+sidebar_position: 4
+tags:
+  - endpoints
 ---
 
 Use `POST /upload-and-scan/{uploadId}` to submit files for scanning.

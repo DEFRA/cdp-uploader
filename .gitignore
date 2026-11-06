@@ -10,4 +10,4 @@ coverage
 .cache
 .envrc
 .eslintcache
-docs/openapi/swagger.json
+/build-*/
