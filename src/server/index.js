@@ -1,6 +1,6 @@
 import path from 'node:path'
 import hapi from '@hapi/hapi'
-import { metrics } from '@defra/cdp-metrics'
+import { Metrics, metrics } from '@defra/cdp-metrics'
 
 import { config } from '~/src/config/index.js'
 import { router } from '~/src/server/router.js'
